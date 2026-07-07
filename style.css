@@ -1,0 +1,167 @@
+/* style.css — 仿 hypurrscan 深绿主题 */
+:root {
+  --bg: #04241f;
+  --bg-2: #06322b;
+  --card: #0a3d34;
+  --card-hover: #0d4a3f;
+  --border: #145043;
+  --accent: #50d2c1;      /* hyperliquid 青绿 */
+  --accent-2: #97fce4;
+  --text: #e6f5f1;
+  --text-dim: #8fb5ac;
+  --green: #1fd286;
+  --red: #ff5c6c;
+  --shadow: 0 2px 12px rgba(0,0,0,.3);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-2); }
+
+/* ---- 顶栏 ---- */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--accent);
+}
+.logo .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+.search-box {
+  flex: 1;
+  max-width: 520px;
+}
+.search-box input {
+  width: 100%;
+  padding: 9px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+}
+.search-box input:focus { border-color: var(--accent); }
+.topbar .spacer { flex: 1; }
+.topbar .badge {
+  font-size: 12px;
+  color: var(--text-dim);
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+
+/* ---- 布局 ---- */
+.container { max-width: 1440px; margin: 0 auto; padding: 24px; }
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text-dim);
+  margin: 28px 0 12px;
+}
+
+/* ---- 统计卡片网格 ---- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+  transition: background .15s;
+}
+.stat-card:hover { background: var(--card-hover); }
+.stat-card .label {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 8px;
+}
+.stat-card .value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+}
+.stat-card .sub {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* ---- 面板卡 ---- */
+.panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.panel h3 {
+  font-size: 15px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel .chart { width: 100%; height: 300px; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+/* ---- 表格 ---- */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+th { color: var(--text-dim); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+tbody tr:hover { background: var(--bg-2); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.up { color: var(--green); }
+.down { color: var(--red); }
+.coin-name { font-weight: 600; }
+
+/* 滚动区 */
+.scroll-y { max-height: 460px; overflow-y: auto; }
+.scroll-y::-webkit-scrollbar { width: 8px; }
+.scroll-y::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.loading { color: var(--text-dim); font-size: 13px; padding: 20px; text-align: center; }
+.empty { color: var(--text-dim); font-size: 13px; padding: 30px; text-align: center; opacity: .6; }
+
+.footer {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 12px;
+  padding: 30px;
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+}
+.tag { font-size: 11px; padding: 2px 7px; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); color: var(--text-dim); }

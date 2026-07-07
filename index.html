@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HypeScan — Hyperliquid Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo"><span class="dot"></span> HypeScan</div>
+    <div class="search-box">
+      <input id="search" type="text" placeholder="搜索地址 / 交易 / 代币 …" autocomplete="off" />
+    </div>
+    <div class="spacer"></div>
+    <span class="badge" id="clock">—</span>
+  </div>
+
+  <div class="container">
+    <!-- 大盘统计 -->
+    <div class="section-title">全站概览 · Overview</div>
+    <div class="stat-grid" id="statGrid">
+      <div class="stat-card"><div class="label">24h Fees</div><div class="value" id="s-fees24">—</div><div class="sub">累计 <span id="s-feesTotal">—</span></div></div>
+      <div class="stat-card"><div class="label">24h Volume</div><div class="value" id="s-vol24">—</div><div class="sub">总量 <span id="s-volTotal">—</span></div></div>
+      <div class="stat-card"><div class="label">Users</div><div class="value" id="s-users">—</div><div class="sub">累计地址</div></div>
+      <div class="stat-card"><div class="label">EVM 24h Txs</div><div class="value" id="s-evmtx">—</div><div class="sub">活跃地址 <span id="s-evmusers">—</span></div></div>
+      <div class="stat-card"><div class="label">HYPE Burned 24h</div><div class="value" id="s-burn">—</div><div class="sub">EVM 手续费销毁</div></div>
+      <div class="stat-card"><div class="label">EVM 合约总数</div><div class="value" id="s-contracts">—</div><div class="sub">累计部署</div></div>
+    </div>
+
+    <!-- 图表 -->
+    <div class="section-title">费用趋势 · Fees</div>
+    <div class="grid-2">
+      <div class="panel">
+        <h3>累计手续费 (USDC)</h3>
+        <div class="chart" id="chartFees"></div>
+      </div>
+      <div class="panel">
+        <h3>每日手续费增量</h3>
+        <div class="chart" id="chartDailyFees"></div>
+      </div>
+    </div>
+
+    <!-- 行情 -->
+    <div class="section-title">永续合约行情 · Perps</div>
+    <div class="panel">
+      <h3>市场 <span class="tag" id="perpCount">—</span></h3>
+      <div class="scroll-y">
+        <table id="perpTable">
+          <thead>
+            <tr>
+              <th>币种</th>
+              <th class="num">标记价</th>
+              <th class="num">24h 涨跌</th>
+              <th class="num">资金费率</th>
+              <th class="num">未平仓 (OI)</th>
+              <th class="num">24h 成交额</th>
+            </tr>
+          </thead>
+          <tbody><tr><td colspan="6" class="loading">加载中…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 现货 -->
+    <div class="section-title">现货行情 · Spot</div>
+    <div class="panel">
+      <h3>现货市场 <span class="tag" id="spotCount">—</span></h3>
+      <div class="scroll-y">
+        <table id="spotTable">
+          <thead>
+            <tr>
+              <th>币种</th>
+              <th class="num">价格</th>
+              <th class="num">24h 涨跌</th>
+              <th class="num">24h 成交额</th>
+            </tr>
+          </thead>
+          <tbody><tr><td colspan="4" class="loading">加载中…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 榜单：可能为空 -->
+    <div class="section-title">HyperEVM 富豪榜 · Rich List</div>
+    <div class="panel">
+      <h3>原生代币持有榜</h3>
+      <div id="richListBox"><div class="loading">加载中…</div></div>
+    </div>
+
+    <div class="footer">
+      HypeScan · 数据来自 Hyperliquid 官方 API 与公开索引服务 · 仅供参考<br/>
+      <span class="tag">api.hyperliquid.xyz</span>
+      <span class="tag">api.hypurrscan.io</span>
+      <span class="tag">trace.hypurrscan.io</span>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
