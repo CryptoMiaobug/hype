@@ -174,16 +174,6 @@ async function loadRichList() {
   }</tbody></table>`;
 }
 
-// ---- 搜索 ----
-document.getElementById('search').addEventListener('keydown', async (e) => {
-  if (e.key !== 'Enter') return;
-  const q = e.target.value.trim();
-  if (!q) return;
-  const r = await Api.search(q);
-  console.log('search result:', r);
-  alert(r ? JSON.stringify(r, null, 2).slice(0, 800) : '未找到结果');
-});
-
 // ---- 启动 ----
 loadOverview();
 loadPerps();
