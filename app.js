@@ -57,19 +57,34 @@ async function loadOverview() {
   });
 
   // AF 累计回购（援助基金持有的 HYPE：0x2222 主 AF + 0xfefe 现货 AF）
-  Api.holders('HYPE').then((d) => {
-    if (!d || !d.holders) return;
-    const AF_ADDRS = [
-      '0x2222222222222222222222222222222222222222',
-      '0xfefefefefefefefefefefefefefefefefefefefe',
-    ];
-    const h = d.holders;
-    let sum = 0;
-    for (const a of AF_ADDRS) {
-      const v = h[a] ?? h[a.toLowerCase()];
-      if (v != null) sum += Number(v);
+  // + HYPE 供应量（用于算 AF 占比 和 累计销毁）
+  Promise.all([Api.holders('HYPE'), Api.hypeDetails()]).then(([d, det]) => {
+    const total = det ? Number(det.totalSupply) : null;
+    const maxS = det ? Number(det.maxSupply) : null;
+
+    // AF 持仓合计
+    if (d && d.holders) {
+      const AF_ADDRS = [
+        '0x2222222222222222222222222222222222222222',
+        '0xfefefefefefefefefefefefefefefefefefefefe',
+      ];
+      const h = d.holders;
+      let sum = 0;
+      for (const a of AF_ADDRS) {
+        const v = h[a] ?? h[a.toLowerCase()];
+        if (v != null) sum += Number(v);
+      }
+      if (sum > 0) {
+        document.getElementById('s-afbuyback').textContent = fmt.compact(sum) + ' HYPE';
+        if (total) document.getElementById('s-afpct').textContent = (sum / total * 100).toFixed(2) + '%';
+      }
     }
-    if (sum > 0) document.getElementById('s-afbuyback').textContent = fmt.compact(sum) + ' HYPE';
+
+    // 累计销毁 = maxSupply - totalSupply
+    if (maxS && total) {
+      const burnedTotal = maxS - total;
+      document.getElementById('s-burnTotal').textContent = fmt.compact(burnedTotal) + ' HYPE';
+    }
   });
 }
 

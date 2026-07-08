@@ -42,6 +42,8 @@ const Api = {
   evmStats: () => safeFetch(`${TRACE}/indexed/stats`),            // {stats:{transactions,...}}
   spotUSDC: () => safeFetch(`${HPS}/spotUSDC`),
   holders: (token = 'HYPE') => safeFetch(`${HPS}/holders/${token}`),  // {holdersCount, holders:{addr:bal}}
+  // HYPE 代币详情（供应量）：totalSupply / maxSupply / circulatingSupply
+  hypeDetails: () => hlInfo('tokenDetails', { tokenId: '0x0d01dc56dcaaca66ad901c959b4011ec' }),
 
   // ---- 行情 ----
   metaAndAssetCtxs: () => hlInfo('metaAndAssetCtxs'),  // [ {universe:[...]}, [ctx...] ]
