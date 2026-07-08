@@ -43,9 +43,6 @@ async function loadOverview() {
     if (!e || !e.success) return;
     document.getElementById('s-evmtx').textContent = fmt.compact(e.txs);
     document.getElementById('s-evmusers').textContent = fmt.compact(e.unique_users);
-    // hype_burned 单位 1e18 (wei)
-    const burned = Number(e.hype_burned) / 1e18;
-    document.getElementById('s-burn').textContent = fmt.compact(burned) + ' HYPE';
   });
 
   // EVM stats（累计合约数）
@@ -80,7 +77,6 @@ async function loadOverview() {
     // 累计销毁 = maxSupply - totalSupply（Gas 直接从 supply 扣）
     if (maxS && total) {
       gasBurn = maxS - total;
-      document.getElementById('s-burnTotal').textContent = fmt.compact(gasBurn) + ' HYPE';
     }
 
     // HyperCore 协议销毁：HIP-1 现货手续费销毁 + HIP-3 slash + 拍卖 gas
