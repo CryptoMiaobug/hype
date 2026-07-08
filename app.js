@@ -102,6 +102,13 @@ function renderDailyFeesChart(days) {
   const slice = rows.slice(start - 1); // 包含前一个点作为基准
   const times = slice.slice(1).map((r) => new Date(r.time * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
   const daily = slice.slice(1).map((r, i) => +((r.total_fees - slice[i].total_fees) / FEES_SCALE).toFixed(0));
+  // 区间合计 = 区间末点累计 - 区间起点前一天累计
+  const sumEl = document.getElementById('dailyFeesSum');
+  if (sumEl) {
+    const sum = daily.reduce((a, b) => a + b, 0);
+    const label = days > 0 ? `${days}天合计` : `全部合计`;
+    sumEl.textContent = `${label} ${fmt.usdCompact(sum)}`;
+  }
   _dailyFeesChart.setOption({
     ..._dailyFeesCommon,
     xAxis: { ..._dailyFeesCommon.xAxis, data: times },
