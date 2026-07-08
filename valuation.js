@@ -1,6 +1,10 @@
 // valuation.js — 两阶段 DCF 估值模型
 // 依赖: api.js (Api.*) + fmt.js (fmt.*)
 
+// 模块解析期快照原始 URL,此时任何 DOMContentLoaded 都还没触发,
+// 避免 i18n.init -> apply -> onI18nChange -> calc -> saveToUrl 抢先污染 location.search
+const INITIAL_SEARCH = location.search;
+
 // ---- 时钟 ----
 function tickClock() {
   const el = document.getElementById('clock');
@@ -24,7 +28,8 @@ const state = {
 
 // ---- URL 参数持久化 ----
 function loadFromUrl() {
-  const q = new URLSearchParams(location.search);
+  // 从模块解析期快照读取,此时 location.search 可能已被 saveToUrl 写成默认值
+  const q = new URLSearchParams(INITIAL_SEARCH);
   const set = (id, key) => {
     const v = q.get(key);
     if (v != null && !isNaN(parseFloat(v))) document.getElementById(id).value = v;
@@ -504,9 +509,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const shareLinkBtn = document.getElementById('btnShareLink');
   if (shareLinkBtn) shareLinkBtn.addEventListener('click', copyShareLink);
 
+  // 用模块解析期快照,DOMContentLoaded 内取 location.search 已被 i18n 污染
+  const initialQ = new URLSearchParams(INITIAL_SEARCH);
+  // 带真参数的分享链接必有 p (利润基数) 或 g/g1 (增长率);仅带 hl 不算
+  const hasSharedParams = ['p', 'g', 'g1', 'gt', 'wacc'].some(k => initialQ.has(k));
+
   loadFromUrl();
-  // 若 URL 无参数,自动触发一键取数
-  if (!location.search) {
+  // 只有 URL 不带任何实际参数时,才自动取数
+  if (!hasSharedParams) {
     fetchDefaults();
   } else {
     calc();
