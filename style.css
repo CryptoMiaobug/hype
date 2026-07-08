@@ -191,6 +191,30 @@ a:hover { color: var(--accent-2); }
 .chg.up { color: #1fd286; }
 .chg.down { color: #ff5b6b; }
 
+/* 仪表盘: 价值测算入口卡 */
+.stat-card.valuation-teaser {
+  background: linear-gradient(135deg, rgba(151,252,228,.14), rgba(80,210,193,.04));
+  border-color: rgba(151,252,228,.4);
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+.stat-card.valuation-teaser:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 24px rgba(80,210,193,.25);
+  border-color: var(--accent-2);
+}
+.stat-card.valuation-teaser .label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stat-card.valuation-teaser .value {
+  color: var(--accent-2);
+}
+
 /* ---- 顶部导航 ---- */
 .topnav {
   display: flex;

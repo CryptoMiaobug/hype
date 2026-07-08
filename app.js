@@ -31,6 +31,7 @@ async function loadOverview() {
       el.classList.add(v >= 0 ? 'up' : 'down');
     };
     if (price != null) document.getElementById('s-hypePrice').textContent = `$${price.toFixed(2)}`;
+    if (price != null) { window.__hypeCurrentPrice = price; tryRenderValuationTeaser(); }
     setChg('s-hypeChg24', chg24);
     setChg('s-hypeChg7d', chg7d);
     if (mcap) document.getElementById('s-hypeMcap').textContent = fmt.usdCompact(mcap);
@@ -61,6 +62,14 @@ async function loadOverview() {
     }
     const fees24 = (latest.total_fees - prev.total_fees) / FEES_SCALE;
     document.getElementById('s-fees24').textContent = fmt.usdCompact(fees24);
+
+    // 价值测算入口卡需要 360 天手续费
+    const cutoff360 = latest.time - 360 * 86400;
+    let start360 = rows[0];
+    for (const r of rows) { if (r.time <= cutoff360) start360 = r; else break; }
+    const fees360 = (latest.total_fees - start360.total_fees) / FEES_SCALE;
+    window.__hypeBase360Fees = fees360 * 0.97;
+    tryRenderValuationTeaser();
 
     renderFeesCharts(rows);
   });
@@ -119,8 +128,39 @@ async function loadOverview() {
       document.getElementById('s-goneHc').textContent = fmt.compact(HYPERCORE_BURN_STATIC) + ' HYPE';
       document.getElementById('s-goneGas').textContent = fmt.compact(gasBurn) + ' HYPE';
       document.getElementById('s-goneNull').textContent = fmt.compact(nullDead) + ' HYPE';
+
+      // 交给价值测算入口卡使用
+      window.__hypeSupplyData = { maxS, gone, circulating: maxS - gone };
+      tryRenderValuationTeaser();
     }
   });
+}
+
+// ---- 仪表盘预测价格入口卡（与 valuation.js 默认参数一致）----
+// 默认参数: growth=25%, perp=8%, wacc=10%, base = 360天手续费 × 97%
+async function tryRenderValuationTeaser() {
+  const sup = window.__hypeSupplyData;
+  const price = window.__hypeCurrentPrice;
+  const base = window.__hypeBase360Fees;
+  if (!sup || !price || !base) return;
+
+  const g = 0.25, perp = 0.08, wacc = 0.10;
+  let prev = base, pv1 = 0;
+  for (let i = 0; i < 5; i++) {
+    prev = prev * (1 + g);
+    pv1 += prev / Math.pow(1 + wacc, i + 1);
+  }
+  const tv = prev * (1 + perp) / (wacc - perp);
+  const pvTv = tv / Math.pow(1 + wacc, 5);
+  const ev = pv1 + pvTv;
+  const predicted = ev / sup.circulating;
+
+  document.getElementById('vt-price').textContent = '$' + predicted.toFixed(2);
+  const diff = (predicted / price - 1) * 100;
+  const sign = diff >= 0 ? '+' : '';
+  const cls = diff >= 0 ? 'up' : 'down';
+  document.getElementById('vt-cmp').innerHTML =
+    `vs 当前 $${price.toFixed(2)} · <span class="chg ${cls}">${sign}${diff.toFixed(1)}%</span>`;
 }
 
 // ---- fees 图表 ----
