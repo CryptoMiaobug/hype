@@ -59,7 +59,8 @@ async function loadOverview() {
 
 // ---- fees 图表 ----
 function renderFeesCharts(rows) {
-  const times = rows.map((r) => new Date(r.time * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+  // 带年份的完整日期："Nov 17, 2024"（tooltip 显示 + 坐标轴拆两行）
+  const times = rows.map((r) => new Date(r.time * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
   const cumulative = rows.map((r) => +(r.total_fees / FEES_SCALE).toFixed(0));
 
   // 每日增量
@@ -69,9 +70,19 @@ function renderFeesCharts(rows) {
   });
 
   const common = {
-    grid: { left: 60, right: 20, top: 20, bottom: 40 },
+    grid: { left: 60, right: 20, top: 20, bottom: 52 },
     tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: times, axisLabel: { color: '#8fb5ac' }, axisLine: { lineStyle: { color: '#145043' } } },
+    xAxis: {
+      type: 'category',
+      data: times,
+      axisLabel: {
+        color: '#8fb5ac',
+        // "Nov 17, 2024" -> 两行："Nov 17" / "2024"
+        formatter: (v) => (v || '').replace(', ', '\n'),
+        lineHeight: 14,
+      },
+      axisLine: { lineStyle: { color: '#145043' } },
+    },
     yAxis: { type: 'value', axisLabel: { color: '#8fb5ac', formatter: (v) => fmt.compact(v) }, splitLine: { lineStyle: { color: '#145043' } } },
     textStyle: { color: '#e6f5f1' },
   };
