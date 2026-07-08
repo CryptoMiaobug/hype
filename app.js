@@ -90,16 +90,29 @@ async function loadOverview() {
 }
 
 // ---- fees 图表 ----
+let _dailyFeesChart = null;
+let _dailyFeesRows = null;
+let _dailyFeesCommon = null;
+
+function renderDailyFeesChart(days) {
+  if (!_dailyFeesRows || !_dailyFeesChart) return;
+  const rows = _dailyFeesRows;
+  // 取尾部 days 天（days=0 或 <=0 表示全部）
+  const start = days > 0 ? Math.max(1, rows.length - days) : 1; // 首个点无前一天无法算增量，从x1开始
+  const slice = rows.slice(start - 1); // 包含前一个点作为基准
+  const times = slice.slice(1).map((r) => new Date(r.time * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
+  const daily = slice.slice(1).map((r, i) => +((r.total_fees - slice[i].total_fees) / FEES_SCALE).toFixed(0));
+  _dailyFeesChart.setOption({
+    ..._dailyFeesCommon,
+    xAxis: { ..._dailyFeesCommon.xAxis, data: times },
+    series: [{ type: 'bar', data: daily, itemStyle: { color: '#1fd286' } }],
+  });
+}
+
 function renderFeesCharts(rows) {
   // 带年份的完整日期："Nov 17, 2024"（tooltip 显示 + 坐标轴拆两行）
   const times = rows.map((r) => new Date(r.time * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
   const cumulative = rows.map((r) => +(r.total_fees / FEES_SCALE).toFixed(0));
-
-  // 每日增量
-  const daily = rows.map((r, i) => {
-    if (i === 0) return 0;
-    return +((r.total_fees - rows[i - 1].total_fees) / FEES_SCALE).toFixed(0);
-  });
 
   const common = {
     grid: { left: 60, right: 20, top: 20, bottom: 52 },
@@ -122,10 +135,26 @@ function renderFeesCharts(rows) {
   const c1 = echarts.init(document.getElementById('chartFees'));
   c1.setOption({ ...common, series: [{ type: 'line', data: cumulative, smooth: true, areaStyle: { color: 'rgba(80,210,193,.2)' }, lineStyle: { color: '#50d2c1' }, itemStyle: { color: '#50d2c1' }, showSymbol: false }] });
 
-  const c2 = echarts.init(document.getElementById('chartDailyFees'));
-  c2.setOption({ ...common, series: [{ type: 'bar', data: daily, itemStyle: { color: '#1fd286' } }] });
+  // 每日增量图：默认 30 天，标签可切换
+  _dailyFeesChart = echarts.init(document.getElementById('chartDailyFees'));
+  _dailyFeesRows = rows;
+  _dailyFeesCommon = common;
+  renderDailyFeesChart(30);
 
-  window.addEventListener('resize', () => { c1.resize(); c2.resize(); });
+  // 绑切换标签（只绑一次）
+  const tabs = document.getElementById('dailyFeesRange');
+  if (tabs && !tabs.dataset.bound) {
+    tabs.dataset.bound = '1';
+    tabs.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-days]');
+      if (!btn) return;
+      tabs.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderDailyFeesChart(Number(btn.dataset.days));
+    });
+  }
+
+  window.addEventListener('resize', () => { c1.resize(); _dailyFeesChart.resize(); });
 }
 
 // ---- 永续行情 ----

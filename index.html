@@ -38,7 +38,14 @@
         <div class="chart" id="chartFees"></div>
       </div>
       <div class="panel">
-        <h3>每日手续费增量</h3>
+        <h3>每日手续费增量
+          <span class="range-tabs" id="dailyFeesRange" role="tablist">
+            <button data-days="30" class="active">30天</button>
+            <button data-days="180">180天</button>
+            <button data-days="360">360天</button>
+            <button data-days="0">All</button>
+          </span>
+        </h3>
         <div class="chart" id="chartDailyFees"></div>
       </div>
     </div>

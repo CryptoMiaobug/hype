@@ -154,6 +154,33 @@ a:hover { color: var(--accent-2); }
 }
 .panel .chart { width: 100%; height: 300px; }
 
+/* 图表头部时间区间切换 */
+.range-tabs {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.range-tabs button {
+  background: transparent;
+  border: 0;
+  color: var(--text-dim);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.range-tabs button:hover { color: var(--text); }
+.range-tabs button.active {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+}
+
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
 
