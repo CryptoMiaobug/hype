@@ -54,7 +54,7 @@ const I18N_DICT = {
     'idx.spotMarkets': '现货市场',
     'idx.richList': 'HyperEVM 富豪榜 · Rich List',
     'idx.nativeHolders': '原生代币持有榜',
-    'idx.footer': 'HypeScan · 数据来自 Hyperliquid 官方 API 与公开索引服务 · 仅供参考',
+    'idx.footer': 'HypeValue · 数据来自 Hyperliquid 官方 API 与公开索引服务 · 仅供参考',
 
     // 表格表头
     'tbl.coin': '币种',
@@ -191,7 +191,7 @@ const I18N_DICT = {
     'idx.spotMarkets': 'Spot',
     'idx.richList': 'HyperEVM Rich List',
     'idx.nativeHolders': 'Native Token Holders',
-    'idx.footer': 'HypeScan · Data from Hyperliquid API and public indexers · For reference only',
+    'idx.footer': 'HypeValue · Data from Hyperliquid API and public indexers · For reference only',
 
     'tbl.coin': 'Coin',
     'tbl.markPrice': 'Mark Price',
