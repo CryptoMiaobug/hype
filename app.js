@@ -70,10 +70,6 @@ async function loadOverview() {
       const AF_ADDR = '0xfefefefefefefefefefefefefefefefefefefefe';
       const h = d.holders;
       afBal = Number(h[AF_ADDR] ?? h[AF_ADDR.toLowerCase()] ?? 0);
-      if (afBal > 0) {
-        document.getElementById('s-afbuyback').textContent = fmt.compact(afBal) + ' HYPE';
-        if (total) document.getElementById('s-afpct').textContent = (afBal / total * 100).toFixed(2) + '%';
-      }
     }
 
     // 累计销毁 = maxSupply - totalSupply（Gas 直接从 supply 扣）
