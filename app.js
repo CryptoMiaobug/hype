@@ -160,7 +160,8 @@ async function tryRenderValuationTeaser() {
   const sign = diff >= 0 ? '+' : '';
   const cls = diff >= 0 ? 'up' : 'down';
   document.getElementById('vt-cmp').innerHTML =
-    `vs 当前 $${price.toFixed(2)} · <span class="chg ${cls}">${sign}${diff.toFixed(1)}%</span>`;
+    (window.I18n ? I18n.t('val.priceVs', { cur: price.toFixed(2) }) : `vs 当前 $${price.toFixed(2)} · `) +
+    `<span class="chg ${cls}">${sign}${diff.toFixed(1)}%</span>`;
 }
 
 // ---- fees 图表 ----
@@ -242,7 +243,7 @@ function renderFeesCharts(rows) {
 async function loadPerps() {
   const d = await Api.metaAndAssetCtxs();
   const tbody = document.querySelector('#perpTable tbody');
-  if (!d || !d[0] || !d[1]) { tbody.innerHTML = '<tr><td colspan="6" class="empty">数据暂不可用</td></tr>'; return; }
+  if (!d || !d[0] || !d[1]) { tbody.innerHTML = `<tr><td colspan="6" class="empty">${window.I18n?I18n.t('common.noData'):'数据暂不可用'}</td></tr>`; return; }
 
   const universe = d[0].universe;
   const ctxs = d[1];
@@ -275,7 +276,7 @@ async function loadPerps() {
 async function loadSpot() {
   const d = await Api.spotMetaAndAssetCtxs();
   const tbody = document.querySelector('#spotTable tbody');
-  if (!d || !d[0] || !d[1]) { tbody.innerHTML = '<tr><td colspan="4" class="empty">数据暂不可用</td></tr>'; return; }
+  if (!d || !d[0] || !d[1]) { tbody.innerHTML = `<tr><td colspan="4" class="empty">${window.I18n?I18n.t('common.noData'):'数据暂不可用'}</td></tr>`; return; }
 
   const tokens = d[0].tokens;       // [{name, index,...}]
   const universe = d[0].universe;   // [{name:"@1", tokens:[baseIdx, quoteIdx], index}]
@@ -316,9 +317,10 @@ async function loadRichList() {
   const box = document.getElementById('richListBox');
   const d = await Api.richList(50);
   const list = Array.isArray(d) ? d : (d && d.holders) || (d && d.list) || null;
-  if (!list || !list.length) { box.innerHTML = '<div class="empty">数据暂不可用（该索引接口未开放或为空）</div>'; return; }
+  if (!list || !list.length) { box.innerHTML = `<div class="empty">${window.I18n?I18n.t('common.noDataRich'):'数据暂不可用（该索引接口未开放或为空）'}</div>`; return; }
 
-  box.innerHTML = `<table><thead><tr><th>#</th><th>地址</th><th class="num">余额</th></tr></thead><tbody>${
+  const T = (k) => (window.I18n ? I18n.t(k) : k);
+  box.innerHTML = `<table><thead><tr><th>#</th><th>${T('rich.addr')}</th><th class="num">${T('rich.balance')}</th></tr></thead><tbody>${
     list.map((r, i) => {
       const addr = r.address || r.addr || r.account || '';
       const bal = r.balance ?? r.amount ?? r.value;
@@ -335,3 +337,11 @@ loadRichList();
 
 // 定时刷新行情
 setInterval(() => { loadPerps(); loadSpot(); }, 30000);
+
+// 语言切换后重新拉一次行情表格（表头会自动重刷一轮）
+window.onI18nChange = () => {
+  loadPerps();
+  loadSpot();
+  loadRichList();
+  tryRenderValuationTeaser();
+};

@@ -11,65 +11,67 @@
   <div class="topbar">
     <div class="logo"><span class="dot"></span> HypeScan</div>
     <nav class="topnav">
-      <a href="index.html" class="active">仪表盘</a>
-      <a href="valuation.html">价值测算</a>
+      <a href="index.html" class="active" data-i18n="nav.dashboard">仪表盘</a>
+      <a href="valuation.html" data-i18n="nav.valuation">价值测算</a>
     </nav>
     <div class="spacer"></div>
     <span class="badge" id="clock">—</span>
   </div>
 
+  <div class="site-notice" data-i18n="notice">💡 本站数据为链上实时刷新 · 部分数据源需科学上网 · 如无显示请刷新</div>
+
   <div class="container">
     <!-- 大盘统计 -->
-    <div class="section-title">全站概览 · Overview</div>
+    <div class="section-title" data-i18n="idx.overview">全站概览 · Overview</div>
     <div class="stat-grid" id="statGrid">
-      <a href="valuation.html" class="stat-card valuation-teaser" title="点击进入价值测算页">
-        <div class="label">预测价格 / HYPE
+      <a href="valuation.html" class="stat-card valuation-teaser" data-i18n-title="idx.predPriceTip" title="点击进入价值测算页">
+        <div class="label"><span data-i18n="idx.predPrice">预测价格 / HYPE</span>
           <span class="tag" style="margin-left:auto;font-size:10px;">DCF→</span>
         </div>
         <div class="value" id="vt-price">—</div>
-        <div class="sub" id="vt-cmp">加载中…</div>
+        <div class="sub" id="vt-cmp" data-i18n="common.loading">加载中…</div>
       </a>
       <div class="stat-card price">
-        <div class="label">HYPE 价格</div>
+        <div class="label" data-i18n="idx.hypePrice">HYPE 价格</div>
         <div class="value" id="s-hypePrice">—</div>
         <div class="sub">
           <span class="chg" id="s-hypeChg24">—</span> 24h ·
           <span class="chg" id="s-hypeChg7d">—</span> 7d
         </div>
         <div class="lines">
-          <div class="line"><span>市值</span><b id="s-hypeMcap">—</b></div>
-          <div class="line"><span>FDV</span><b id="s-hypeFdv">—</b></div>
-          <div class="line"><span>24h 成交</span><b id="s-hypeVol">—</b></div>
+          <div class="line"><span data-i18n="idx.mcap">市值</span><b id="s-hypeMcap">—</b></div>
+          <div class="line"><span data-i18n="idx.fdv">FDV</span><b id="s-hypeFdv">—</b></div>
+          <div class="line"><span data-i18n="idx.vol24">24h 成交</span><b id="s-hypeVol">—</b></div>
         </div>
       </div>
-      <div class="stat-card"><div class="label">24h Fees</div><div class="value" id="s-fees24">—</div><div class="sub">累计 <span id="s-feesTotal">—</span></div></div>
-      <div class="stat-card"><div class="label">24h Volume</div><div class="value" id="s-vol24">—</div><div class="sub">总量 <span id="s-volTotal">—</span></div></div>
-      <div class="stat-card"><div class="label">Users</div><div class="value" id="s-users">—</div><div class="sub">累计地址</div></div>
-      <div class="stat-card"><div class="label">EVM 24h Txs</div><div class="value" id="s-evmtx">—</div><div class="sub">活跃地址 <span id="s-evmusers">—</span></div></div>
-      <div class="stat-card breakdown"><div class="label">HYPE 已销毁</div><div class="value" id="s-goneTotal">—</div><div class="sub">占总量 <span id="s-gonePct">—</span></div><div class="lines">
-        <div class="line"><span>AF 回购</span><b id="s-goneAF">—</b></div>
-        <div class="line"><span>HyperCore 协议销毁</span><b id="s-goneHc">—</b></div>
-        <div class="line"><span>HyperEVM Gas</span><b id="s-goneGas">—</b></div>
-        <div class="line"><span>Null + Dead</span><b id="s-goneNull">—</b></div>
+      <div class="stat-card"><div class="label" data-i18n="idx.fees24">24h Fees</div><div class="value" id="s-fees24">—</div><div class="sub"><span data-i18n="common.total">累计</span> <span id="s-feesTotal">—</span></div></div>
+      <div class="stat-card"><div class="label" data-i18n="idx.volume24">24h Volume</div><div class="value" id="s-vol24">—</div><div class="sub"><span data-i18n="common.total">总量</span> <span id="s-volTotal">—</span></div></div>
+      <div class="stat-card"><div class="label" data-i18n="idx.users">Users</div><div class="value" id="s-users">—</div><div class="sub" data-i18n="idx.usersSub">累计地址</div></div>
+      <div class="stat-card"><div class="label" data-i18n="idx.evmTx">EVM 24h Txs</div><div class="value" id="s-evmtx">—</div><div class="sub"><span data-i18n="idx.evmActive">活跃地址</span> <span id="s-evmusers">—</span></div></div>
+      <div class="stat-card breakdown"><div class="label" data-i18n="idx.hypeBurned">HYPE 已销毁</div><div class="value" id="s-goneTotal">—</div><div class="sub"><span data-i18n="idx.burnedPct">占总量</span> <span id="s-gonePct">—</span></div><div class="lines">
+        <div class="line"><span data-i18n="idx.afBuyback">AF 回购</span><b id="s-goneAF">—</b></div>
+        <div class="line"><span data-i18n="idx.hcBurn">HyperCore 协议销毁</span><b id="s-goneHc">—</b></div>
+        <div class="line"><span data-i18n="idx.evmGas">HyperEVM Gas</span><b id="s-goneGas">—</b></div>
+        <div class="line"><span data-i18n="idx.nullDead">Null + Dead</span><b id="s-goneNull">—</b></div>
       </div></div>
-      <div class="stat-card"><div class="label">EVM 合约总数</div><div class="value" id="s-contracts">—</div><div class="sub">累计部署</div></div>
+      <div class="stat-card"><div class="label" data-i18n="idx.contracts">EVM 合约总数</div><div class="value" id="s-contracts">—</div><div class="sub" data-i18n="idx.contractsSub">累计部署</div></div>
     </div>
 
     <!-- 图表 -->
-    <div class="section-title">费用趋势 · Fees</div>
+    <div class="section-title" data-i18n="idx.feesTrend">费用趋势 · Fees</div>
     <div class="grid-2">
       <div class="panel">
-        <h3>累计手续费 (USDC)</h3>
+        <h3 data-i18n="idx.totalFees">累计手续费 (USDC)</h3>
         <div class="chart" id="chartFees"></div>
       </div>
       <div class="panel">
-        <h3>每日手续费增量
+        <h3><span data-i18n="idx.dailyFees">每日手续费增量</span>
           <span class="tag" id="dailyFeesSum">—</span>
           <span class="range-tabs" id="dailyFeesRange" role="tablist">
-            <button data-days="30" class="active">30天</button>
-            <button data-days="180">180天</button>
-            <button data-days="360">360天</button>
-            <button data-days="0">All</button>
+            <button data-days="30" class="active" data-i18n="common.days30">30天</button>
+            <button data-days="180" data-i18n="common.days180">180天</button>
+            <button data-days="360" data-i18n="common.days360">360天</button>
+            <button data-days="0" data-i18n="common.all">All</button>
           </span>
         </h3>
         <div class="chart" id="chartDailyFees"></div>
@@ -77,60 +79,61 @@
     </div>
 
     <!-- 行情 -->
-    <div class="section-title">永续合约行情 · Perps</div>
+    <div class="section-title" data-i18n="idx.perps">永续合约行情 · Perps</div>
     <div class="panel">
-      <h3>市场 <span class="tag" id="perpCount">—</span></h3>
+      <h3><span data-i18n="idx.markets">市场</span> <span class="tag" id="perpCount">—</span></h3>
       <div class="scroll-y">
         <table id="perpTable">
           <thead>
             <tr>
-              <th>币种</th>
-              <th class="num">标记价</th>
-              <th class="num">24h 涨跌</th>
-              <th class="num">资金费率</th>
-              <th class="num">未平仓 (OI)</th>
-              <th class="num">24h 成交额</th>
+              <th data-i18n="tbl.coin">币种</th>
+              <th class="num" data-i18n="tbl.markPrice">标记价</th>
+              <th class="num" data-i18n="tbl.chg24h">24h 涨跌</th>
+              <th class="num" data-i18n="tbl.funding">资金费率</th>
+              <th class="num" data-i18n="tbl.oi">未平仓 (OI)</th>
+              <th class="num" data-i18n="tbl.turnover">24h 成交额</th>
             </tr>
           </thead>
-          <tbody><tr><td colspan="6" class="loading">加载中…</td></tr></tbody>
+          <tbody><tr><td colspan="6" class="loading" data-i18n="common.loading">加载中…</td></tr></tbody>
         </table>
       </div>
     </div>
 
     <!-- 现货 -->
-    <div class="section-title">现货行情 · Spot</div>
+    <div class="section-title" data-i18n="idx.spot">现货行情 · Spot</div>
     <div class="panel">
-      <h3>现货市场 <span class="tag" id="spotCount">—</span></h3>
+      <h3><span data-i18n="idx.spotMarkets">现货市场</span> <span class="tag" id="spotCount">—</span></h3>
       <div class="scroll-y">
         <table id="spotTable">
           <thead>
             <tr>
-              <th>币种</th>
-              <th class="num">价格</th>
-              <th class="num">24h 涨跌</th>
-              <th class="num">24h 成交额</th>
+              <th data-i18n="tbl.coin">币种</th>
+              <th class="num" data-i18n="tbl.price">价格</th>
+              <th class="num" data-i18n="tbl.chg24h">24h 涨跌</th>
+              <th class="num" data-i18n="tbl.turnover">24h 成交额</th>
             </tr>
           </thead>
-          <tbody><tr><td colspan="4" class="loading">加载中…</td></tr></tbody>
+          <tbody><tr><td colspan="4" class="loading" data-i18n="common.loading">加载中…</td></tr></tbody>
         </table>
       </div>
     </div>
 
     <!-- 榜单：可能为空 -->
-    <div class="section-title">HyperEVM 富豪榜 · Rich List</div>
+    <div class="section-title" data-i18n="idx.richList">HyperEVM 富豪榜 · Rich List</div>
     <div class="panel">
-      <h3>原生代币持有榜</h3>
-      <div id="richListBox"><div class="loading">加载中…</div></div>
+      <h3 data-i18n="idx.nativeHolders">原生代币持有榜</h3>
+      <div id="richListBox"><div class="loading" data-i18n="common.loading">加载中…</div></div>
     </div>
 
     <div class="footer">
-      HypeScan · 数据来自 Hyperliquid 官方 API 与公开索引服务 · 仅供参考<br/>
+      <span data-i18n="idx.footer">HypeScan · 数据来自 Hyperliquid 官方 API 与公开索引服务 · 仅供参考</span><br/>
       <span class="tag">api.hyperliquid.xyz</span>
       <span class="tag">api.hypurrscan.io</span>
       <span class="tag">trace.hypurrscan.io</span>
     </div>
   </div>
 
+  <script src="i18n.js"></script>
   <script src="api.js"></script>
   <script src="app.js"></script>
 </body>

@@ -55,16 +55,19 @@ function toggleGrowthMode(force) {
   const peryear = document.getElementById('growth-perYear');
   const btn = document.getElementById('btnExpandGrowth');
   const isExpanded = force !== undefined ? force : peryear.classList.contains('hidden');
+  const T = (k) => (window.I18n ? I18n.t(k) : k);
   if (isExpanded) {
     unified.classList.add('hidden');
     peryear.classList.remove('hidden');
-    btn.textContent = '统一 ▴';
+    btn.textContent = T('val.growthCollapse');
+    btn.setAttribute('data-i18n', 'val.growthCollapse');
     const v = document.getElementById('in-growthAll').value;
     ['g1','g2','g3','g4','g5'].forEach(k => document.getElementById('in-'+k).value = v);
   } else {
     unified.classList.remove('hidden');
     peryear.classList.add('hidden');
-    btn.textContent = '分年设置 ▾';
+    btn.textContent = T('val.growthExpand');
+    btn.setAttribute('data-i18n', 'val.growthExpand');
   }
   calc();
 }
@@ -141,6 +144,7 @@ function calc() {
   const cmp = document.getElementById('r-priceCmp');
   const supEl = document.getElementById('r-supply');
   const priceEl = document.getElementById('r-price');
+  const T = (k, v) => (window.I18n ? I18n.t(k, v) : k);
   if (r.ev != null && state.circulatingHype) {
     const price = r.ev / state.circulatingHype;
     priceEl.textContent = '$' + price.toFixed(2);
@@ -149,19 +153,19 @@ function calc() {
       const diff = (price / state.currentPrice - 1) * 100;
       const sign = diff >= 0 ? '+' : '';
       const cls = diff >= 0 ? 'up' : 'down';
-      cmp.innerHTML = `vs 当前 $${state.currentPrice.toFixed(2)} · <span class="chg ${cls}">${sign}${diff.toFixed(1)}%</span>`;
+      cmp.innerHTML = T('val.priceVs', { cur: state.currentPrice.toFixed(2) })
+        + `<span class="chg ${cls}">${sign}${diff.toFixed(1)}%</span>`;
     } else {
-      cmp.textContent = `流通盘 ${fmt.compact(state.circulatingHype)}`;
+      cmp.textContent = `${T('val.priceSubDefault')} ${fmt.compact(state.circulatingHype)}`;
     }
   } else {
     priceEl.textContent = '—';
-    cmp.textContent = state.circulatingHype ? `流通盘 ${fmt.compact(state.circulatingHype)}` : '需要供应量数据';
+    cmp.textContent = state.circulatingHype
+      ? `${T('val.priceSubDefault')} ${fmt.compact(state.circulatingHype)}`
+      : T('val.priceNeedSupply');
   }
 
   // PE：双口径
-  //   PE(流通) = CoinGecko 流通市值 / 当期利润
-  //   PE(全稀释) = 调整 FDV / 当期利润
-  //     调整 FDV = (maxSupply - 已消失合计) × 当前价 = state.circulatingHype × currentPrice
   const peEl = document.getElementById('r-pe');
   const peSub = document.getElementById('r-peSub');
   if (p.base > 0) {
@@ -172,19 +176,19 @@ function calc() {
     if (peCirc != null && peFdv != null) {
       peEl.innerHTML = `${peCirc.toFixed(1)}× <span style="color:var(--text-dim);font-size:14px;">/</span> ${peFdv.toFixed(1)}×`;
       peSub.innerHTML =
-        `<span title="CoinGecko 流通市值 ${fmt.usdCompact(state.currentMcap)}">流通</span> / ` +
-        `<span title="调整后全稀释 ${fmt.usdCompact(adjFdv)}（已扣销毁）">全稀释*</span> · ` +
-        `利润 ${fmt.usdCompact(p.base)}`;
+        `<span title="${T('val.peTipCirc', {v: fmt.usdCompact(state.currentMcap)})}" data-i18n="val.peCirc">${T('val.peCirc')}</span> / ` +
+        `<span title="${T('val.peTipFdv', {v: fmt.usdCompact(adjFdv)})}" data-i18n="val.peFdvAdj">${T('val.peFdvAdj')}</span>` +
+        T('val.pePart3', {base: fmt.usdCompact(p.base)});
     } else if (peCirc != null) {
       peEl.textContent = peCirc.toFixed(1) + '×';
-      peSub.textContent = `流通 · ${fmt.usdCompact(state.currentMcap)} / ${fmt.usdCompact(p.base)}`;
+      peSub.textContent = T('val.peCircOnly', {mcap: fmt.usdCompact(state.currentMcap), base: fmt.usdCompact(p.base)});
     } else {
       peEl.textContent = '—';
-      peSub.textContent = '需要市值数据';
+      peSub.textContent = T('val.peNeedMcap');
     }
   } else {
     peEl.textContent = '—';
-    peSub.textContent = '需要利润基数';
+    peSub.textContent = T('val.peNeedProfit');
   }
 
   // 明细表
@@ -208,6 +212,7 @@ function calc() {
 
 function renderChart(r) {
   if (!chart) chart = echarts.init(document.getElementById('chartDCF'));
+  const T = (k, v) => (window.I18n ? I18n.t(k, v) : k);
   const years = ['Y1','Y2','Y3','Y4','Y5'];
   chart.setOption({
     tooltip: {
@@ -215,7 +220,7 @@ function renderChart(r) {
       backgroundColor: '#0a3d34', borderColor: '#145043', textStyle: { color: '#e6f5f1' },
       formatter: (params) => params.map(p => `${p.marker}${p.seriesName}: ${fmt.usdCompact(p.value)}`).join('<br/>')
     },
-    legend: { data: ['预测利润', '折现现值'], textStyle: { color: '#8fb5ac' }, top: 0 },
+    legend: { data: [T('val.chartFcf'), T('val.chartPv')], textStyle: { color: '#8fb5ac' }, top: 0 },
     grid: { left: 60, right: 30, bottom: 30, top: 40 },
     xAxis: { type: 'category', data: years, axisLine: { lineStyle: { color: '#145043' } }, axisLabel: { color: '#8fb5ac' } },
     yAxis: {
@@ -225,8 +230,8 @@ function renderChart(r) {
       splitLine: { lineStyle: { color: '#0d4a3f' } },
     },
     series: [
-      { name: '预测利润', type: 'bar', data: r.fcf, itemStyle: { color: '#50d2c1', borderRadius: [4,4,0,0] } },
-      { name: '折现现值', type: 'line', data: r.pv, smooth: true, symbolSize: 8, itemStyle: { color: '#ffb454' }, lineStyle: { width: 3 } },
+      { name: T('val.chartFcf'), type: 'bar', data: r.fcf, itemStyle: { color: '#50d2c1', borderRadius: [4,4,0,0] } },
+      { name: T('val.chartPv'), type: 'line', data: r.pv, smooth: true, symbolSize: 8, itemStyle: { color: '#ffb454' }, lineStyle: { width: 3 } },
     ],
   });
 }
@@ -237,9 +242,12 @@ async function fetchDefaults() {
   state.fetching = true;
   const btn = document.getElementById('btnFetch');
   const status = document.getElementById('fetchStatus');
+  const T = (k, v) => (window.I18n ? I18n.t(k, v) : k);
   btn.disabled = true;
-  btn.textContent = '⏳ 取数中...';
-  status.textContent = '正在拉取:手续费/供应量/HYPE 价格/美债收益率...';
+  btn.textContent = T('val.fetchBtnLoading');
+  btn.setAttribute('data-i18n', 'val.fetchBtnLoading');
+  status.textContent = T('val.fetchLoading');
+  status.setAttribute('data-i18n', 'val.fetchLoading');
 
   const timeout = (ms) => new Promise((_, r) => setTimeout(() => r(new Error('timeout')), ms));
   const race = (p, ms) => Promise.race([p, timeout(ms)]);
@@ -268,11 +276,12 @@ async function fetchDefaults() {
     const base = usdc360 * 0.97;
     document.getElementById('in-baseProfit').value = Math.round(base);
     document.getElementById('rng-baseProfit').value = Math.min(2000000000, Math.round(base));
-    document.getElementById('src-baseProfit').textContent =
-      `✓ 过去 360 天手续费 ${fmt.usdCompact(usdc360)} × 97% = ${fmt.usdCompact(base)}`;
+    document.getElementById('src-baseProfit').textContent = T('val.baseProfitOk', { fee: fmt.usdCompact(usdc360), base: fmt.usdCompact(base) });
+    document.getElementById('src-baseProfit').removeAttribute('data-i18n');
   } else {
-    errors.push('手续费');
-    document.getElementById('src-baseProfit').textContent = '✗ 手续费拉取失败';
+    errors.push(T('val.srcFees'));
+    document.getElementById('src-baseProfit').textContent = T('val.baseProfitFail');
+    document.getElementById('src-baseProfit').setAttribute('data-i18n', 'val.baseProfitFail');
   }
 
   // 2. 供应量 & 已消失合计
@@ -299,7 +308,7 @@ async function fetchDefaults() {
     const gone = afBal + HYPERCORE_STATIC + gasBurn + nullDead;
     state.circulatingHype = maxS - gone;
   } else {
-    errors.push('供应量');
+    errors.push(T('val.srcSupply'));
   }
 
   // 3. HYPE 当前价 + 市值 + FDV
@@ -313,21 +322,29 @@ async function fetchDefaults() {
   if (rfR.status === 'fulfilled' && rfR.value != null) {
     document.getElementById('in-rf').value = rfR.value.toFixed(2);
     document.getElementById('rng-rf').value = rfR.value.toFixed(2);
-    document.getElementById('src-rf').textContent = `✓ ${rfR.value.toFixed(2)}% (10 年期美债)`;
+    const rfEl = document.getElementById('src-rf');
+    rfEl.textContent = T('val.rfOk', { v: rfR.value.toFixed(2) });
+    rfEl.removeAttribute('data-i18n');
   } else {
-    errors.push('美债利率');
-    document.getElementById('src-rf').textContent = '✗ 美债利率拉取失败,请手动填';
+    errors.push(T('val.srcRf'));
+    const rfEl = document.getElementById('src-rf');
+    rfEl.textContent = T('val.rfFail');
+    rfEl.setAttribute('data-i18n', 'val.rfFail');
   }
 
   state.fetching = false;
   btn.disabled = false;
-  btn.textContent = '🔄 重新取数';
+  btn.textContent = T('val.fetchBtnAgain');
+  btn.setAttribute('data-i18n', 'val.fetchBtnAgain');
   if (errors.length === 0) {
-    status.textContent = '✅ 全部数据已加载';
+    status.textContent = T('val.fetchOk');
+    status.setAttribute('data-i18n', 'val.fetchOk');
   } else if (errors.length < 4) {
-    status.textContent = `⚠️ 部分失败: ${errors.join('、')}。可以手动填入或再次点击取数`;
+    status.textContent = T('val.fetchPartialFail', { errs: errors.join('、') });
+    status.removeAttribute('data-i18n');
   } else {
-    status.textContent = `❌ 取数失败: ${errors.join('、')}。请手动填入或稍后重试`;
+    status.textContent = T('val.fetchAllFail', { errs: errors.join('、') });
+    status.removeAttribute('data-i18n');
   }
   calc();
 }
@@ -357,3 +374,6 @@ document.addEventListener('DOMContentLoaded', () => {
     calc();
   }
 });
+
+// 语言切换后重新渲染 chart 与动态文本
+window.onI18nChange = () => calc();
