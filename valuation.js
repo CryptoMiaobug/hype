@@ -160,17 +160,20 @@ function calc() {
 
   // PE：双口径
   //   PE(流通) = CoinGecko 流通市值 / 当期利润
-  //   PE(全稀释) = FDV / 当期利润（对应 CMC 风格的全口径）
+  //   PE(全稀释) = 调整 FDV / 当期利润
+  //     调整 FDV = (maxSupply - 已消失合计) × 当前价 = state.circulatingHype × currentPrice
   const peEl = document.getElementById('r-pe');
   const peSub = document.getElementById('r-peSub');
   if (p.base > 0) {
     const peCirc = state.currentMcap ? (state.currentMcap / p.base) : null;
-    const peFdv  = state.currentFdv  ? (state.currentFdv  / p.base) : null;
+    const adjFdv = (state.circulatingHype && state.currentPrice)
+      ? state.circulatingHype * state.currentPrice : null;
+    const peFdv  = adjFdv ? (adjFdv / p.base) : null;
     if (peCirc != null && peFdv != null) {
       peEl.innerHTML = `${peCirc.toFixed(1)}× <span style="color:var(--text-dim);font-size:14px;">/</span> ${peFdv.toFixed(1)}×`;
       peSub.innerHTML =
         `<span title="CoinGecko 流通市值 ${fmt.usdCompact(state.currentMcap)}">流通</span> / ` +
-        `<span title="FDV 全稀释市值 ${fmt.usdCompact(state.currentFdv)}">全稀释</span> · ` +
+        `<span title="调整后全稀释 ${fmt.usdCompact(adjFdv)}（已扣销毁）">全稀释*</span> · ` +
         `利润 ${fmt.usdCompact(p.base)}`;
     } else if (peCirc != null) {
       peEl.textContent = peCirc.toFixed(1) + '×';
