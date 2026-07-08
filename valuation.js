@@ -16,6 +16,10 @@ const state = {
   currentFdv: null,         // 全稀释市值 FDV
   circulatingHype: null,    // maxSupply - 已消失合计
   fetching: false,
+  // 分享用: 最新一次 calc 的结果
+  lastPrice: null,
+  lastDiffPct: null,
+  lastEv: null,
 };
 
 // ---- URL 参数持久化 ----
@@ -32,6 +36,12 @@ function loadFromUrl() {
   set('in-wacc', 'wacc');
   set('in-g1', 'g1'); set('in-g2', 'g2'); set('in-g3', 'g3'); set('in-g4', 'g4'); set('in-g5', 'g5');
   if (q.get('mode') === 'peryear') toggleGrowthMode(true);
+  // 跟随发起人语言 (不写 localStorage,避免污染朋友自己选的)
+  const hl = q.get('hl');
+  if ((hl === 'zh' || hl === 'en') && window.I18n) {
+    if (typeof I18n.setTemp === 'function') I18n.setTemp(hl);
+    else if (I18n.lang !== hl) I18n.set(hl);
+  }
 }
 function saveToUrl() {
   const q = new URLSearchParams();
@@ -46,7 +56,121 @@ function saveToUrl() {
   q.set('gt', document.getElementById('in-perpetual').value);
   q.set('rf', document.getElementById('in-rf').value);
   q.set('wacc', document.getElementById('in-wacc').value);
+  // 保留 URL 中已有的 hl 参数 (跟随发起人语言)
+  const prev = new URLSearchParams(location.search);
+  const hl = prev.get('hl');
+  if (hl === 'zh' || hl === 'en') q.set('hl', hl);
   history.replaceState(null, '', location.pathname + '?' + q.toString());
+}
+
+// ---- 分享 ----
+function buildShareUrl() {
+  // 先确保最新参数已写入
+  saveToUrl();
+  const q = new URLSearchParams(location.search);
+  // 分享时把当前语言带上,朋友打开时语言一致
+  const lang = (window.I18n && I18n.lang) || 'zh';
+  q.set('hl', lang);
+  return location.origin + location.pathname + '?' + q.toString();
+}
+
+function buildShareText() {
+  const T = (k, v) => (window.I18n ? I18n.t(k, v) : k);
+  const price = state.lastPrice;
+  const diff = state.lastDiffPct;
+  const cur = state.currentPrice;
+  if (price != null && diff != null && cur != null) {
+    const sign = diff >= 0 ? '+' : '';
+    return T('val.shareText', {
+      price: price.toFixed(2),
+      cur: cur.toFixed(2),
+      sign, diff: diff.toFixed(1),
+    });
+  }
+  if (price != null) {
+    return T('val.shareTextNoCmp', { price: price.toFixed(2) });
+  }
+  return T('val.shareTextFallback');
+}
+
+async function copyToClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) {
+    // 回退
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+function flashButton(btnId, i18nKey, revertKey, ms = 2000) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  const T = (k) => (window.I18n ? I18n.t(k) : k);
+  btn.textContent = T(i18nKey);
+  btn.setAttribute('data-i18n', i18nKey);
+  setTimeout(() => {
+    btn.textContent = T(revertKey);
+    btn.setAttribute('data-i18n', revertKey);
+  }, ms);
+}
+
+function setShareStatus(i18nKey, vars) {
+  const el = document.getElementById('fetchStatus');
+  if (!el) return;
+  const T = (k, v) => (window.I18n ? I18n.t(k, v) : k);
+  el.textContent = T(i18nKey, vars);
+  el.setAttribute('data-i18n', i18nKey);
+}
+
+async function shareValuation() {
+  const url = buildShareUrl();
+  const text = buildShareText();
+  const T = (k, v) => (window.I18n ? I18n.t(k, v) : k);
+  // 优先尝试系统 Web Share (手机上体验好)
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: T('val.shareTitle'), text, url });
+      setShareStatus('val.shareOk');
+      return;
+    } catch (e) {
+      // 用户取消或不支持 -> 走剪贴板
+      if (e && e.name === 'AbortError') return;
+    }
+  }
+  // 回退: 拷贝 “文案 + 链接”
+  const ok = await copyToClipboard(text + '\n' + url);
+  if (ok) {
+    flashButton('btnShare', 'val.shareBtnCopied', 'val.shareBtn');
+    setShareStatus('val.shareRichCopied');
+  } else {
+    setShareStatus('val.shareFailed', { url });
+  }
+}
+
+async function copyShareLink() {
+  const url = buildShareUrl();
+  const ok = await copyToClipboard(url);
+  if (ok) {
+    flashButton('btnShareLink', 'val.shareLinkCopied', 'val.shareLinkBtn');
+    setShareStatus('val.shareLinkOk');
+  } else {
+    setShareStatus('val.shareFailed', { url });
+  }
 }
 
 // ---- 展开/收起分年增长率 ----
@@ -151,18 +275,24 @@ function calc() {
   const T = (k, v) => (window.I18n ? I18n.t(k, v) : k);
   if (r.ev != null && state.circulatingHype) {
     const price = r.ev / state.circulatingHype;
+    state.lastPrice = price;
+    state.lastEv = r.ev;
     priceEl.textContent = '$' + price.toFixed(2);
     supEl.textContent = fmt.compact(state.circulatingHype);
     if (state.currentPrice) {
       const diff = (price / state.currentPrice - 1) * 100;
+      state.lastDiffPct = diff;
       const sign = diff >= 0 ? '+' : '';
       const cls = diff >= 0 ? 'up' : 'down';
       cmp.innerHTML = T('val.priceVs', { cur: state.currentPrice.toFixed(2) })
         + `<span class="chg ${cls}">${sign}${diff.toFixed(1)}%</span>`;
     } else {
+      state.lastDiffPct = null;
       cmp.textContent = `${T('val.priceSubDefault')} ${fmt.compact(state.circulatingHype)}`;
     }
   } else {
+    state.lastPrice = null;
+    state.lastDiffPct = null;
     priceEl.textContent = '—';
     cmp.textContent = state.circulatingHype
       ? `${T('val.priceSubDefault')} ${fmt.compact(state.circulatingHype)}`
@@ -369,6 +499,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btnExpandGrowth').addEventListener('click', () => toggleGrowthMode());
   document.getElementById('btnFetch').addEventListener('click', fetchDefaults);
+  const shareBtn = document.getElementById('btnShare');
+  if (shareBtn) shareBtn.addEventListener('click', shareValuation);
+  const shareLinkBtn = document.getElementById('btnShareLink');
+  if (shareLinkBtn) shareLinkBtn.addEventListener('click', copyShareLink);
 
   loadFromUrl();
   // 若 URL 无参数,自动触发一键取数

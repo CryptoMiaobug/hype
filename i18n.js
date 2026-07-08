@@ -141,6 +141,22 @@ const I18N_DICT = {
     'val.srcPrice': '当前价',
     'val.srcRf': '无风险利率',
     'val.srcTreasury': '美国财政部',
+
+    // 分享
+    'val.shareBtn': '📤 分享我的估值',
+    'val.shareBtnTip': '把当前参数打包成链接,发给朋友一键还原',
+    'val.shareBtnCopied': '✅ 已拷贝',
+    'val.shareLinkBtn': '🔗 复制链接',
+    'val.shareLinkBtnTip': '只拷贝链接,不带文案',
+    'val.shareLinkCopied': '✅ 已复制',
+    'val.shareTitle': 'HYPE 估值 · HypeValue',
+    'val.shareText': '我在 HypeValue 算出 HYPE 目标价 ${price}（vs 当前 ${cur}，{sign}{diff}%）。打开链接一键还原我的参数 👇',
+    'val.shareTextNoCmp': '我在 HypeValue 算出 HYPE 目标价 ${price}。打开链接一键还原我的参数 👇',
+    'val.shareTextFallback': '我的 HYPE DCF 估值参数，一键还原 👇',
+    'val.shareOk': '✅ 已开启系统分享',
+    'val.shareRichCopied': '✅ 文案 + 链接已复制，直接粘到 TG / 微信 / Discord',
+    'val.shareLinkOk': '✅ 链接已复制，朋友打开后参数会自动加载',
+    'val.shareFailed': '⚠️ 自动复制失败，手动拷贝：{url}',
   },
   en: {
     // ---- Generic ----
@@ -278,6 +294,22 @@ const I18N_DICT = {
     'val.srcPrice': 'Current Price',
     'val.srcRf': 'Risk-Free Rate',
     'val.srcTreasury': 'US Treasury',
+
+    // Share
+    'val.shareBtn': '📤 Share My Valuation',
+    'val.shareBtnTip': 'Pack current params into a link so friends can restore your scenario',
+    'val.shareBtnCopied': '✅ Copied',
+    'val.shareLinkBtn': '🔗 Copy Link',
+    'val.shareLinkBtnTip': 'Copy the link only, no message',
+    'val.shareLinkCopied': '✅ Copied',
+    'val.shareTitle': 'HYPE Valuation · HypeValue',
+    'val.shareText': 'My HYPE fair price on HypeValue: ${price} (vs current ${cur}, {sign}{diff}%). Open the link to load my scenario 👇',
+    'val.shareTextNoCmp': 'My HYPE fair price on HypeValue: ${price}. Open the link to load my scenario 👇',
+    'val.shareTextFallback': 'My HYPE DCF valuation params, click to restore 👇',
+    'val.shareOk': '✅ Share sheet opened',
+    'val.shareRichCopied': '✅ Message + link copied. Paste into TG / Discord / WhatsApp',
+    'val.shareLinkOk': '✅ Link copied. Friends will load your params automatically',
+    'val.shareFailed': '⚠️ Auto-copy failed, copy manually: {url}',
   },
 };
 
@@ -321,6 +353,16 @@ const I18n = {
     if (lang !== 'zh' && lang !== 'en') return;
     this.lang = lang;
     localStorage.setItem('hs_lang', lang);
+    document.documentElement.lang = lang;
+    this.apply();
+    this.updateSwitcherUI();
+  },
+
+  // 临时切换语言 (不写 localStorage,用于 URL ?hl= 跟随发起人)
+  setTemp(lang) {
+    if (lang !== 'zh' && lang !== 'en') return;
+    if (this.lang === lang) return;
+    this.lang = lang;
     document.documentElement.lang = lang;
     this.apply();
     this.updateSwitcherUI();
