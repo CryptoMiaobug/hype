@@ -48,6 +48,26 @@ const Api = {
   // ---- CoinGecko HYPE 行情（价格 / 市值 / 24h+7d 涨跌）----
   coingeckoHype: () => safeFetch('https://api.coingecko.com/api/v3/coins/hyperliquid?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false'),
 
+  // ---- 美国财政部 日度国债收益率 CSV（自带 CORS: *）----
+  // 返回 10 年期最新收益率（数字 %）
+  async treasuryYield10y() {
+    const y = new Date().getUTCFullYear();
+    const url = `https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/${y}/all?type=daily_treasury_yield_curve&field_tdr_date_value_month=&_format=csv`;
+    const resp = await fetch(url, { method: 'GET' });
+    if (!resp.ok) throw new Error('treasury: ' + resp.status);
+    const csv = await resp.text();
+    const lines = csv.trim().split(/\r?\n/);
+    if (lines.length < 2) throw new Error('treasury: empty');
+    const header = lines[0].split(',').map(c => c.replace(/"/g, '').trim());
+    const idx10y = header.findIndex(c => c === '10 Yr');
+    if (idx10y < 0) throw new Error('treasury: no 10Y col');
+    // 第 2 行就是最新数据
+    const row = lines[1].split(',');
+    const v = parseFloat(row[idx10y]);
+    if (isNaN(v)) throw new Error('treasury: NaN');
+    return v;
+  },
+
   // ---- 行情 ----
   metaAndAssetCtxs: () => hlInfo('metaAndAssetCtxs'),  // [ {universe:[...]}, [ctx...] ]
   spotMetaAndAssetCtxs: () => hlInfo('spotMetaAndAssetCtxs'),

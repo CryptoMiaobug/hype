@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HYPE 价值测算 — HypeScan</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo"><span class="dot"></span> HypeScan</div>
+    <nav class="topnav">
+      <a href="index.html">仪表盘</a>
+      <a href="valuation.html" class="active">价值测算</a>
+    </nav>
+    <div class="spacer"></div>
+    <span class="badge" id="clock">—</span>
+  </div>
+
+  <div class="container">
+    <div class="section-title">两阶段现金流折现 (DCF) 估值模型</div>
+
+    <div class="val-load-bar">
+      <button id="btnFetch" class="val-btn primary">🔄 一键取数</button>
+      <span class="val-status" id="fetchStatus">点击按钮从链上/CoinGecko/美国财政部拉取实时数据</span>
+    </div>
+
+    <div class="val-layout">
+      <!-- 左侧:参数输入 -->
+      <div class="panel val-inputs">
+        <h3>模型参数</h3>
+
+        <div class="val-field">
+          <label>当期利润基数 (USD)
+            <span class="hint">= 过去 360 天手续费 × 97%</span>
+          </label>
+          <input type="number" id="in-baseProfit" step="1000000" value="0" />
+          <div class="val-slider-row">
+            <input type="range" id="rng-baseProfit" min="10000000" max="2000000000" step="1000000" value="500000000" />
+          </div>
+          <div class="val-src" id="src-baseProfit">— 待取数</div>
+        </div>
+
+        <div class="val-field">
+          <div class="val-flex-row">
+            <label style="flex:1">
+              1-5 年增长率
+              <span class="hint">默认 5 年统一</span>
+            </label>
+            <button type="button" class="val-btn-mini" id="btnExpandGrowth">分年设置 ▾</button>
+          </div>
+          <div id="growth-unified">
+            <input type="number" id="in-growthAll" step="0.5" min="-50" max="200" value="20" /> %
+            <div class="val-slider-row">
+              <input type="range" id="rng-growthAll" min="-30" max="100" step="0.5" value="20" />
+            </div>
+          </div>
+          <div id="growth-perYear" class="hidden">
+            <div class="val-year-grid">
+              <div><small>Y1</small><input type="number" id="in-g1" step="0.5" value="20" />%</div>
+              <div><small>Y2</small><input type="number" id="in-g2" step="0.5" value="20" />%</div>
+              <div><small>Y3</small><input type="number" id="in-g3" step="0.5" value="20" />%</div>
+              <div><small>Y4</small><input type="number" id="in-g4" step="0.5" value="20" />%</div>
+              <div><small>Y5</small><input type="number" id="in-g5" step="0.5" value="20" />%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="val-field">
+          <label>永续增长率 (g)
+            <span class="hint">第 5 年后永续增长率</span>
+          </label>
+          <input type="number" id="in-perpetual" step="0.1" min="0" max="10" value="5" /> %
+          <div class="val-slider-row">
+            <input type="range" id="rng-perpetual" min="0" max="8" step="0.1" value="5" />
+          </div>
+        </div>
+
+        <div class="val-field">
+          <label>无风险利率 (Rf)
+            <span class="hint">10 年期美债收益率</span>
+          </label>
+          <input type="number" id="in-rf" step="0.01" min="0" max="15" value="4.5" /> %
+          <div class="val-slider-row">
+            <input type="range" id="rng-rf" min="0" max="10" step="0.01" value="4.5" />
+          </div>
+          <div class="val-src" id="src-rf">— 待取数</div>
+        </div>
+
+        <div class="val-field">
+          <label>贴现率 WACC
+            <span class="hint">加权平均资金成本</span>
+          </label>
+          <input type="number" id="in-wacc" step="0.1" min="0.1" max="30" value="9" /> %
+          <div class="val-slider-row">
+            <input type="range" id="rng-wacc" min="3" max="20" step="0.1" value="9" />
+          </div>
+        </div>
+
+        <div class="val-warning hidden" id="valWarn">⚠️ WACC 必须大于永续增长率</div>
+      </div>
+
+      <!-- 右侧:结果 -->
+      <div class="val-results">
+        <!-- 高亮卡片 -->
+        <div class="val-highlight-grid">
+          <div class="val-hl-card">
+            <div class="lbl">阶段一现值合计</div>
+            <div class="val" id="r-pv1">—</div>
+            <div class="sub">前 5 年 PV</div>
+          </div>
+          <div class="val-hl-card">
+            <div class="lbl">永续终值现值</div>
+            <div class="val" id="r-pvTv">—</div>
+            <div class="sub">TV 贴回今天</div>
+          </div>
+          <div class="val-hl-card primary">
+            <div class="lbl">企业总价值 EV</div>
+            <div class="val" id="r-ev">—</div>
+            <div class="sub">阶段一 + 终值</div>
+          </div>
+          <div class="val-hl-card accent">
+            <div class="lbl">预测价格 / HYPE</div>
+            <div class="val" id="r-price">—</div>
+            <div class="sub" id="r-priceCmp">流通盘 <span id="r-supply">—</span></div>
+          </div>
+        </div>
+
+        <!-- 图表 -->
+        <div class="panel">
+          <h3>5 年预测利润 vs 折现现值</h3>
+          <div class="chart" id="chartDCF" style="height:320px;"></div>
+        </div>
+
+        <!-- 明细表 -->
+        <div class="panel">
+          <h3>测算明细表</h3>
+          <table class="val-table" id="tblDCF">
+            <thead>
+              <tr><th>年份</th><th>增长率</th><th>预测利润 (USD)</th><th>折现因子</th><th>折现现值 (USD)</th></tr>
+            </thead>
+            <tbody id="tblDCFBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="val-disclaimer">
+      <strong>免责声明</strong>:本页面仅为估值模型演示,不构成投资建议。DCF 模型对参数极度敏感,实际价值受市场情绪、监管、技术演进等多因素影响。
+      <br />
+      <span class="val-src-note">
+        数据来源:手续费 · <a href="https://api.hypurrscan.io/fees" target="_blank">hypurrscan</a> ·
+        供应量 · <a href="https://api.hyperliquid.xyz" target="_blank">Hyperliquid Info API</a> ·
+        当前价 · <a href="https://coingecko.com" target="_blank">CoinGecko</a> ·
+        无风险利率 · <a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates" target="_blank">美国财政部</a>
+      </span>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script src="valuation.js"></script>
+</body>
+</html>

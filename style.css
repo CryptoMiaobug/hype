@@ -191,6 +191,26 @@ a:hover { color: var(--accent-2); }
 .chg.up { color: #1fd286; }
 .chg.down { color: #ff5b6b; }
 
+/* ---- 顶部导航 ---- */
+.topnav {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+.topnav a {
+  padding: 6px 14px;
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background .15s, color .15s;
+}
+.topnav a:hover { background: rgba(80,210,193,.08); color: var(--text); }
+.topnav a.active { background: var(--accent); color: var(--bg); }
+@media (max-width: 640px) {
+  .topnav a { padding: 5px 10px; font-size: 12px; }
+}
+
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
 
@@ -221,3 +241,238 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   margin-top: 20px;
 }
 .tag { font-size: 11px; padding: 2px 7px; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); color: var(--text-dim); }
+
+/* ============ 价值测算页 ============ */
+.hidden { display: none !important; }
+
+/* 顶部一键取数 */
+.val-load-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.val-btn {
+  background: var(--card-hover);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .15s;
+  font-weight: 500;
+}
+.val-btn:hover { background: var(--border); }
+.val-btn:disabled { opacity: .6; cursor: not-allowed; }
+.val-btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.val-btn.primary:hover { background: var(--accent-2); }
+.val-btn-mini {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.val-btn-mini:hover { color: var(--text); border-color: var(--accent); }
+.val-status { color: var(--text-dim); font-size: 13px; flex: 1; }
+
+/* 左右布局 */
+.val-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 20px;
+}
+@media (max-width: 900px) {
+  .val-layout { grid-template-columns: 1fr; }
+}
+
+/* 输入面板 */
+.val-inputs {
+  padding: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  height: fit-content;
+  position: sticky;
+  top: 80px;
+}
+@media (max-width: 900px) { .val-inputs { position: static; } }
+.val-inputs h3 {
+  color: var(--accent);
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.val-field {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed var(--border);
+}
+.val-field:last-child { border-bottom: none; }
+.val-field label {
+  display: block;
+  color: var(--text);
+  font-size: 12px;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.val-field label .hint {
+  color: var(--text-dim);
+  font-weight: 400;
+  font-size: 11px;
+  margin-left: 6px;
+}
+.val-field input[type="number"] {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 130px;
+  font-family: inherit;
+}
+.val-field input[type="number"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.val-slider-row { margin-top: 8px; }
+.val-slider-row input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+.val-src {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+.val-flex-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.val-year-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-top: 4px;
+}
+.val-year-grid > div {
+  text-align: center;
+}
+.val-year-grid small {
+  display: block;
+  color: var(--text-dim);
+  font-size: 10px;
+  margin-bottom: 2px;
+}
+.val-year-grid input {
+  width: 100% !important;
+  padding: 3px 4px !important;
+  font-size: 12px !important;
+  text-align: center;
+}
+
+.val-warning {
+  background: rgba(255, 92, 108, .12);
+  border: 1px solid rgba(255, 92, 108, .35);
+  color: var(--red);
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+/* 结果区 */
+.val-results { display: flex; flex-direction: column; gap: 20px; }
+
+.val-highlight-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+@media (max-width: 1100px) { .val-highlight-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.val-hl-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  transition: transform .15s;
+}
+.val-hl-card:hover { transform: translateY(-2px); }
+.val-hl-card .lbl {
+  color: var(--text-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 8px;
+}
+.val-hl-card .val {
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 600;
+  font-family: 'SF Mono', Monaco, monospace;
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+.val-hl-card .sub { color: var(--text-dim); font-size: 11px; }
+
+.val-hl-card.primary {
+  background: linear-gradient(135deg, rgba(80,210,193,.14), rgba(80,210,193,.04));
+  border-color: rgba(80,210,193,.45);
+}
+.val-hl-card.primary .val { color: var(--accent-2); font-size: 24px; }
+.val-hl-card.accent {
+  background: linear-gradient(135deg, rgba(151,252,228,.15), rgba(80,210,193,.03));
+  border-color: rgba(151,252,228,.5);
+}
+.val-hl-card.accent .val { color: var(--accent-2); font-size: 26px; }
+
+/* 表格 */
+.val-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.val-table th, .val-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.val-table th {
+  color: var(--text-dim);
+  font-weight: 500;
+  font-size: 12px;
+  background: var(--bg-2);
+}
+.val-table td {
+  font-family: 'SF Mono', Monaco, monospace;
+}
+.val-table tbody tr:hover { background: var(--card-hover); }
+
+/* 免责 */
+.val-disclaimer {
+  margin-top: 30px;
+  padding: 14px 18px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.val-disclaimer strong { color: var(--text); }
+.val-src-note { color: var(--text-dim); }
+.val-src-note a { color: var(--accent); }
