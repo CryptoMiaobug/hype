@@ -12,6 +12,7 @@ tickClock();
 // ---- 状态 ----
 const state = {
   currentPrice: null,       // HYPE 当前价 (USD)
+  currentMcap: null,        // 当前市值 (USD)
   circulatingHype: null,    // maxSupply - 已消失合计
   fetching: false,
 };
@@ -156,6 +157,18 @@ function calc() {
     cmp.textContent = state.circulatingHype ? `流通盘 ${fmt.compact(state.circulatingHype)}` : '需要供应量数据';
   }
 
+  // PE = 当前市值 / 当期利润
+  const peEl = document.getElementById('r-pe');
+  const peSub = document.getElementById('r-peSub');
+  if (state.currentMcap && p.base > 0) {
+    const pe = state.currentMcap / p.base;
+    peEl.textContent = pe.toFixed(1) + '×';
+    peSub.innerHTML = `市值 ${fmt.usdCompact(state.currentMcap)} / 利润 ${fmt.usdCompact(p.base)}`;
+  } else {
+    peEl.textContent = '—';
+    peSub.textContent = state.currentMcap ? '需要利润基数' : '需要当前市值';
+  }
+
   // 明细表
   const body = document.getElementById('tblDCFBody');
   body.innerHTML = r.fcf.map((cf, i) => `
@@ -271,9 +284,10 @@ async function fetchDefaults() {
     errors.push('供应量');
   }
 
-  // 3. HYPE 当前价
-  if (cgR.status === 'fulfilled' && cgR.value?.market_data?.current_price?.usd) {
-    state.currentPrice = cgR.value.market_data.current_price.usd;
+  // 3. HYPE 当前价 + 市值
+  if (cgR.status === 'fulfilled' && cgR.value?.market_data) {
+    state.currentPrice = cgR.value.market_data.current_price?.usd ?? null;
+    state.currentMcap  = cgR.value.market_data.market_cap?.usd    ?? null;
   }
 
   // 4. 美债 10 年期

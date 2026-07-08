@@ -51,18 +51,18 @@
             <button type="button" class="val-btn-mini" id="btnExpandGrowth">分年设置 ▾</button>
           </div>
           <div id="growth-unified">
-            <input type="number" id="in-growthAll" step="0.5" min="-50" max="200" value="20" /> %
+            <input type="number" id="in-growthAll" step="0.5" min="-50" max="200" value="25" /> %
             <div class="val-slider-row">
-              <input type="range" id="rng-growthAll" min="-30" max="100" step="0.5" value="20" />
+              <input type="range" id="rng-growthAll" min="-30" max="100" step="0.5" value="25" />
             </div>
           </div>
           <div id="growth-perYear" class="hidden">
             <div class="val-year-grid">
-              <div><small>Y1</small><input type="number" id="in-g1" step="0.5" value="20" />%</div>
-              <div><small>Y2</small><input type="number" id="in-g2" step="0.5" value="20" />%</div>
-              <div><small>Y3</small><input type="number" id="in-g3" step="0.5" value="20" />%</div>
-              <div><small>Y4</small><input type="number" id="in-g4" step="0.5" value="20" />%</div>
-              <div><small>Y5</small><input type="number" id="in-g5" step="0.5" value="20" />%</div>
+              <div><small>Y1</small><input type="number" id="in-g1" step="0.5" value="25" />%</div>
+              <div><small>Y2</small><input type="number" id="in-g2" step="0.5" value="25" />%</div>
+              <div><small>Y3</small><input type="number" id="in-g3" step="0.5" value="25" />%</div>
+              <div><small>Y4</small><input type="number" id="in-g4" step="0.5" value="25" />%</div>
+              <div><small>Y5</small><input type="number" id="in-g5" step="0.5" value="25" />%</div>
             </div>
           </div>
         </div>
@@ -71,9 +71,9 @@
           <label>永续增长率 (g)
             <span class="hint">第 5 年后永续增长率</span>
           </label>
-          <input type="number" id="in-perpetual" step="0.1" min="0" max="10" value="5" /> %
+          <input type="number" id="in-perpetual" step="0.1" min="0" max="15" value="8" /> %
           <div class="val-slider-row">
-            <input type="range" id="rng-perpetual" min="0" max="8" step="0.1" value="5" />
+            <input type="range" id="rng-perpetual" min="0" max="12" step="0.1" value="8" />
           </div>
         </div>
 
@@ -92,9 +92,9 @@
           <label>贴现率 WACC
             <span class="hint">加权平均资金成本</span>
           </label>
-          <input type="number" id="in-wacc" step="0.1" min="0.1" max="30" value="9" /> %
+          <input type="number" id="in-wacc" step="0.1" min="0.1" max="30" value="10" /> %
           <div class="val-slider-row">
-            <input type="range" id="rng-wacc" min="3" max="20" step="0.1" value="9" />
+            <input type="range" id="rng-wacc" min="3" max="20" step="0.1" value="10" />
           </div>
         </div>
 
@@ -124,6 +124,11 @@
             <div class="lbl">预测价格 / HYPE</div>
             <div class="val" id="r-price">—</div>
             <div class="sub" id="r-priceCmp">流通盘 <span id="r-supply">—</span></div>
+          </div>
+          <div class="val-hl-card">
+            <div class="lbl">当前市盈率 PE</div>
+            <div class="val" id="r-pe">—</div>
+            <div class="sub" id="r-peSub">市值 / 当期利润</div>
           </div>
         </div>
 
