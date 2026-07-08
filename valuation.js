@@ -83,7 +83,9 @@ function pairInputSlider(inputId, sliderId) {
 
 // ---- 获取当前参数 ----
 function getParams() {
-  const base = parseFloat(document.getElementById('in-baseProfit').value) || 0;
+  const baseEl = document.getElementById('in-baseProfit');
+  const rawBase = baseEl ? baseEl.value : '';
+  const base = parseFloat(rawBase) || 0;
   const perp = (parseFloat(document.getElementById('in-perpetual').value) || 0) / 100;
   const rf = (parseFloat(document.getElementById('in-rf').value) || 0) / 100;
   const wacc = (parseFloat(document.getElementById('in-wacc').value) || 0) / 100;
@@ -101,6 +103,8 @@ function getParams() {
 // ---- 核心 DCF 计算 ----
 function computeDCF(p) {
   const { base, growths, perp, wacc } = p;
+  // 帮用户排查：打印每次计算的入参
+  console.log('[HypeValue.DCF]', { base, growths, perp, wacc, currentMcap: state.currentMcap, currentPrice: state.currentPrice });
   // 前 5 年 FCF
   const fcf = [];
   let prev = base;
