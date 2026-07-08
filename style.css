@@ -117,6 +117,25 @@ a:hover { color: var(--accent-2); }
   margin-top: 4px;
 }
 
+/* 带明细的合计卡片 */
+.stat-card.breakdown .value { color: var(--accent-2); }
+.stat-card .lines {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.stat-card .lines .line {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.stat-card .lines .line b { color: var(--text); font-weight: 600; }
+
 /* ---- 面板卡 ---- */
 .panel {
   background: var(--card);

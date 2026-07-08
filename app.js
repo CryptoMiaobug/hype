@@ -61,23 +61,34 @@ async function loadOverview() {
   Promise.all([Api.holders('HYPE'), Api.hypeDetails()]).then(([d, det]) => {
     const total = det ? Number(det.totalSupply) : null;
     const maxS = det ? Number(det.maxSupply) : null;
+    let afBal = 0;
+    let gasBurn = 0;
 
     // AF 已销毁：仅 0xfefe 现货 AF 地址（2025/12 验证节点投票确认永久销毁）
     // 0x2222 是 L1<->EVM 桥接系统地址，不是 AF，不能算入
     if (d && d.holders) {
       const AF_ADDR = '0xfefefefefefefefefefefefefefefefefefefefe';
       const h = d.holders;
-      const bal = Number(h[AF_ADDR] ?? h[AF_ADDR.toLowerCase()] ?? 0);
-      if (bal > 0) {
-        document.getElementById('s-afbuyback').textContent = fmt.compact(bal) + ' HYPE';
-        if (total) document.getElementById('s-afpct').textContent = (bal / total * 100).toFixed(2) + '%';
+      afBal = Number(h[AF_ADDR] ?? h[AF_ADDR.toLowerCase()] ?? 0);
+      if (afBal > 0) {
+        document.getElementById('s-afbuyback').textContent = fmt.compact(afBal) + ' HYPE';
+        if (total) document.getElementById('s-afpct').textContent = (afBal / total * 100).toFixed(2) + '%';
       }
     }
 
-    // 累计销毁 = maxSupply - totalSupply
+    // 累计销毁 = maxSupply - totalSupply（Gas 直接从 supply 扣）
     if (maxS && total) {
-      const burnedTotal = maxS - total;
-      document.getElementById('s-burnTotal').textContent = fmt.compact(burnedTotal) + ' HYPE';
+      gasBurn = maxS - total;
+      document.getElementById('s-burnTotal').textContent = fmt.compact(gasBurn) + ' HYPE';
+    }
+
+    // HYPE 已消失合计 = AF 销毁 + Gas 直接扣
+    if (afBal > 0 && gasBurn > 0 && maxS) {
+      const gone = afBal + gasBurn;
+      document.getElementById('s-goneTotal').textContent = fmt.compact(gone) + ' HYPE';
+      document.getElementById('s-gonePct').textContent = (gone / maxS * 100).toFixed(2) + '%';
+      document.getElementById('s-goneAF').textContent = fmt.compact(afBal) + ' HYPE';
+      document.getElementById('s-goneGas').textContent = fmt.compact(gasBurn) + ' HYPE';
     }
   });
 }
