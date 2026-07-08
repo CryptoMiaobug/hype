@@ -285,9 +285,11 @@ const I18n = {
   lang: 'zh',
 
   init() {
+    // 优先用用户手动选择（localStorage）；
+    // 首次访问跟随系统语言：中文（zh / zh-CN / zh-TW / zh-HK...）→ zh，其他一律→ en
     const saved = localStorage.getItem('hs_lang');
-    const navLang = (navigator.language || 'zh').toLowerCase();
-    this.lang = saved || (navLang.startsWith('en') ? 'en' : 'zh');
+    const navLang = (navigator.language || '').toLowerCase();
+    this.lang = saved || (navLang.startsWith('zh') ? 'zh' : 'en');
     document.documentElement.lang = this.lang === 'en' ? 'en' : 'zh';
     this.apply();
     this.mountSwitcher();
