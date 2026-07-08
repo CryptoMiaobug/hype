@@ -66,10 +66,15 @@ async function loadOverview() {
 
     // AF 已销毁：仅 0xfefe 现货 AF 地址（2025/12 验证节点投票确认永久销毁）
     // 0x2222 是 L1<->EVM 桥接系统地址，不是 AF，不能算入
+    let nullDead = 0;
     if (d && d.holders) {
       const AF_ADDR = '0xfefefefefefefefefefefefefefefefefefefefe';
+      const NULL_ADDR = '0x0000000000000000000000000000000000000000';
+      const DEAD_ADDR = '0x000000000000000000000000000000000000dead';
       const h = d.holders;
       afBal = Number(h[AF_ADDR] ?? h[AF_ADDR.toLowerCase()] ?? 0);
+      nullDead = Number(h[NULL_ADDR] ?? h[NULL_ADDR.toLowerCase()] ?? 0)
+               + Number(h[DEAD_ADDR] ?? h[DEAD_ADDR.toLowerCase()] ?? 0);
     }
 
     // 累计销毁 = maxSupply - totalSupply（Gas 直接从 supply 扣）
@@ -78,13 +83,19 @@ async function loadOverview() {
       document.getElementById('s-burnTotal').textContent = fmt.compact(gasBurn) + ' HYPE';
     }
 
-    // HYPE 已消失合计 = AF 销毁 + Gas 直接扣
+    // HyperCore 协议销毁：HIP-1 现货手续费销毁 + HIP-3 slash + 拍卖 gas
+    // • 无公开 API 直接取，hl.eco 前端占位值 746K，待未来有实时数据时更新
+    const HYPERCORE_BURN_STATIC = 746_000;
+
+    // HYPE 已消失合计 = AF + HyperCore + Gas + Null/Dead
     if (afBal > 0 && gasBurn > 0 && maxS) {
-      const gone = afBal + gasBurn;
+      const gone = afBal + HYPERCORE_BURN_STATIC + gasBurn + nullDead;
       document.getElementById('s-goneTotal').textContent = fmt.compact(gone) + ' HYPE';
       document.getElementById('s-gonePct').textContent = (gone / maxS * 100).toFixed(2) + '%';
       document.getElementById('s-goneAF').textContent = fmt.compact(afBal) + ' HYPE';
+      document.getElementById('s-goneHc').textContent = fmt.compact(HYPERCORE_BURN_STATIC) + ' HYPE';
       document.getElementById('s-goneGas').textContent = fmt.compact(gasBurn) + ' HYPE';
+      document.getElementById('s-goneNull').textContent = fmt.compact(nullDead) + ' HYPE';
     }
   });
 }
