@@ -55,6 +55,22 @@ async function loadOverview() {
     const c = e.stats.contracts_deployed ?? e.stats.tokens_indexed;
     if (c != null) document.getElementById('s-contracts').textContent = fmt.compact(c);
   });
+
+  // AF 累计回购（援助基金持有的 HYPE：0x2222 主 AF + 0xfefe 现货 AF）
+  Api.holders('HYPE').then((d) => {
+    if (!d || !d.holders) return;
+    const AF_ADDRS = [
+      '0x2222222222222222222222222222222222222222',
+      '0xfefefefefefefefefefefefefefefefefefefefe',
+    ];
+    const h = d.holders;
+    let sum = 0;
+    for (const a of AF_ADDRS) {
+      const v = h[a] ?? h[a.toLowerCase()];
+      if (v != null) sum += Number(v);
+    }
+    if (sum > 0) document.getElementById('s-afbuyback').textContent = fmt.compact(sum) + ' HYPE';
+  });
 }
 
 // ---- fees 图表 ----
