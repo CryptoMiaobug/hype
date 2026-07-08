@@ -181,6 +181,16 @@ a:hover { color: var(--accent-2); }
   font-weight: 600;
 }
 
+/* HYPE 价格液变色卡片 */
+.stat-card.price {
+  background: linear-gradient(135deg, rgba(80,210,193,.08), rgba(80,210,193,.02));
+  border-color: rgba(80,210,193,.35);
+}
+.stat-card.price .value { color: var(--accent); }
+.chg { font-weight: 600; }
+.chg.up { color: #1fd286; }
+.chg.down { color: #ff5b6b; }
+
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
 

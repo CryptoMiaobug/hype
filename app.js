@@ -11,6 +11,33 @@ tickClock();
 
 // ---- 大盘统计 ----
 async function loadOverview() {
+  // HYPE 行情：CoinGecko（价格 / 市值 / FDV / 24h + 7d 涨跌 / 24h 成交）
+  Api.coingeckoHype().then((d) => {
+    if (!d || !d.market_data) return;
+    const md = d.market_data;
+    const price = md.current_price?.usd;
+    const chg24 = md.price_change_percentage_24h;
+    const chg7d = md.price_change_percentage_7d;
+    const mcap = md.market_cap?.usd;
+    const fdv = md.fully_diluted_valuation?.usd;
+    const vol = md.total_volume?.usd;
+
+    const setChg = (id, v) => {
+      const el = document.getElementById(id);
+      if (!el || v == null) return;
+      const sign = v >= 0 ? '+' : '';
+      el.textContent = `${sign}${v.toFixed(2)}%`;
+      el.classList.remove('up', 'down');
+      el.classList.add(v >= 0 ? 'up' : 'down');
+    };
+    if (price != null) document.getElementById('s-hypePrice').textContent = `$${price.toFixed(2)}`;
+    setChg('s-hypeChg24', chg24);
+    setChg('s-hypeChg7d', chg7d);
+    if (mcap) document.getElementById('s-hypeMcap').textContent = fmt.usdCompact(mcap);
+    if (fdv)  document.getElementById('s-hypeFdv').textContent  = fmt.usdCompact(fdv);
+    if (vol)  document.getElementById('s-hypeVol').textContent  = fmt.usdCompact(vol);
+  }).catch(() => {});
+
   // globalStats
   Api.globalStats().then((g) => {
     if (!g) return;

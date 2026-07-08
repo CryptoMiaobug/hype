@@ -45,6 +45,9 @@ const Api = {
   // HYPE 代币详情（供应量）：totalSupply / maxSupply / circulatingSupply
   hypeDetails: () => hlInfo('tokenDetails', { tokenId: '0x0d01dc56dcaaca66ad901c959b4011ec' }),
 
+  // ---- CoinGecko HYPE 行情（价格 / 市值 / 24h+7d 涨跌）----
+  coingeckoHype: () => safeFetch('https://api.coingecko.com/api/v3/coins/hyperliquid?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false'),
+
   // ---- 行情 ----
   metaAndAssetCtxs: () => hlInfo('metaAndAssetCtxs'),  // [ {universe:[...]}, [ctx...] ]
   spotMetaAndAssetCtxs: () => hlInfo('spotMetaAndAssetCtxs'),
