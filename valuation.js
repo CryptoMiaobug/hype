@@ -12,7 +12,8 @@ tickClock();
 // ---- 状态 ----
 const state = {
   currentPrice: null,       // HYPE 当前价 (USD)
-  currentMcap: null,        // 当前市值 (USD)
+  currentMcap: null,        // 流通市值 (CoinGecko)
+  currentFdv: null,         // 全稀释市值 FDV
   circulatingHype: null,    // maxSupply - 已消失合计
   fetching: false,
 };
@@ -157,16 +158,30 @@ function calc() {
     cmp.textContent = state.circulatingHype ? `流通盘 ${fmt.compact(state.circulatingHype)}` : '需要供应量数据';
   }
 
-  // PE = 当前市值 / 当期利润
+  // PE：双口径
+  //   PE(流通) = CoinGecko 流通市值 / 当期利润
+  //   PE(全稀释) = FDV / 当期利润（对应 CMC 风格的全口径）
   const peEl = document.getElementById('r-pe');
   const peSub = document.getElementById('r-peSub');
-  if (state.currentMcap && p.base > 0) {
-    const pe = state.currentMcap / p.base;
-    peEl.textContent = pe.toFixed(1) + '×';
-    peSub.innerHTML = `市值 ${fmt.usdCompact(state.currentMcap)} / 利润 ${fmt.usdCompact(p.base)}`;
+  if (p.base > 0) {
+    const peCirc = state.currentMcap ? (state.currentMcap / p.base) : null;
+    const peFdv  = state.currentFdv  ? (state.currentFdv  / p.base) : null;
+    if (peCirc != null && peFdv != null) {
+      peEl.innerHTML = `${peCirc.toFixed(1)}× <span style="color:var(--text-dim);font-size:14px;">/</span> ${peFdv.toFixed(1)}×`;
+      peSub.innerHTML =
+        `<span title="CoinGecko 流通市值 ${fmt.usdCompact(state.currentMcap)}">流通</span> / ` +
+        `<span title="FDV 全稀释市值 ${fmt.usdCompact(state.currentFdv)}">全稀释</span> · ` +
+        `利润 ${fmt.usdCompact(p.base)}`;
+    } else if (peCirc != null) {
+      peEl.textContent = peCirc.toFixed(1) + '×';
+      peSub.textContent = `流通 · ${fmt.usdCompact(state.currentMcap)} / ${fmt.usdCompact(p.base)}`;
+    } else {
+      peEl.textContent = '—';
+      peSub.textContent = '需要市值数据';
+    }
   } else {
     peEl.textContent = '—';
-    peSub.textContent = state.currentMcap ? '需要利润基数' : '需要当前市值';
+    peSub.textContent = '需要利润基数';
   }
 
   // 明细表
@@ -284,10 +299,11 @@ async function fetchDefaults() {
     errors.push('供应量');
   }
 
-  // 3. HYPE 当前价 + 市值
+  // 3. HYPE 当前价 + 市值 + FDV
   if (cgR.status === 'fulfilled' && cgR.value?.market_data) {
     state.currentPrice = cgR.value.market_data.current_price?.usd ?? null;
     state.currentMcap  = cgR.value.market_data.market_cap?.usd    ?? null;
+    state.currentFdv   = cgR.value.market_data.fully_diluted_valuation?.usd ?? null;
   }
 
   // 4. 美债 10 年期
