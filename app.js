@@ -62,21 +62,15 @@ async function loadOverview() {
     const total = det ? Number(det.totalSupply) : null;
     const maxS = det ? Number(det.maxSupply) : null;
 
-    // AF 持仓合计
+    // AF 已销毁：仅 0xfefe 现货 AF 地址（2025/12 验证节点投票确认永久销毁）
+    // 0x2222 是 L1<->EVM 桥接系统地址，不是 AF，不能算入
     if (d && d.holders) {
-      const AF_ADDRS = [
-        '0x2222222222222222222222222222222222222222',
-        '0xfefefefefefefefefefefefefefefefefefefefe',
-      ];
+      const AF_ADDR = '0xfefefefefefefefefefefefefefefefefefefefe';
       const h = d.holders;
-      let sum = 0;
-      for (const a of AF_ADDRS) {
-        const v = h[a] ?? h[a.toLowerCase()];
-        if (v != null) sum += Number(v);
-      }
-      if (sum > 0) {
-        document.getElementById('s-afbuyback').textContent = fmt.compact(sum) + ' HYPE';
-        if (total) document.getElementById('s-afpct').textContent = (sum / total * 100).toFixed(2) + '%';
+      const bal = Number(h[AF_ADDR] ?? h[AF_ADDR.toLowerCase()] ?? 0);
+      if (bal > 0) {
+        document.getElementById('s-afbuyback').textContent = fmt.compact(bal) + ' HYPE';
+        if (total) document.getElementById('s-afpct').textContent = (bal / total * 100).toFixed(2) + '%';
       }
     }
 
