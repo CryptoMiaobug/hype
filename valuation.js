@@ -169,7 +169,8 @@ async function shareValuation() {
 
 async function copyShareLink() {
   const url = buildShareUrl();
-  const ok = await copyToClipboard(url);
+  const text = buildShareText();
+  const ok = await copyToClipboard(text + '\n' + url);
   if (ok) {
     flashButton('btnShareLink', 'val.shareLinkCopied', 'val.shareLinkBtn');
     setShareStatus('val.shareLinkOk');
