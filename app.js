@@ -309,7 +309,7 @@ async function fillPerp7d(names) {
 async function loadSpot() {
   const d = await Api.spotMetaAndAssetCtxs();
   const tbody = document.querySelector('#spotTable tbody');
-  if (!d || !d[0] || !d[1]) { tbody.innerHTML = `<tr><td colspan="4" class="empty">${window.I18n?I18n.t('common.noData'):'数据暂不可用'}</td></tr>`; return; }
+  if (!d || !d[0] || !d[1]) { tbody.innerHTML = `<tr><td colspan="5" class="empty">${window.I18n?I18n.t('common.noData'):'数据暂不可用'}</td></tr>`; return; }
 
   const tokens = d[0].tokens;       // [{name, index,...}]
   const universe = d[0].universe;   // [{name:"@1", tokens:[baseIdx, quoteIdx], index}]
@@ -325,7 +325,7 @@ async function loadSpot() {
 
   const rows = ctxs
     .filter((c) => c && c.midPx)
-    .map((c) => ({ name: baseNameByPair[c.coin] || c.coin, ...c }))
+    .map((c) => ({ name: baseNameByPair[c.coin] || c.coin, pair: c.coin, ...c }))
     .sort((a, b) => Number(b.dayNtlVlm) - Number(a.dayNtlVlm));
 
   document.getElementById('spotCount').textContent = rows.length + ' 币种';
@@ -340,9 +340,41 @@ async function loadSpot() {
       <td class="coin-name">${r.name}</td>
       <td class="num">${px.toLocaleString('en-US', { maximumFractionDigits: 6 })}</td>
       <td class="num ${cls}">${sign}${(chg * 100).toFixed(2)}%</td>
+      <td class="num chg7d-spot" data-pair="${r.pair}">—</td>
       <td class="num">${fmt.usdCompact(Number(r.dayNtlVlm))}</td>
     </tr>`;
   }).join('');
+
+  // 7D 涨跌：用日 K 线算（现货用 pair 名如 @1 / PURR/USDC 拉 candle）
+  fillSpot7d(rows.map((r) => r.pair));
+}
+
+// 现货 7D 涨跌：按 pair 拉日 K 线，分批并发
+async function fillSpot7d(pairs) {
+  const now = Date.now();
+  const start = now - 8 * 24 * 60 * 60 * 1000;
+  const BATCH = 8;
+  for (let i = 0; i < pairs.length; i += BATCH) {
+    const batch = pairs.slice(i, i + BATCH);
+    await Promise.all(batch.map(async (pair) => {
+      try {
+        const candles = await Api.candleSnapshot(pair, '1d', start, now);
+        if (!Array.isArray(candles) || candles.length < 2) return;
+        const last = Number(candles[candles.length - 1].c);
+        const ref = candles[Math.max(0, candles.length - 8)];
+        const base = Number(ref.c || ref.o);
+        if (!base || !last) return;
+        const chg = (last - base) / base;
+        const cell = document.querySelector(`.chg7d-spot[data-pair="${pair}"]`);
+        if (cell) {
+          const sign = chg >= 0 ? '+' : '';
+          cell.textContent = `${sign}${(chg * 100).toFixed(2)}%`;
+          cell.classList.remove('up', 'down');
+          cell.classList.add(chg >= 0 ? 'up' : 'down');
+        }
+      } catch (_) { /* 单币失败不阻塞 */ }
+    }));
+  }
 }
 
 // ---- 富豪榜（可能为空）----
