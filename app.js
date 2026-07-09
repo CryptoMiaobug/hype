@@ -124,10 +124,10 @@ async function loadOverview() {
       const gone = afBal + HYPERCORE_BURN_STATIC + gasBurn + nullDead;
       document.getElementById('s-goneTotal').textContent = fmt.compact(gone) + ' HYPE';
       document.getElementById('s-gonePct').textContent = (gone / maxS * 100).toFixed(2) + '%';
-      document.getElementById('s-goneAF').textContent = fmt.compact(afBal) + ' HYPE';
-      document.getElementById('s-goneHc').textContent = fmt.compact(HYPERCORE_BURN_STATIC) + ' HYPE';
-      document.getElementById('s-goneGas').textContent = fmt.compact(gasBurn) + ' HYPE';
-      document.getElementById('s-goneNull').textContent = fmt.compact(nullDead) + ' HYPE';
+      document.getElementById('s-goneAF').textContent = fmt.compact(afBal);
+      document.getElementById('s-goneHc').textContent = fmt.compact(HYPERCORE_BURN_STATIC);
+      document.getElementById('s-goneGas').textContent = fmt.compact(gasBurn);
+      document.getElementById('s-goneNull').textContent = fmt.compact(nullDead);
 
       // 交给价值测算入口卡使用
       window.__hypeSupplyData = { maxS, gone, circulating: maxS - gone };
