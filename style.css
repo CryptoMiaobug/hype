@@ -542,11 +542,19 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .val-src-note a { color: var(--accent); }
 
 /* ============ 顶部通知条 ============ */
-.site-notice {
+.notice-bar {
   background: linear-gradient(90deg, rgba(80,210,193,.14), rgba(151,252,228,.08));
   border-bottom: 1px solid rgba(80,210,193,.3);
-  color: var(--accent-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
   padding: 8px 20px;
+  flex-wrap: wrap;
+}
+.notice-bar .social-links { margin-top: 0; }
+.site-notice {
+  color: var(--accent-2);
   text-align: center;
   font-size: 12.5px;
   font-weight: 500;
