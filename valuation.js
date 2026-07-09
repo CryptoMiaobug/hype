@@ -381,7 +381,9 @@ function renderChart(r) {
 }
 
 // ---- 一键取数 ----
-async function fetchDefaults() {
+// preserveInputs=true: 仅拉链上供应量/价格填充 state（供预测价格/PE 计算），
+//                      不覆盖用户的输入参数（分享链接场景）
+async function fetchDefaults(preserveInputs = false) {
   if (state.fetching) return;
   state.fetching = true;
   const btn = document.getElementById('btnFetch');
@@ -408,7 +410,7 @@ async function fetchDefaults() {
   const [feesR, detR, holdersR, cgR, rfR, midsR] = results;
   const errors = [];
 
-  // 1. 利润基数 = 过去 360 天手续费 × 97%
+  // 1. 利润基数 = 过去 360 天手续费 × 97%（分享链接时不覆盖用户参数）
   if (feesR.status === 'fulfilled' && Array.isArray(feesR.value) && feesR.value.length > 0) {
     const rows = feesR.value;
     const latest = rows[rows.length - 1];
@@ -419,8 +421,10 @@ async function fetchDefaults() {
     // hypurrscan total_fees 单位是 wei-ish (1e6 USDC)
     const usdc360 = diff / 1e6;
     const base = usdc360 * 0.97;
-    document.getElementById('in-baseProfit').value = Math.round(base);
-    document.getElementById('rng-baseProfit').value = Math.min(2000000000, Math.round(base));
+    if (!preserveInputs) {
+      document.getElementById('in-baseProfit').value = Math.round(base);
+      document.getElementById('rng-baseProfit').value = Math.min(2000000000, Math.round(base));
+    }
     document.getElementById('src-baseProfit').textContent = T('val.baseProfitOk', { fee: fmt.usdCompact(usdc360), base: fmt.usdCompact(base) });
     document.getElementById('src-baseProfit').removeAttribute('data-i18n');
   } else {
@@ -476,10 +480,12 @@ async function fetchDefaults() {
   }
   if (state.currentPrice == null) errors.push(T('val.srcPrice') || 'HYPE 价格');
 
-  // 4. 美债 10 年期
+  // 4. 美债 10 年期（分享链接时不覆盖用户参数）
   if (rfR.status === 'fulfilled' && rfR.value != null) {
-    document.getElementById('in-rf').value = rfR.value.toFixed(2);
-    document.getElementById('rng-rf').value = rfR.value.toFixed(2);
+    if (!preserveInputs) {
+      document.getElementById('in-rf').value = rfR.value.toFixed(2);
+      document.getElementById('rng-rf').value = rfR.value.toFixed(2);
+    }
     const rfEl = document.getElementById('src-rf');
     rfEl.textContent = T('val.rfOk', { v: rfR.value.toFixed(2) });
     rfEl.removeAttribute('data-i18n');
@@ -522,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('btnExpandGrowth').addEventListener('click', () => toggleGrowthMode());
-  document.getElementById('btnFetch').addEventListener('click', fetchDefaults);
+  document.getElementById('btnFetch').addEventListener('click', () => fetchDefaults(false));
   const shareBtn = document.getElementById('btnShare');
   if (shareBtn) shareBtn.addEventListener('click', shareValuation);
   const shareLinkBtn = document.getElementById('btnShareLink');
@@ -534,11 +540,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const hasSharedParams = ['p', 'g', 'g1', 'gt', 'wacc'].some(k => initialQ.has(k));
 
   loadFromUrl();
-  // 只有 URL 不带任何实际参数时,才自动取数
+  // URL 不带实际参数: 完整取数(覆盖输入); 带分享参数: 保留输入但仍拉供应量/价格供预测价/PE 计算
   if (!hasSharedParams) {
     fetchDefaults();
   } else {
     calc();
+    fetchDefaults(true);
   }
 });
 
