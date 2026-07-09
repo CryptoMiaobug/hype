@@ -275,33 +275,37 @@ function calc() {
 
   // 预测价格
   const cmp = document.getElementById('r-priceCmp');
-  const supEl = document.getElementById('r-supply');
   const priceEl = document.getElementById('r-price');
   const T = (k, v) => (window.I18n ? I18n.t(k, v) : k);
+  // 注意: 不再依赖 #r-supply 嵌套 span —— 一旦对 cmp 写 textContent/innerHTML,
+  // 该子节点就被销毁, 下次 getElementById 返回 null 会导致 calc 崩溃(PE 永远渲染不到)。
   if (r.ev != null && state.circulatingHype) {
     const price = r.ev / state.circulatingHype;
     state.lastPrice = price;
     state.lastEv = r.ev;
-    priceEl.textContent = '$' + price.toFixed(2);
-    supEl.textContent = fmt.compact(state.circulatingHype);
-    if (state.currentPrice) {
-      const diff = (price / state.currentPrice - 1) * 100;
-      state.lastDiffPct = diff;
-      const sign = diff >= 0 ? '+' : '';
-      const cls = diff >= 0 ? 'up' : 'down';
-      cmp.innerHTML = T('val.priceVs', { cur: state.currentPrice.toFixed(2) })
-        + `<span class="chg ${cls}">${sign}${diff.toFixed(1)}%</span>`;
-    } else {
-      state.lastDiffPct = null;
-      cmp.textContent = `${T('val.priceSubDefault')} ${fmt.compact(state.circulatingHype)}`;
+    if (priceEl) priceEl.textContent = '$' + price.toFixed(2);
+    if (cmp) {
+      if (state.currentPrice) {
+        const diff = (price / state.currentPrice - 1) * 100;
+        state.lastDiffPct = diff;
+        const sign = diff >= 0 ? '+' : '';
+        const cls = diff >= 0 ? 'up' : 'down';
+        cmp.innerHTML = T('val.priceVs', { cur: state.currentPrice.toFixed(2) })
+          + `<span class="chg ${cls}">${sign}${diff.toFixed(1)}%</span>`;
+      } else {
+        state.lastDiffPct = null;
+        cmp.textContent = `${T('val.priceSubDefault')} ${fmt.compact(state.circulatingHype)}`;
+      }
     }
   } else {
     state.lastPrice = null;
     state.lastDiffPct = null;
-    priceEl.textContent = '—';
-    cmp.textContent = state.circulatingHype
-      ? `${T('val.priceSubDefault')} ${fmt.compact(state.circulatingHype)}`
-      : T('val.priceNeedSupply');
+    if (priceEl) priceEl.textContent = '—';
+    if (cmp) {
+      cmp.textContent = state.circulatingHype
+        ? `${T('val.priceSubDefault')} ${fmt.compact(state.circulatingHype)}`
+        : T('val.priceNeedSupply');
+    }
   }
 
   // PE：双口径
