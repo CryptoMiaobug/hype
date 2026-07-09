@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HYPE 价值测算 — HypeValue</title>
-  <link rel="stylesheet" href="style.css?v=20260709h" />
+  <link rel="stylesheet" href="style.css?v=20260709i" />
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 </head>
 <body>
@@ -109,6 +109,21 @@
       <div class="val-results">
         <!-- 高亮卡片 -->
         <div class="val-highlight-grid">
+          <div class="val-hl-card accent">
+            <div class="lbl" data-i18n="val.price">预测价格 / HYPE</div>
+            <div class="val" id="r-price">—</div>
+            <div class="sub" id="r-priceCmp"><span data-i18n="val.priceSubDefault">流通盘</span></div>
+          </div>
+          <div class="val-hl-card primary">
+            <div class="lbl" data-i18n="val.ev">企业总价值 EV</div>
+            <div class="val" id="r-ev">—</div>
+            <div class="sub" data-i18n="val.evSub">阶段一 + 终值</div>
+          </div>
+          <div class="val-hl-card">
+            <div class="lbl" data-i18n="val.pe">当前市盈率 PE</div>
+            <div class="val" id="r-pe">—</div>
+            <div class="sub" id="r-peSub" data-i18n="val.peSubDefault">流通 / 全稀释</div>
+          </div>
           <div class="val-hl-card">
             <div class="lbl" data-i18n="val.pv1">阶段一现值合计</div>
             <div class="val" id="r-pv1">—</div>
@@ -118,21 +133,6 @@
             <div class="lbl" data-i18n="val.pvTv">永续终值现值</div>
             <div class="val" id="r-pvTv">—</div>
             <div class="sub" data-i18n="val.pvTvSub">TV 贴回今天</div>
-          </div>
-          <div class="val-hl-card primary">
-            <div class="lbl" data-i18n="val.ev">企业总价值 EV</div>
-            <div class="val" id="r-ev">—</div>
-            <div class="sub" data-i18n="val.evSub">阶段一 + 终值</div>
-          </div>
-          <div class="val-hl-card accent">
-            <div class="lbl" data-i18n="val.price">预测价格 / HYPE</div>
-            <div class="val" id="r-price">—</div>
-            <div class="sub" id="r-priceCmp"><span data-i18n="val.priceSubDefault">流通盘</span></div>
-          </div>
-          <div class="val-hl-card">
-            <div class="lbl" data-i18n="val.pe">当前市盈率 PE</div>
-            <div class="val" id="r-pe">—</div>
-            <div class="sub" id="r-peSub" data-i18n="val.peSubDefault">流通 / 全稀释</div>
           </div>
         </div>
 
@@ -174,8 +174,8 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=20260709f"></script>
-  <script src="api.js?v=20260709f"></script>
-  <script src="valuation.js?v=20260709f"></script>
+  <script src="i18n.js?v=20260709i"></script>
+  <script src="api.js?v=20260709i"></script>
+  <script src="valuation.js?v=20260709i"></script>
 </body>
 </html>
