@@ -35,11 +35,26 @@ function loadFromUrl() {
     if (v != null && !isNaN(parseFloat(v))) document.getElementById(id).value = v;
   };
   set('in-baseProfit', 'p');
+  set('in-supply', 's');
   set('in-growthAll', 'g');
   set('in-perpetual', 'gt');
   set('in-rf', 'rf');
   set('in-wacc', 'wacc');
   set('in-g1', 'g1'); set('in-g2', 'g2'); set('in-g3', 'g3'); set('in-g4', 'g4'); set('in-g5', 'g5');
+  // 分享链接携带的当前价/市值(供 PE 与对比)，直接填 state，不需取数
+  const curV = parseFloat(q.get('cur'));
+  if (!isNaN(curV) && curV > 0) state.currentPrice = curV;
+  const mcV = parseFloat(q.get('mc'));
+  if (!isNaN(mcV) && mcV > 0) state.currentMcap = mcV;
+  const sV = parseFloat(q.get('s'));
+  if (!isNaN(sV) && sV > 0) {
+    state.circulatingHype = sV;
+    const supSrc = document.getElementById('src-supply');
+    if (supSrc) {
+      supSrc.textContent = (window.I18n ? I18n.t('val.supplyShared', { v: fmt.compact(sV) }) : '');
+      supSrc.removeAttribute('data-i18n');
+    }
+  }
   if (q.get('mode') === 'peryear') toggleGrowthMode(true);
   // 跟随发起人语言 (不写 localStorage,避免污染朋友自己选的)
   const hl = q.get('hl');
@@ -51,6 +66,8 @@ function loadFromUrl() {
 function saveToUrl() {
   const q = new URLSearchParams();
   q.set('p', document.getElementById('in-baseProfit').value);
+  const supplyVal = document.getElementById('in-supply').value;
+  if (supplyVal && parseFloat(supplyVal) > 0) q.set('s', supplyVal);
   const peryear = !document.getElementById('growth-perYear').classList.contains('hidden');
   if (peryear) {
     q.set('mode', 'peryear');
@@ -76,6 +93,10 @@ function buildShareUrl() {
   // 分享时把当前语言带上,朋友打开时语言一致
   const lang = (window.I18n && I18n.lang) || 'zh';
   q.set('hl', lang);
+  // 携带供应量 + 当前价/市值,朋友打开无需取数即可算价格/PE
+  if (state.circulatingHype) q.set('s', Math.round(state.circulatingHype));
+  if (state.currentPrice) q.set('cur', state.currentPrice);
+  if (state.currentMcap) q.set('mc', Math.round(state.currentMcap));
   return location.origin + location.pathname + '?' + q.toString();
 }
 
@@ -216,6 +237,8 @@ function getParams() {
   const baseEl = document.getElementById('in-baseProfit');
   const rawBase = baseEl ? baseEl.value : '';
   const base = parseFloat(rawBase) || 0;
+  const supplyEl = document.getElementById('in-supply');
+  const supply = supplyEl ? (parseFloat(supplyEl.value) || 0) : 0;
   const perp = (parseFloat(document.getElementById('in-perpetual').value) || 0) / 100;
   const rf = (parseFloat(document.getElementById('in-rf').value) || 0) / 100;
   const wacc = (parseFloat(document.getElementById('in-wacc').value) || 0) / 100;
@@ -227,7 +250,7 @@ function getParams() {
     const g = (parseFloat(document.getElementById('in-growthAll').value) || 0) / 100;
     growths = [g,g,g,g,g];
   }
-  return { base, growths, perp, rf, wacc };
+  return { base, supply, growths, perp, rf, wacc };
 }
 
 // ---- 核心 DCF 计算 ----
@@ -263,6 +286,9 @@ let chart = null;
 function calc() {
   const p = getParams();
   const r = computeDCF(p);
+
+  // 供应量以输入框为准(可手改/分享链接携带); >0 时同步到 state
+  if (p.supply > 0) state.circulatingHype = p.supply;
 
   // WACC ≤ g 警告
   const warn = document.getElementById('valWarn');
@@ -456,6 +482,19 @@ async function fetchDefaults(preserveInputs = false) {
     const gasBurn = maxS - total;
     const gone = afBal + HYPERCORE_STATIC + gasBurn + nullDead;
     state.circulatingHype = maxS - gone;
+    // 写入供应量输入框(preserveInputs 且已有值时不覆盖)
+    const supEl = document.getElementById('in-supply');
+    const supRng = document.getElementById('rng-supply');
+    const supSrc = document.getElementById('src-supply');
+    const hasSupplyInput = supEl && parseFloat(supEl.value) > 0;
+    if (supEl && (!preserveInputs || !hasSupplyInput)) {
+      supEl.value = Math.round(state.circulatingHype);
+      if (supRng) supRng.value = Math.min(1000000000, Math.round(state.circulatingHype));
+    }
+    if (supSrc) {
+      supSrc.textContent = T('val.supplyOk', { v: fmt.compact(state.circulatingHype) });
+      supSrc.removeAttribute('data-i18n');
+    }
   } else {
     errors.push(T('val.srcSupply'));
   }
@@ -517,6 +556,7 @@ async function fetchDefaults(preserveInputs = false) {
 document.addEventListener('DOMContentLoaded', () => {
   // 联动
   pairInputSlider('in-baseProfit', 'rng-baseProfit');
+  pairInputSlider('in-supply', 'rng-supply');
   pairInputSlider('in-growthAll', 'rng-growthAll');
   pairInputSlider('in-perpetual', 'rng-perpetual');
   pairInputSlider('in-rf', 'rng-rf');
@@ -536,16 +576,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 用模块解析期快照,DOMContentLoaded 内取 location.search 已被 i18n 污染
   const initialQ = new URLSearchParams(INITIAL_SEARCH);
-  // 带真参数的分享链接必有 p (利润基数) 或 g/g1 (增长率);仅带 hl 不算
-  const hasSharedParams = ['p', 'g', 'g1', 'gt', 'wacc'].some(k => initialQ.has(k));
+  // 带数据的分享链接: 必有供应量 s (或旧链接没 s 但有 p/g 等参数)。
+  // 只要带了任何实际参数就算分享链接 -> 不取数，以免覆盖分享数据
+  const hasSharedParams = ['p', 's', 'g', 'g1', 'gt', 'wacc'].some(k => initialQ.has(k));
 
   loadFromUrl();
-  // URL 不带实际参数: 完整取数(覆盖输入); 带分享参数: 保留输入但仍拉供应量/价格供预测价/PE 计算
-  if (!hasSharedParams) {
-    fetchDefaults();
-  } else {
+  // 带数据: 不取数,直接用分享参数算; 不带数据: 取数
+  if (hasSharedParams) {
     calc();
-    fetchDefaults(true);
+    // 分享链接若缺供应量(s)/现价(cur)才去拉链上数据补齐,不覆盖用户输入
+    if (!state.circulatingHype || !state.currentPrice) fetchDefaults(true);
+  } else {
+    fetchDefaults(false);
   }
 });
 

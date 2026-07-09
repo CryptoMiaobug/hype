@@ -81,6 +81,11 @@ const I18N_DICT = {
     'val.baseProfit': '当期利润基数 (USD)',
     'val.baseProfitHint': '= 过去 360 天手续费 × 97%',
     'val.baseProfitTodo': '— 待取数',
+    'val.supply': '流通供应量 (HYPE)',
+    'val.supplyHint': '= 总量 - 已销毁',
+    'val.supplyTodo': '— 待取数',
+    'val.supplyOk': '✓ 链上流通量 {v}',
+    'val.supplyShared': '✓ 来自分享链接 {v}',
     'val.baseProfitOk': '✓ 过去 360 天手续费 {fee} × 97% = {base}',
     'val.baseProfitFail': '✗ 手续费拉取失败',
 
@@ -235,6 +240,11 @@ const I18N_DICT = {
     'val.baseProfit': 'Base Profit (USD)',
     'val.baseProfitHint': '= last 360d fees × 97%',
     'val.baseProfitTodo': '— pending',
+    'val.supply': 'Circulating Supply (HYPE)',
+    'val.supplyHint': '= max supply - burned',
+    'val.supplyTodo': '— pending',
+    'val.supplyOk': '✓ on-chain {v}',
+    'val.supplyShared': '✓ from shared link {v}',
     'val.baseProfitOk': '✓ Last 360d fees {fee} × 97% = {base}',
     'val.baseProfitFail': '✗ Fees fetch failed',
 
