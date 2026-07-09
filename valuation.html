@@ -210,15 +210,17 @@
   (function () {
     var GC = 'https://cryptomiao.goatcounter.com/counter/';
     function fmt(n){ return (n||0).toLocaleString('en-US'); }
-    function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+    function ymd(d){ return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0'); }
     function grab(url, el){
       fetch(url).then(function(r){ return r.ok ? r.json() : null; })
         .then(function(j){ if(j){ el.textContent = fmt(parseInt((j.count_unique||j.count||'0').toString().replace(/,/g,''),10)); } })
         .catch(function(){});
     }
-    var today = ymd(new Date());
+    var now = new Date();
+    var todayUTC = ymd(now);
+    var tomorrowUTC = ymd(new Date(now.getTime() + 86400000));
     grab(GC + 'TOTAL.json', document.getElementById('vcTotal'));
-    grab(GC + 'TOTAL.json?start=' + today + '&end=' + today, document.getElementById('vcToday'));
+    grab(GC + 'TOTAL.json?start=' + todayUTC + '&end=' + tomorrowUTC, document.getElementById('vcToday'));
   })();
   </script>
 
