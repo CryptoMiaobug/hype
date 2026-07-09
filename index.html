@@ -150,6 +150,28 @@
     </div>
   </div>
 
+  <div class="visit-counter" id="visitCounter">
+    <span data-i18n="visit.total">总访问</span>：<b id="vcTotal">—</b>
+    <span class="vc-sep">·</span>
+    <span data-i18n="visit.today">今日</span>：<b id="vcToday">—</b>
+  </div>
+
+  <script>
+  (function () {
+    var GC = 'https://cryptomiao.goatcounter.com/counter/';
+    function fmt(n){ return (n||0).toLocaleString('en-US'); }
+    function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+    function grab(url, el){
+      fetch(url).then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(j){ if(j){ el.textContent = fmt(parseInt((j.count_unique||j.count||'0').toString().replace(/,/g,''),10)); } })
+        .catch(function(){});
+    }
+    var today = ymd(new Date());
+    grab(GC + 'TOTAL.json', document.getElementById('vcTotal'));
+    grab(GC + 'TOTAL.json?start=' + today + '&end=' + today, document.getElementById('vcToday'));
+  })();
+  </script>
+
   <script src="i18n.js?v=20260709t"></script>
   <script src="api.js?v=20260709t"></script>
   <script src="app.js?v=20260709t"></script>
