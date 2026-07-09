@@ -397,9 +397,10 @@ async function fetchDefaults() {
     race(Api.holders('HYPE'), 30000),
     race(Api.coingeckoHype(), 30000),
     race(Api.treasuryYield10y(), 30000),
+    race(Api.allMids(), 30000),
   ]);
 
-  const [feesR, detR, holdersR, cgR, rfR] = results;
+  const [feesR, detR, holdersR, cgR, rfR, midsR] = results;
   const errors = [];
 
   // 1. 利润基数 = 过去 360 天手续费 × 97%
@@ -456,6 +457,19 @@ async function fetchDefaults() {
     state.currentMcap  = cgR.value.market_data.market_cap?.usd    ?? null;
     state.currentFdv   = cgR.value.market_data.fully_diluted_valuation?.usd ?? null;
   }
+
+  // 3b. CoinGecko 挂了(免费接口常被限流/CORS)时,用 Hyperliquid allMids 兜底 HYPE 现货价,
+  //     再用 价格 × 流通量 推算市值,保证 PE 能算出来。
+  if (state.currentPrice == null && midsR.status === 'fulfilled' && midsR.value) {
+    const hypeMid = parseFloat(midsR.value.HYPE);
+    if (!isNaN(hypeMid) && hypeMid > 0) {
+      state.currentPrice = hypeMid;
+      if (state.currentMcap == null && state.circulatingHype) {
+        state.currentMcap = hypeMid * state.circulatingHype;
+      }
+    }
+  }
+  if (state.currentPrice == null) errors.push(T('val.srcPrice') || 'HYPE 价格');
 
   // 4. 美债 10 年期
   if (rfR.status === 'fulfilled' && rfR.value != null) {
