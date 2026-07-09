@@ -238,6 +238,18 @@ a:hover { color: var(--accent-2); }
   .topbar .badge#clock { display: none; }
   .lang-switch { margin-right: 0; }
   .topnav a { padding: 5px 10px; font-size: 12px; }
+
+  /* 防止参数面板及表格右侧溢出 */
+  .container { padding: 16px 12px; }
+  .val-inputs { padding: 16px; }
+  .val-field input[type="number"] { width: 100%; }
+  .val-field input[type="range"] { max-width: 100%; }
+  .val-slider-row input[type="range"] { max-width: 100%; }
+  .val-year-grid { gap: 4px; }
+  .val-year-grid input { min-width: 0; }
+  .val-flex-row { flex-wrap: wrap; }
+  .val-src, .val-field label .hint { word-break: break-word; overflow-wrap: anywhere; }
+  .val-table { display: block; overflow-x: auto; }
 }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
