@@ -9,20 +9,38 @@ const HL_INFO = 'https://api.hyperliquid.xyz/info';
 const HPS = 'https://api.hypurrscan.io';
 const TRACE = 'https://trace.hypurrscan.io/api/v1';
 
-// 通用 fetch，带超时与错误吞掉（数据缺失时返回 null，页面留空）
-async function safeFetch(url, opts = {}, timeoutMs = 15000) {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), timeoutMs);
-  try {
-    const r = await fetch(url, { ...opts, signal: ctrl.signal });
-    if (!r.ok) return null;
-    return await r.json();
-  } catch (e) {
-    console.warn('fetch failed:', url, e.message);
-    return null;
-  } finally {
-    clearTimeout(t);
+// 通用 fetch，带超时、429 退避重试与错误吞掉（数据缺失时返回 null，页面留空）
+async function safeFetch(url, opts = {}, timeoutMs = 15000, retries = 3) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const r = await fetch(url, { ...opts, signal: ctrl.signal });
+      if (r.status === 429 || r.status === 503) {
+        // 被限流：指数退避后重试
+        if (attempt < retries) {
+          const wait = 500 * Math.pow(2, attempt) + Math.random() * 400;
+          await new Promise((res) => setTimeout(res, wait));
+          continue;
+        }
+        return null;
+      }
+      if (!r.ok) return null;
+      return await r.json();
+    } catch (e) {
+      // 网络错误/超时：重试
+      if (attempt < retries) {
+        const wait = 500 * Math.pow(2, attempt) + Math.random() * 400;
+        await new Promise((res) => setTimeout(res, wait));
+        continue;
+      }
+      console.warn('fetch failed:', url, e.message);
+      return null;
+    } finally {
+      clearTimeout(t);
+    }
   }
+  return null;
 }
 
 // 官方 info POST

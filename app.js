@@ -243,7 +243,13 @@ function renderFeesCharts(rows) {
 async function loadPerps() {
   const d = await Api.metaAndAssetCtxs();
   const tbody = document.querySelector('#perpTable tbody');
-  if (!d || !d[0] || !d[1]) { tbody.innerHTML = `<tr><td colspan="7" class="empty">${window.I18n?I18n.t('common.noData'):'数据暂不可用'}</td></tr>`; return; }
+  if (!d || !d[0] || !d[1]) {
+    // 拉取失败（限流/超时）：保留已有数据，仅首次无数据时才提示
+    if (!tbody.querySelector('tr td.coin-name')) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty">${window.I18n?I18n.t('common.noData'):'数据暂不可用'}</td></tr>`;
+    }
+    return;
+  }
 
   const universe = d[0].universe;
   const ctxs = d[1];
@@ -276,13 +282,33 @@ async function loadPerps() {
   fillPerp7d(rows.map((r) => r.name));
 }
 
-// 按币拉日 K 线算 7D 涨跌，分批并发（每批 8 个）
+// 7D 涨跌缓存：日 K 线一天变化一次，无需每 30s 重拉（避免限流）
+const _chg7dCache = {}; // { key: {chg, ts} }
+const CHG7D_TTL = 30 * 60 * 1000; // 30 分钟
+
+// 把 7D 涨跌写入对应单元格
+function _applyChg7d(selector, chg) {
+  const cell = document.querySelector(selector);
+  if (!cell) return;
+  const sign = chg >= 0 ? '+' : '';
+  cell.textContent = `${sign}${(chg * 100).toFixed(2)}%`;
+  cell.classList.remove('up', 'down');
+  cell.classList.add(chg >= 0 ? 'up' : 'down');
+}
+
+// 按币拉日 K 线算 7D 涨跌，分批并发（每批 8 个），带缓存
 async function fillPerp7d(names) {
   const now = Date.now();
   const start = now - 8 * 24 * 60 * 60 * 1000; // 多拿一天余量
   const BATCH = 8;
-  for (let i = 0; i < names.length; i += BATCH) {
-    const batch = names.slice(i, i + BATCH);
+  const need = [];
+  for (const name of names) {
+    const c = _chg7dCache['p:' + name];
+    if (c && now - c.ts < CHG7D_TTL) _applyChg7d(`.chg7d[data-coin="${name}"]`, c.chg);
+    else need.push(name);
+  }
+  for (let i = 0; i < need.length; i += BATCH) {
+    const batch = need.slice(i, i + BATCH);
     await Promise.all(batch.map(async (name) => {
       try {
         const candles = await Api.candleSnapshot(name, '1d', start, now);
@@ -293,13 +319,8 @@ async function fillPerp7d(names) {
         const base = Number(ref.c || ref.o);
         if (!base || !last) return;
         const chg = (last - base) / base;
-        const cell = document.querySelector(`.chg7d[data-coin="${name}"]`);
-        if (cell) {
-          const sign = chg >= 0 ? '+' : '';
-          cell.textContent = `${sign}${(chg * 100).toFixed(2)}%`;
-          cell.classList.remove('up', 'down');
-          cell.classList.add(chg >= 0 ? 'up' : 'down');
-        }
+        _chg7dCache['p:' + name] = { chg, ts: Date.now() };
+        _applyChg7d(`.chg7d[data-coin="${name}"]`, chg);
       } catch (_) { /* 单币失败不阻塞其他 */ }
     }));
   }
@@ -309,7 +330,13 @@ async function fillPerp7d(names) {
 async function loadSpot() {
   const d = await Api.spotMetaAndAssetCtxs();
   const tbody = document.querySelector('#spotTable tbody');
-  if (!d || !d[0] || !d[1]) { tbody.innerHTML = `<tr><td colspan="5" class="empty">${window.I18n?I18n.t('common.noData'):'数据暂不可用'}</td></tr>`; return; }
+  if (!d || !d[0] || !d[1]) {
+    // 拉取失败：保留已有数据，仅首次无数据时才提示
+    if (!tbody.querySelector('tr td.coin-name')) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty">${window.I18n?I18n.t('common.noData'):'数据暂不可用'}</td></tr>`;
+    }
+    return;
+  }
 
   const tokens = d[0].tokens;       // [{name, index,...}]
   const universe = d[0].universe;   // [{name:"@1", tokens:[baseIdx, quoteIdx], index}]
@@ -349,13 +376,19 @@ async function loadSpot() {
   fillSpot7d(rows.map((r) => r.pair));
 }
 
-// 现货 7D 涨跌：按 pair 拉日 K 线，分批并发
+// 现货 7D 涨跌：按 pair 拉日 K 线，分批并发，带缓存
 async function fillSpot7d(pairs) {
   const now = Date.now();
   const start = now - 8 * 24 * 60 * 60 * 1000;
   const BATCH = 8;
-  for (let i = 0; i < pairs.length; i += BATCH) {
-    const batch = pairs.slice(i, i + BATCH);
+  const need = [];
+  for (const pair of pairs) {
+    const c = _chg7dCache['s:' + pair];
+    if (c && now - c.ts < CHG7D_TTL) _applyChg7d(`.chg7d-spot[data-pair="${pair}"]`, c.chg);
+    else need.push(pair);
+  }
+  for (let i = 0; i < need.length; i += BATCH) {
+    const batch = need.slice(i, i + BATCH);
     await Promise.all(batch.map(async (pair) => {
       try {
         const candles = await Api.candleSnapshot(pair, '1d', start, now);
@@ -365,13 +398,8 @@ async function fillSpot7d(pairs) {
         const base = Number(ref.c || ref.o);
         if (!base || !last) return;
         const chg = (last - base) / base;
-        const cell = document.querySelector(`.chg7d-spot[data-pair="${pair}"]`);
-        if (cell) {
-          const sign = chg >= 0 ? '+' : '';
-          cell.textContent = `${sign}${(chg * 100).toFixed(2)}%`;
-          cell.classList.remove('up', 'down');
-          cell.classList.add(chg >= 0 ? 'up' : 'down');
-        }
+        _chg7dCache['s:' + pair] = { chg, ts: Date.now() };
+        _applyChg7d(`.chg7d-spot[data-pair="${pair}"]`, chg);
       } catch (_) { /* 单币失败不阻塞 */ }
     }));
   }
@@ -400,8 +428,8 @@ loadPerps();
 loadSpot();
 loadRichList();
 
-// 定时刷新行情
-setInterval(() => { loadPerps(); loadSpot(); }, 30000);
+// 定时刷新行情（60s；7D 涨跌有缓存，不会重拉 K 线）
+setInterval(() => { loadPerps(); loadSpot(); }, 60000);
 
 // 语言切换后重新拉一次行情表格（表头会自动重刷一轮）
 window.onI18nChange = () => {
