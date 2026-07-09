@@ -243,7 +243,7 @@ function renderFeesCharts(rows) {
 async function loadPerps() {
   const d = await Api.metaAndAssetCtxs();
   const tbody = document.querySelector('#perpTable tbody');
-  if (!d || !d[0] || !d[1]) { tbody.innerHTML = `<tr><td colspan="6" class="empty">${window.I18n?I18n.t('common.noData'):'数据暂不可用'}</td></tr>`; return; }
+  if (!d || !d[0] || !d[1]) { tbody.innerHTML = `<tr><td colspan="7" class="empty">${window.I18n?I18n.t('common.noData'):'数据暂不可用'}</td></tr>`; return; }
 
   const universe = d[0].universe;
   const ctxs = d[1];
@@ -265,11 +265,44 @@ async function loadPerps() {
       <td class="coin-name">${r.name}</td>
       <td class="num">${mark.toLocaleString('en-US', { maximumFractionDigits: 6 })}</td>
       <td class="num ${cls}">${sign}${(chg * 100).toFixed(2)}%</td>
+      <td class="num chg7d" data-coin="${r.name}">—</td>
       <td class="num ${fcls}">${(funding * 100).toFixed(4)}%</td>
       <td class="num">${fmt.usdCompact(Number(r.openInterest) * mark)}</td>
       <td class="num">${fmt.usdCompact(Number(r.dayNtlVlm))}</td>
     </tr>`;
   }).join('');
+
+  // 7D 涨跌：Hyperliquid ctx 不提供，用日 K 线算（current vs 7 天前），分批拉取避免限流
+  fillPerp7d(rows.map((r) => r.name));
+}
+
+// 按币拉日 K 线算 7D 涨跌，分批并发（每批 8 个）
+async function fillPerp7d(names) {
+  const now = Date.now();
+  const start = now - 8 * 24 * 60 * 60 * 1000; // 多拿一天余量
+  const BATCH = 8;
+  for (let i = 0; i < names.length; i += BATCH) {
+    const batch = names.slice(i, i + BATCH);
+    await Promise.all(batch.map(async (name) => {
+      try {
+        const candles = await Api.candleSnapshot(name, '1d', start, now);
+        if (!Array.isArray(candles) || candles.length < 2) return;
+        const last = Number(candles[candles.length - 1].c);
+        // 找 ~7 天前的收盘（倒数第 8 根，不够则取最早）
+        const ref = candles[Math.max(0, candles.length - 8)];
+        const base = Number(ref.c || ref.o);
+        if (!base || !last) return;
+        const chg = (last - base) / base;
+        const cell = document.querySelector(`.chg7d[data-coin="${name}"]`);
+        if (cell) {
+          const sign = chg >= 0 ? '+' : '';
+          cell.textContent = `${sign}${(chg * 100).toFixed(2)}%`;
+          cell.classList.remove('up', 'down');
+          cell.classList.add(chg >= 0 ? 'up' : 'down');
+        }
+      } catch (_) { /* 单币失败不阻塞其他 */ }
+    }));
+  }
 }
 
 // ---- 现货行情 ----
