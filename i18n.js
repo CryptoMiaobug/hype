@@ -114,6 +114,7 @@ const I18N_DICT = {
     'val.peSubDefault': '流通 / 全稀释',
     'val.peCirc': '流通',
     'val.peFdvAdj': '全稀释*',
+    'val.pePart3': ' · 利润 {base}',
     'val.peSubLine': '流通 / 全稀释* · 利润 {base}',
     'val.peTipCirc': 'CoinGecko 流通市值 {v}',
     'val.peTipFdv': '调整后全稀释 {v}(已扣销毁)',
