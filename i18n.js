@@ -9,6 +9,7 @@ const I18N_DICT = {
     // ---- 通用 ----
     'nav.dashboard': '仪表盘',
     'nav.valuation': '价值测算',
+    'nav.battle': '战况',
     'common.loading': '加载中…',
     'common.noData': '数据暂不可用',
     'common.noDataRich': '数据暂不可用（该索引接口未开放或为空）',
@@ -169,6 +170,7 @@ const I18N_DICT = {
     // ---- Generic ----
     'nav.dashboard': 'Dashboard',
     'nav.valuation': 'Valuation',
+    'nav.battle': 'Battle',
     'common.loading': 'Loading…',
     'common.noData': 'Data unavailable',
     'common.noDataRich': 'Data unavailable (endpoint not exposed or empty)',

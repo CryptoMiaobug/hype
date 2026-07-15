@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HYPE Battlefield</title>
+    <script type="module" crossorigin src="/battlefield/assets/index-DcRaZzZA.js"></script>
+    <link rel="modulepreload" crossorigin href="/battlefield/assets/three-B4AnyguS.js">
+    <link rel="stylesheet" crossorigin href="/battlefield/assets/index-Bi-qbEeh.css">
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <!-- Top: live price bar -->
+    <div id="top-bar" class="panel">
+      <div class="top-left">
+        <div class="brand">HYPE <span class="brand-sub">Battlefield</span></div>
+        <div class="conn" id="conn-dot" title="feed status">●</div>
+      </div>
+      <div class="top-center">
+        <div class="price" id="ui-price">$—</div>
+        <div class="price-meta">
+          <span id="ui-change" class="change">—</span>
+          <span class="sep">·</span>
+          <span id="ui-mark" class="dim">mark —</span>
+          <span class="sep">·</span>
+          <span id="ui-funding" class="dim">fund —</span>
+        </div>
+      </div>
+      <div class="top-right">
+        <div class="stat"><span class="dim">24h vol</span> <b id="ui-vol">—</b></div>
+        <div class="stat"><span class="dim">OI</span> <b id="ui-oi">—</b></div>
+        <div class="stat"><span class="dim">source</span> <b>Hyperliquid</b></div>
+      </div>
+    </div>
+
+    <!-- Left: order book depth -->
+    <div id="left-panel" class="panel">
+      <div class="panel-title">ORDER BOOK</div>
+      <div class="wall-row">
+        <div class="wall wall-buy">
+          <div class="wall-label">Buy Wall</div>
+          <div class="wall-val" id="ui-buywall">$—</div>
+        </div>
+        <div class="wall wall-sell">
+          <div class="wall-label">Sell Wall</div>
+          <div class="wall-val" id="ui-sellwall">$—</div>
+        </div>
+      </div>
+      <div class="pressure-row">
+        <div class="dim">Pressure</div>
+        <div id="ui-pressure" class="pressure">—</div>
+      </div>
+      <div class="depth-title">Depth (30 lvls)</div>
+      <canvas id="ui-depth" width="240" height="120"></canvas>
+    </div>
+
+    <!-- Right: market feed -->
+    <div id="right-panel" class="panel">
+      <div class="panel-title">MARKET FEED</div>
+      <div id="ui-feed" class="feed"></div>
+    </div>
+
+    <!-- Bottom hint -->
+    <div id="hint">WASD move · drag rotate · scroll zoom · <b>1</b>/<b>2</b>/<b>3</b> camera</div>
+
+    <!-- Camera mode + perf -->
+    <div id="cam-panel" class="panel">
+      <button class="cam-btn active" data-mode="free">Free <span>1</span></button>
+      <button class="cam-btn" data-mode="follow">Follow <span>2</span></button>
+      <button class="cam-btn" data-mode="cinematic">Cinematic <span>3</span></button>
+    </div>
+    <div id="perf" class="panel"><span id="perf-fps">—</span> fps</div>
+
+  </body>
+</html>
