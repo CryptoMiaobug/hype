@@ -10,6 +10,30 @@ const I18N_DICT = {
     'nav.dashboard': '仪表盘',
     'nav.valuation': '价值测算',
     'nav.battle': '战况',
+    // ---- 战场页 ----
+    'bf.brand': 'HypeValue',
+    'bf.orderbook': '订单簿',
+    'bf.buyWall': '买单墙',
+    'bf.sellWall': '卖单墙',
+    'bf.pressure': '压力',
+    'bf.depthTitle': '深度 (30 档)',
+    'bf.marketFeed': '市场动态',
+    'bf.feedEmpty': '等待市场活动…',
+    'bf.hint': 'WASD 移动 · 拖拽旋转 · 滚轮缩放 · <b>1</b>/<b>2</b>/<b>3</b> 切换视角',
+    'bf.camFree': '自由',
+    'bf.camFollow': '跟随',
+    'bf.camCinematic': '电影',
+    'bf.fps': '帧率',
+    'bf.mark': '标记',
+    'bf.fund': '资费',
+    'bf.vol24': '24h 成交',
+    'bf.oi': '未平仓',
+    'bf.source': '数据源',
+    'bf.pressBullish': '偏多',
+    'bf.pressBearish': '偏空',
+    'bf.pressBalanced': '均衡',
+    'bf.pressBidHeavy': '买盘重',
+    'bf.pressAskHeavy': '卖盘重',
     'common.loading': '加载中…',
     'common.noData': '数据暂不可用',
     'common.noDataRich': '数据暂不可用（该索引接口未开放或为空）',
@@ -171,6 +195,30 @@ const I18N_DICT = {
     'nav.dashboard': 'Dashboard',
     'nav.valuation': 'Valuation',
     'nav.battle': 'Battle',
+    // ---- Battlefield ----
+    'bf.brand': 'HypeValue',
+    'bf.orderbook': 'Order Book',
+    'bf.buyWall': 'Buy Wall',
+    'bf.sellWall': 'Sell Wall',
+    'bf.pressure': 'Pressure',
+    'bf.depthTitle': 'Depth (30 lvls)',
+    'bf.marketFeed': 'Market Feed',
+    'bf.feedEmpty': 'waiting for market activity…',
+    'bf.hint': 'WASD move · drag rotate · scroll zoom · <b>1</b>/<b>2</b>/<b>3</b> camera',
+    'bf.camFree': 'Free',
+    'bf.camFollow': 'Follow',
+    'bf.camCinematic': 'Cinematic',
+    'bf.fps': 'fps',
+    'bf.mark': 'mark',
+    'bf.fund': 'fund',
+    'bf.vol24': '24h vol',
+    'bf.oi': 'OI',
+    'bf.source': 'source',
+    'bf.pressBullish': 'Bullish',
+    'bf.pressBearish': 'Bearish',
+    'bf.pressBalanced': 'Balanced',
+    'bf.pressBidHeavy': 'Bid heavy',
+    'bf.pressAskHeavy': 'Ask heavy',
     'common.loading': 'Loading…',
     'common.noData': 'Data unavailable',
     'common.noDataRich': 'Data unavailable (endpoint not exposed or empty)',
@@ -384,24 +432,44 @@ const I18n = {
   },
 
   mountSwitcher() {
+    // 主站页面：交给 .topbar（插到 .badge 之前）
     const bar = document.querySelector('.topbar');
-    if (!bar || document.getElementById('langSwitch')) return;
-    const sw = document.createElement('div');
-    sw.id = 'langSwitch';
-    sw.className = 'lang-switch';
-    sw.innerHTML = `
-      <button data-lang="zh">CN</button>
-      <button data-lang="en">EN</button>
-    `;
-    // 插到 .badge 之前
-    const badge = bar.querySelector('.badge');
-    if (badge) bar.insertBefore(sw, badge);
-    else bar.appendChild(sw);
-    sw.addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-lang]');
-      if (btn) this.set(btn.dataset.lang);
-    });
-    this.updateSwitcherUI();
+    if (bar && !document.getElementById('langSwitch')) {
+      const sw = document.createElement('div');
+      sw.id = 'langSwitch';
+      sw.className = 'lang-switch';
+      sw.innerHTML = `
+        <button data-lang="zh">CN</button>
+        <button data-lang="en">EN</button>
+      `;
+      const badge = bar.querySelector('.badge');
+      if (badge) bar.insertBefore(sw, badge);
+      else bar.appendChild(sw);
+      sw.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-lang]');
+        if (btn) this.set(btn.dataset.lang);
+      });
+      this.updateSwitcherUI();
+      return;
+    }
+
+    // 战场页：交给 #top-bar .top-left（服从当前页风格）
+    const bfLeft = document.querySelector('#top-bar .top-left');
+    if (bfLeft && !document.getElementById('langSwitch')) {
+      const sw = document.createElement('div');
+      sw.id = 'langSwitch';
+      sw.className = 'lang-switch lang-switch-bf';
+      sw.innerHTML = `
+        <button data-lang="zh">CN</button>
+        <button data-lang="en">EN</button>
+      `;
+      bfLeft.appendChild(sw);
+      sw.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-lang]');
+        if (btn) this.set(btn.dataset.lang);
+      });
+      this.updateSwitcherUI();
+    }
   },
 
   updateSwitcherUI() {
