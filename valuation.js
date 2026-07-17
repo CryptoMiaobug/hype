@@ -55,7 +55,7 @@ function loadFromUrl() {
       supSrc.removeAttribute('data-i18n');
     }
   }
-  if (q.get('mode') === 'peryear') toggleGrowthMode(true);
+  if (q.get('mode') === 'peryear') toggleGrowthMode(true, true);
   // 跟随发起人语言 (不写 localStorage,避免污染朋友自己选的)
   const hl = q.get('hl');
   if ((hl === 'zh' || hl === 'en') && window.I18n) {
@@ -200,7 +200,7 @@ async function copyShareLink() {
 }
 
 // ---- 展开/收起分年增长率 ----
-function toggleGrowthMode(force) {
+function toggleGrowthMode(force, skipCopy) {
   const unified = document.getElementById('growth-unified');
   const peryear = document.getElementById('growth-perYear');
   const btn = document.getElementById('btnExpandGrowth');
@@ -211,8 +211,11 @@ function toggleGrowthMode(force) {
     peryear.classList.remove('hidden');
     btn.textContent = T('val.growthCollapse');
     btn.setAttribute('data-i18n', 'val.growthCollapse');
-    const v = document.getElementById('in-growthAll').value;
-    ['g1','g2','g3','g4','g5'].forEach(k => document.getElementById('in-'+k).value = v);
+    // skipCopy: 从分享链接载入时,分年值已由 URL 填好,不要用统一值覆盖
+    if (!skipCopy) {
+      const v = document.getElementById('in-growthAll').value;
+      ['g1','g2','g3','g4','g5'].forEach(k => document.getElementById('in-'+k).value = v);
+    }
   } else {
     unified.classList.remove('hidden');
     peryear.classList.add('hidden');
