@@ -168,6 +168,24 @@ async function tryRenderValuationTeaser() {
 let _dailyFeesChart = null;
 let _dailyFeesRows = null;
 let _dailyFeesCommon = null;
+let _hypePriceByDate = null; // { 'Nov 17, 2024': 12.72, ... }
+
+// 拉取 HYPE 日线收盘价，构建 日期->收盘价 映射（叠加到每日手续费图）
+async function loadHypePriceHistory() {
+  if (_hypePriceByDate) return _hypePriceByDate;
+  const now = Date.now();
+  const start = now - 800 * 86400 * 1000; // 覆盖 all 范围
+  const candles = await Api.candleSnapshot('HYPE', '1d', start, now);
+  const map = {};
+  if (Array.isArray(candles)) {
+    for (const k of candles) {
+      const label = new Date(k.t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      map[label] = +parseFloat(k.c);
+    }
+  }
+  _hypePriceByDate = map;
+  return map;
+}
 
 function renderDailyFeesChart(days) {
   if (!_dailyFeesRows || !_dailyFeesChart) return;
@@ -177,6 +195,10 @@ function renderDailyFeesChart(days) {
   const slice = rows.slice(start - 1); // 包含前一个点作为基准
   const times = slice.slice(1).map((r) => new Date(r.time * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
   const daily = slice.slice(1).map((r, i) => +((r.total_fees - slice[i].total_fees) / FEES_SCALE).toFixed(0));
+  // 价格曲线：按日期对齐（缺失日补 null，让曲线断开而非归零）
+  const priceMap = _hypePriceByDate || {};
+  const price = times.map((d) => (priceMap[d] != null ? priceMap[d] : null));
+  const hasPrice = price.some((v) => v != null);
   // 区间合计 = 区间末点累计 - 区间起点前一天累计
   const sumEl = document.getElementById('dailyFeesSum');
   if (sumEl) {
@@ -184,10 +206,46 @@ function renderDailyFeesChart(days) {
     const label = days > 0 ? `${days}天合计` : `全部合计`;
     sumEl.textContent = `${label} ${fmt.usdCompact(sum)}`;
   }
+  const priceLabel = (window.I18n && I18n.t) ? (I18n.t('fees.priceSeries') || 'HYPE 价格') : 'HYPE 价格';
+  const feesLabel = (window.I18n && I18n.t) ? (I18n.t('fees.dailySeries') || '每日手续费') : '每日手续费';
   _dailyFeesChart.setOption({
     ..._dailyFeesCommon,
+    tooltip: {
+      trigger: 'axis',
+      valueFormatter: undefined,
+      formatter: (params) => {
+        if (!params || !params.length) return '';
+        let s = `${params[0].axisValueLabel || params[0].axisValue}<br/>`;
+        for (const p of params) {
+          if (p.value == null) continue;
+          if (p.seriesName === priceLabel) s += `${p.marker}${p.seriesName}: $${Number(p.value).toFixed(2)}<br/>`;
+          else s += `${p.marker}${p.seriesName}: ${fmt.usdCompact(p.value)}<br/>`;
+        }
+        return s;
+      },
+    },
+    legend: { data: [feesLabel, priceLabel], textStyle: { color: '#8fb5ac' }, top: 0, right: 10 },
+    grid: { ..._dailyFeesCommon.grid, right: 56, top: 30 },
     xAxis: { ..._dailyFeesCommon.xAxis, data: times },
-    series: [{ type: 'bar', data: daily, itemStyle: { color: '#1fd286' } }],
+    yAxis: [
+      _dailyFeesCommon.yAxis,
+      {
+        type: 'value',
+        position: 'right',
+        scale: true,
+        axisLabel: { color: '#f0b429', formatter: (v) => '$' + Number(v).toFixed(0) },
+        splitLine: { show: false },
+        axisLine: { lineStyle: { color: '#f0b429' } },
+      },
+    ],
+    series: [
+      { name: feesLabel, type: 'bar', yAxisIndex: 0, data: daily, itemStyle: { color: '#1fd286' } },
+      ...(hasPrice ? [{
+        name: priceLabel, type: 'line', yAxisIndex: 1, data: price, smooth: true,
+        showSymbol: false, connectNulls: true,
+        lineStyle: { color: '#f0b429', width: 2 }, itemStyle: { color: '#f0b429' }, z: 3,
+      }] : []),
+    ],
   });
 }
 
@@ -222,6 +280,13 @@ function renderFeesCharts(rows) {
   _dailyFeesRows = rows;
   _dailyFeesCommon = common;
   renderDailyFeesChart(30);
+
+  // 异步拉 HYPE 价格历史，到手后重新渲染一次（使用当前选中的时长）
+  loadHypePriceHistory().then(() => {
+    const active = document.querySelector('#dailyFeesRange button.active');
+    const days = active ? Number(active.dataset.days) : 30;
+    renderDailyFeesChart(days);
+  }).catch(() => {});
 
   // 绑切换标签（只绑一次）
   const tabs = document.getElementById('dailyFeesRange');
