@@ -107,14 +107,14 @@ const I18N_DICT = {
 
     'val.params': '模型参数',
     'val.baseProfit': '当期利润基数 (USD)',
-    'val.baseProfitHint': '= 过去 360 天手续费 × 97%',
+    'val.baseProfitHint': '= 过去 360 天手续费 × 99%',
     'val.baseProfitTodo': '— 待取数',
     'val.supply': '流通供应量 (HYPE)',
     'val.supplyHint': '= 总量 - 已销毁',
     'val.supplyTodo': '— 待取数',
     'val.supplyOk': '✓ 链上流通量 {v}',
     'val.supplyShared': '✓ 来自分享链接 {v}',
-    'val.baseProfitOk': '✓ 过去 360 天手续费 {fee} × 97% = {base}',
+    'val.baseProfitOk': '✓ 过去 360 天手续费 {fee} × 99% = {base}',
     'val.baseProfitFail': '✗ 手续费拉取失败',
 
     'val.growth15': '1-5 年增长率',
@@ -294,14 +294,14 @@ const I18N_DICT = {
 
     'val.params': 'Model Parameters',
     'val.baseProfit': 'Base Profit (USD)',
-    'val.baseProfitHint': '= last 360d fees × 97%',
+    'val.baseProfitHint': '= last 360d fees × 99%',
     'val.baseProfitTodo': '— pending',
     'val.supply': 'Circulating Supply (HYPE)',
     'val.supplyHint': '= max supply - burned',
     'val.supplyTodo': '— pending',
     'val.supplyOk': '✓ on-chain {v}',
     'val.supplyShared': '✓ from shared link {v}',
-    'val.baseProfitOk': '✓ Last 360d fees {fee} × 97% = {base}',
+    'val.baseProfitOk': '✓ Last 360d fees {fee} × 99% = {base}',
     'val.baseProfitFail': '✗ Fees fetch failed',
 
     'val.growth15': 'Year 1-5 Growth',

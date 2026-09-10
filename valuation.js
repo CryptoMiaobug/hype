@@ -438,7 +438,7 @@ async function fetchDefaults(preserveInputs = false) {
   const [feesR, detR, holdersR, cgR, rfR, midsR] = results;
   const errors = [];
 
-  // 1. 利润基数 = 过去 360 天手续费 × 97%（分享链接时不覆盖用户参数）
+  // 1. 利润基数 = 过去 360 天手续费 × 99%（分享链接时不覆盖用户参数）
   if (feesR.status === 'fulfilled' && Array.isArray(feesR.value) && feesR.value.length > 0) {
     const rows = feesR.value;
     const latest = rows[rows.length - 1];
@@ -448,7 +448,7 @@ async function fetchDefaults(preserveInputs = false) {
     const diff = latest.total_fees - start.total_fees;
     // hypurrscan total_fees 单位是 wei-ish (1e6 USDC)
     const usdc360 = diff / 1e6;
-    const base = usdc360 * 0.97;
+    const base = usdc360 * 0.99;
     if (!preserveInputs) {
       document.getElementById('in-baseProfit').value = Math.round(base);
       document.getElementById('rng-baseProfit').value = Math.min(2000000000, Math.round(base));
