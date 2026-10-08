@@ -5,9 +5,9 @@
  let seed,rows=[],range=90,chart;const key='hypevalue-pe-v1-'+asset;
  async function json(url){const r=await fetch(url,{signal:AbortSignal.timeout(25000),credentials:'omit'});if(!r.ok)throw Error('HTTP '+r.status+(r.status===429?'（限流，请稍后手动重试）':''));return r.json();}
  function render(){
-  const latest=rows.at(-1),complete=[...rows].reverse().find(r=>r.circ!=null);
-  $('asof').textContent='目标完整 UTC 日：'+C.yesterday()+' · 表中截至：'+latest.date+' · 最近有效：'+(complete?.date??'无');
-  $('cards').innerHTML=[['流通'+(asset==='hype'?'收入倍数':'销毁 PE'),fmt(latest.circ)+' x'],['全解锁'+(asset==='hype'?'情景倍数':'销毁 PE（估算）'),fmt(latest.full)+' x'],['近似收盘价格','$'+fmt(latest.price,4)],['30日'+(asset==='hype'?'持币人收入':'销毁价值'),'$'+fmt(latest.r30)],['年化分母','$'+fmt(latest.annual)],['情景总供应',fmt(latest.supply,2)]].map(([k,v])=>`<div class="stat-card"><div class="label">${k}</div><div class="value">${v}</div><div class="sub">${latest.date} UTC</div></div>`).join('');
+  const target=rows.at(-1),complete=[...rows].reverse().find(r=>r.circ!=null),latest=complete??target;
+  $('asof').textContent='目标完整 UTC 日：'+C.yesterday()+' · 表中截至：'+target.date+' · 卡片有效估值日：'+(complete?.date??'无');
+  $('cards').innerHTML=[['流通'+(asset==='hype'?'收入倍数':'销毁 PE'),fmt(latest.circ)+' x'],['全解锁'+(asset==='hype'?'情景倍数':'销毁 PE（估算）'),fmt(latest.full)+' x'],['近似收盘价格','$'+fmt(latest.price,4)],['30日'+(asset==='hype'?'持币人收入':'销毁价值'),'$'+fmt(latest.r30)],['年化分母','$'+fmt(latest.annual)],['情景总供应',fmt(latest.supply,2)]].map(([k,v])=>`<div class="stat-card"><div class="label">${k}</div><div class="value">${v}</div><div class="sub">${latest.date} UTC${latest.date!==target.date?' · 最近有效，非目标日':''}</div></div>`).join('');
   const shown=range?rows.slice(-range):rows;
   $('tbody').replaceChildren(...[...shown].reverse().map(r=>{const tr=document.createElement('tr');for(const v of [r.date,fmt(r.price,4),fmt(r.circ),fmt(r.full),fmt(r.r30),r.source==='bundled'?'固化历史':r.status==='ok'?'浏览器增量':r.status]){const td=document.createElement('td');td.textContent=v;tr.append(td);}return tr;}));
   if(window.echarts){chart??=echarts.init($('chart'));chart.setOption({color:['#50d2c1','#ecb96a','#1fd286'],tooltip:{trigger:'axis'},legend:{textStyle:{color:'#8fb5ac'},data:['流通倍数','全解锁情景倍数','价格 USD']},grid:{left:65,right:65,bottom:55},xAxis:{type:'category',data:shown.map(r=>r.date),axisLabel:{color:'#8fb5ac'}},yAxis:[{type:'value',name:'倍数 x',axisLabel:{color:'#8fb5ac'}},{type:'value',name:'USD',axisLabel:{color:'#8fb5ac'},splitLine:{show:false}}],series:[['流通倍数','circ',0],['全解锁情景倍数','full',0],['价格 USD','price',1]].map(([name,k,yAxisIndex])=>({name,type:'line',showSymbol:false,connectNulls:false,yAxisIndex,data:shown.map(r=>r[k])}))});}else $('chart').textContent='图表库未加载；下方表格和 CSV 仍可用。';
@@ -33,7 +33,8 @@
     try{localStorage.setItem(key,JSON.stringify({seedHash:seed.sourceSHA256,revenue:rev,market:prices,savedAt:new Date().toISOString()}));}catch{notes.push('缓存写入失败；本次增量仅在内存中');}
    }
    rows=C.calculate(seed,rev,prices,end);render();const pending=rows.filter(r=>r.source==='browser'&&r.circ==null).length;
-   notes.push(pending?pending+' 个增量日期仍缺数据/无有效分母，显示 NA，不填零。':'所有目标日期的流通指标已完整。');
+   notes.push(pending?pending+' 个增量日期仍待补齐/无有效分母；表格保留 NA，卡片显示明确标注日期的最近有效估值。':'所有目标日期的流通指标已完整。');
+   const target=rows.at(-1);if(target.circ==null){const reasons=[];if(!C.valid(rev[end]))reasons.push('当日收入缺失');if(target.r30==null)reasons.push('30日收入窗口不完整');if(target.price==null)reasons.push('缺少 D+1 00:00 UTC 精确配对价格/市值');if(target.annual===0)reasons.push('年化分母为零');notes.push('目标 '+end+'：'+reasons.join('；')+'。请求成功但缺字段也不代表已补齐；上游可能尚未发布符合口径的数据。');}
    if(asset==='uni'&&rows.at(-1).supply==null)notes.push('供应累计存在缺口，全解锁估算暂停；须补全缺口后恢复。');
   }catch(e){notes.push('读取失败：'+e.message);}finally{$('status').textContent=notes.join(' ');$('refresh').disabled=false;}
  }
