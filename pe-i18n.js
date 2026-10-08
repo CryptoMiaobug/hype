@@ -83,6 +83,7 @@ Object.entries({
 }).forEach(([lang, entries]) => Object.assign(I18N_DICT[lang], entries));
 
 const PE_TEXT = {
+  "加载中…": "Loading…",
   "目标完整 UTC 日：": "Target complete UTC day: ",
   " · 表中截至：": " · Table through: ",
   " · 卡片有效估值日：": " · Valid valuation date on cards: ",

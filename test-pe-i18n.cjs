@@ -27,7 +27,7 @@ function english(h){
   for(const initial of ['en','zh',undefined]){
    const h=await run(asset,initial);if(initial!=='zh')english(h);else assert.equal(h.root.lang,'zh');
    const b=h.els.find(e=>e.dataset.range==='30');b.onclick();const before=JSON.stringify(h.option.series.map(s=>s.data)),count=h.requests.length;
-   h.byId.vcTotal.dataset.state='ready';h.byId.vcTotal.textContent='123';h.byId.vcToday.dataset.state='error';
+   h.byId.vcTotal.dataset.state='loading';h.context.I18n.set('en');assert.equal(h.byId.vcTotal.textContent,'Loading…');h.byId.vcTotal.dataset.state='ready';h.byId.vcTotal.textContent='123';h.byId.vcToday.dataset.state='error';
    h.context.I18n.set('en');english(h);assert.equal(h.byId.vcTotal.textContent,'123');assert.equal(h.byId.vcToday.textContent,'Unavailable');assert.equal(h.option.xAxis[0].data.length,30);assert.equal(JSON.stringify(h.option.series.map(s=>s.data)),before);
    assert.equal(h.requests.length,count);assert.equal(h.store.hs_lang,'en');
    h.context.I18n.set('zh');assert.equal(h.byId.vcToday.textContent,'暂不可用');assert.ok(hasChinese(h.byId.status.textContent));assert.equal(h.requests.length,count);
