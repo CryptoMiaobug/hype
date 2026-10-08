@@ -1,6 +1,7 @@
 // PE presentation only; reuse site language, persistence and switcher.
 Object.entries({
   "zh": {
+    "pe.clearChains": "清除链明细缓存",
     "nav.dashboard": "仪表盘",
     "nav.valuation": "价值测算",
     "nav.battle": "战况",
@@ -35,12 +36,13 @@ Object.entries({
     "pe.sources": "来源：",
     "pe.aria.hype": "上方为流通倍数、全解锁情景倍数及价格，下方为每日持币人收入USD柱状图；共用UTC日期，详细数值见下方表格",
     "pe.text12": "估值倍数、价格与每日回购／销毁价值（代理口径）",
-    "pe.text17": "上下图共用 UTC 日期及时间筛选，触摸或悬停可核对同日数据。柱状图采用 DefiLlama dailyRevenue，与当前估值分母使用同一销毁价值代理序列，不代表已逐笔核验的实际链上回购或销毁；真实零保留，缺失留空。",
+    "pe.text17": "上下图共用 UTC 日期及筛选。下图为 DefiLlama dailyRevenue 最新链明细快照，不是 dailyFees 或实际执行销毁；Robinhood Chain 仅指该链上的 Uniswap 收入，不是 Robinhood 公司营收。明细可能修订，与估值底稿收入不同；悬停/触摸显示两者及差额，不缩放、不改估值。真实零保留，缺失留空；合计仅涵盖已报告链，缺键不视作零，任一已报告链无效则合计为 NA。",
     "pe.text20": "分母采用 DefiLlama Uniswap dailyRevenue 的销毁价值代理，不是 LP 手续费或会计净利润。全解锁销毁 PE 为估算总供应 × 当日价格 ÷ 年化销毁价值。供应从 2025-12-29 的假设 9 亿 UNI 开始扣减 Σ(日收入 / 同日近似收盘价)，忽略增发；不是已核实链上供应或最大供应 FDV。增量延续固化末日供应，遇任意收入/价格缺日，后续供应估算全部 NA，补全后才恢复。",
     "pe.text32": "每日回购／销毁价值（代理）USD",
-    "pe.aria.uni": "上方为流通倍数、全解锁情景倍数及价格，下方为每日回购／销毁价值代理USD柱状图；共用UTC日期，详细数值见下方表格"
+    "pe.aria.uni": "上方为流通倍数、全解锁情景倍数及价格，下方为每日按链收入代理USD堆叠柱状图；共用UTC日期，近30日各链金额及覆盖见下方表格"
   },
   "en": {
+    "pe.clearChains": "Clear chain cache",
     "nav.dashboard": "Dashboard",
     "nav.valuation": "Valuation",
     "nav.battle": "Battlefield",
@@ -75,10 +77,10 @@ Object.entries({
     "pe.sources": "Sources: ",
     "pe.aria.hype": "Top: circulating multiple, fully unlocked scenario multiple and price. Bottom: daily holders revenue in USD. Shared UTC dates; detailed values in the table below.",
     "pe.text12": "Valuation multiples, price & daily buyback / burn value proxy",
-    "pe.text17": "Both panels share UTC dates and the selected range. Hover or touch to compare the same day. Bars use DefiLlama dailyRevenue, the same burn-value proxy as the valuation denominator—not individually verified on-chain buybacks or burns. Genuine zeros are preserved; missing values remain gaps.",
+    "pe.text17": "Both grids share UTC dates and range filters. Bars use the latest DefiLlama dailyRevenue chain snapshot, not dailyFees or executed burns. Robinhood Chain means Uniswap revenue on that chain, not Robinhood company revenue. Revisions may differ from valuation inputs: hover/touch shows both totals and the difference. No scaling or valuation changes. Real zeros remain zero; gaps remain blank. Totals cover reported chains only; absent keys are not zero, and an invalid reported chain makes the total NA.",
     "pe.text20": "The denominator uses DefiLlama Uniswap dailyRevenue as a burn-value proxy, not LP fees or accounting net income. Fully unlocked burn PE = estimated total supply × daily price ÷ annualized burn value. Supply starts from an assumed 900 million UNI on 2025-12-29, less Σ(daily revenue / same-day approximate closing price), ignoring issuance. It is not verified on-chain supply or maximum-supply FDV. Incremental estimates continue from the last bundled supply; any missing revenue or price day makes all subsequent supply estimates NA until the gap is filled.",
     "pe.text32": "Daily buyback / burn value proxy USD",
-    "pe.aria.uni": "Top: circulating multiple, fully unlocked scenario multiple and price. Bottom: daily buyback / burn value proxy in USD. Shared UTC dates; detailed values in the table below."
+    "pe.aria.uni": "Top: circulating multiple, fully unlocked scenario multiple and price. Bottom: stacked daily chain revenue proxy in USD. Shared UTC dates; 30-day chain amounts and coverage in the table below."
   }
 }).forEach(([lang, entries]) => Object.assign(I18N_DICT[lang], entries));
 
