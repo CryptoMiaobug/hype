@@ -8,7 +8,8 @@ async function run(asset,stored,nav='en-US',offline=true,denied=false){
  const root={lang:'zh'},bar=node(),buttons=[node({'data-lang':'zh'}),node({'data-lang':'en'})];
  const document={documentElement:root,body:{dataset:{asset}},getElementById:id=>byId[id],querySelector:s=>s==='.topbar'?bar:null,querySelectorAll:s=>s==='#langSwitch button'?buttons:els.filter(e=>s.startsWith('[')&&e.hasAttribute(s.slice(1,-1))),createElement:()=>node(),addEventListener:(k,fn)=>events[k]=fn};
  const seed=JSON.parse(fs.readFileSync('pe-data/'+asset+'.json'));
- const context={document,navigator:{language:nav},localStorage:{getItem:k=>{if(denied)throw Error('SecurityError');return store[k]??null},setItem:(k,v)=>{if(denied)throw Error('SecurityError');store[k]=v}},PECore:{...C,yesterday:()=> '2026-10-08'},echarts:{init:()=>({setOption:o=>option=o,resize(){}})},AbortSignal:{timeout(){}},Blob,URL,setTimeout,console,addEventListener(){},fetch:async url=>{requests.push(url);if(url==='pe-data/uni-chains.json')return {ok:true,json:async()=>JSON.parse(fs.readFileSync(url))};if(url.startsWith('pe-data/'))return {ok:true,json:async()=>seed};if(offline)throw Error('offline');return {ok:false,status:429};}};context.window=context;vm.createContext(context);
+ const context={document,navigator:{language:nav},localStorage:{getItem:k=>{if(denied)throw Error('SecurityError');return store[k]??null},setItem:(k,v)=>{if(denied)throw Error('SecurityError');store[k]=v}},PECore:{...C,yesterday:()=> '2026-10-08'},echarts:{init:()=>({setOption:o=>option=o,resize(){}})},AbortSignal:{timeout(){}},Blob,URL,setTimeout,console,addEventListener(){},fetch:async url=>{requests.push(url);if(url==='pe-data/uni-chains.json'||url==='pe-data/hype-sources.json')return {ok:true,json:async()=>JSON.parse(fs.readFileSync(url))};if(url.startsWith('pe-data/'))return {ok:true,json:async()=>seed};if(offline)throw Error('offline');return {ok:false,status:429};}};context.window=context;vm.createContext(context);
+ if(asset==='hype')vm.runInContext(fs.readFileSync('pe-sources.js','utf8'),context);
  if(asset==='uni')vm.runInContext(fs.readFileSync('pe-chains.js','utf8'),context);
  vm.runInContext(fs.readFileSync('i18n.js','utf8'),context);vm.runInContext(fs.readFileSync('pe-i18n.js','utf8'),context);
  const pending=vm.runInContext(fs.readFileSync('pe.js','utf8'),context);events.DOMContentLoaded();await pending;
@@ -16,12 +17,12 @@ async function run(asset,stored,nav='en-US',offline=true,denied=false){
 }
 function english(h){
  for(const e of h.els.filter(e=>e.attrs['data-i18n'])){assert.ok(!hasChinese(e.textContent),e.textContent);assert.ok(!/^pe\.|^nav\./.test(e.textContent));}
- for(const id of ['cards','asof','status',...(h.byId['chain-summary']?['chain-summary']:[])])assert.ok(!hasChinese(h.byId[id].innerHTML+h.byId[id].textContent),id+': '+h.byId[id].textContent);
+ for(const id of ['cards','asof','status',...(h.byId['chain-summary']?['chain-summary']:['source-summary'])])assert.ok(!hasChinese(h.byId[id].innerHTML+h.byId[id].textContent),id+': '+h.byId[id].textContent);
  for(const row of h.byId.tbody.children)for(const cell of row.children)assert.ok(!hasChinese(cell.textContent),cell.textContent);
  assert.ok(!hasChinese(h.option.tooltip.formatter([{axisValue:'2026-10-08'}])));
  assert.ok(!hasChinese(h.byId.chart.attrs['aria-label']));
  for(const item of [...h.option.series,...h.option.yAxis])assert.ok(!hasChinese(item.name));
- assert.equal(h.root.lang,'en');assert.equal(h.option.series.length,h.byId['chain-summary']?9:4);
+ assert.equal(h.root.lang,'en');assert.equal(h.option.series.length,h.byId['chain-summary']?9:5);
 }
 (async()=>{
  for(const asset of ['hype','uni']){

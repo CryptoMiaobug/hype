@@ -153,3 +153,5 @@ window.PEText = function(text) {
 };
 
 Object.entries({"zh": {"pe.text3": "HYPE 持币人收入年化估值观察台", "pe.text35": "总访问量", "pe.text4": "UNI 销毁 PE观察台"}, "en": {"pe.text3": "HYPE Annualized Holders-Revenue Valuation", "pe.text35": "Total visits", "pe.text4": "UNI Burn-Value PE Dashboard"}}).forEach(([lang, entries]) => Object.assign(I18N_DICT[lang], entries));
+
+Object.entries({zh:{"pe.clearSources":"清除来源明细缓存","pe.sourceMethod":"永续相关收入包含永续交易回购资金、优先订单费用销毁价值、AQAv2收益；现货及拍卖相关收入包含现货交易回购资金、HIP-1拍卖销毁价值。这些合计不是纯交易费，也不等于已核实的实际回购。HIP-3不另行重复加总。当前公开日序列可靠拆分为两组，不凭方法标签虚构五条每日数据。"},en:{"pe.clearSources":"Clear revenue-source cache","pe.sourceMethod":"Perpetual-related revenue includes perpetual-trading buyback allocations, priority-order fee burn value and AQAv2 yields. Spot & auction-related revenue includes spot-trading buyback allocations and HIP-1 auction burn value. These totals are not pure trading fees or verified executed buybacks. HIP-3 is not added again. The available daily series reliably separates two groups; methodology labels alone do not justify inventing five daily series."}}).forEach(([lang,entries])=>Object.assign(I18N_DICT[lang],entries));
