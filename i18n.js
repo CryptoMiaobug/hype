@@ -6,6 +6,8 @@
 
 const I18N_DICT = {
   zh: {
+    'visit.total': '总访问量',
+    'visit.today': '今日访问量',
     // ---- 通用 ----
     'nav.dashboard': '仪表盘',
     'nav.valuation': '价值测算',
@@ -194,6 +196,8 @@ const I18N_DICT = {
     'val.shareFailed': '⚠️ 自动复制失败，手动拷贝：{url}',
   },
   en: {
+    'visit.total': 'Total visits',
+    'visit.today': 'Visits today',
     // ---- Generic ----
     'nav.dashboard': 'Dashboard',
     'nav.valuation': 'Valuation',
