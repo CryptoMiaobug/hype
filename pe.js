@@ -9,28 +9,28 @@
   $('asof').textContent='目标完整 UTC 日：'+C.yesterday()+' · 表中截至：'+target.date+' · 卡片有效估值日：'+(complete?.date??'无');
   $('cards').innerHTML=[['流通'+(asset==='hype'?'收入倍数':'销毁 PE'),fmt(latest.circ)+' x'],['全解锁'+(asset==='hype'?'情景倍数':'销毁 PE（估算）'),fmt(latest.full)+' x'],['近似收盘价格','$'+fmt(latest.price,4)],['30日'+(asset==='hype'?'持币人收入':'销毁价值'),'$'+fmt(latest.r30)],['年化分母','$'+fmt(latest.annual)],['情景总供应',fmt(latest.supply,2)]].map(([k,v])=>`<div class="stat-card"><div class="label">${k}</div><div class="value">${v}</div><div class="sub">${latest.date} UTC${latest.date!==target.date?' · 最近有效，非目标日':''}</div></div>`).join('');
   const shown=range?rows.slice(-range):rows;
-  $('tbody').replaceChildren(...[...shown].reverse().map(r=>{const tr=document.createElement('tr');for(const v of [r.date,fmt(r.price,4),fmt(r.circ),fmt(r.full),...(asset==='hype'?[fmt(dailyRevenue[r.date])]:[]),fmt(r.r30),r.source==='bundled'?'固化历史':r.status==='ok'?'浏览器增量':r.status]){const td=document.createElement('td');td.textContent=v;tr.append(td);}return tr;}));
+  $('tbody').replaceChildren(...[...shown].reverse().map(r=>{const tr=document.createElement('tr');for(const v of [r.date,fmt(r.price,4),fmt(r.circ),fmt(r.full),fmt(dailyRevenue[r.date]),fmt(r.r30),r.source==='bundled'?'固化历史':r.status==='ok'?'浏览器增量':r.status]){const td=document.createElement('td');td.textContent=v;tr.append(td);}return tr;}));
   if(window.echarts){
    chart??=echarts.init($('chart'));
-   const dates=shown.map(r=>r.date),hype=asset==='hype';
+   const dates=shown.map(r=>r.date),revenueLabel=asset==='hype'?'每日持币人收入（USD）':'每日回购／销毁价值（代理口径，USD）';
    const axis={type:'category',data:dates,axisLabel:{color:'#8fb5ac'}};
    const colors={circ:'#38BDF8',full:'#FBBF24',price:'#C084FC',revenue:'#50d2c1'};
    const marker=k=>`<span style="display:inline-block;margin-right:4px;border-radius:50%;width:10px;height:10px;background-color:${colors[k]}"></span>`;
    const options={color:[colors.circ,colors.full,colors.price],tooltip:{trigger:'axis'},legend:{textStyle:{color:'#8fb5ac'},data:['流通倍数','全解锁情景倍数','价格 USD']},grid:{left:65,right:65,bottom:55},xAxis:axis,yAxis:[{type:'value',name:'倍数 x',axisLabel:{color:'#8fb5ac'}},{type:'value',name:'USD',axisLabel:{color:'#8fb5ac'},splitLine:{show:false}}],series:[['流通倍数','circ',0],['全解锁情景倍数','full',0],['价格 USD','price',1]].map(([name,k,yAxisIndex])=>({name,type:'line',showSymbol:false,connectNulls:false,yAxisIndex,lineStyle:{color:colors[k]},itemStyle:{color:colors[k]},data:shown.map(r=>r[k])}))};
-   if(hype){
+   {
     options.tooltip.confine=true;
     // One chart / two grids: identical UTC categories and linked pointers on mouse or touch.
     options.grid=[{left:65,right:65,top:65,height:'42%'},{left:65,right:65,top:'67%',bottom:55}];
     options.xAxis=[{...axis,gridIndex:0,boundaryGap:true},{...axis,gridIndex:1,boundaryGap:true}];
     options.yAxis.push({type:'value',gridIndex:1,name:'USD',min:0,axisLabel:{color:'#8fb5ac',formatter:v=>v>=1e6?fmt(v/1e6,1)+'M':v>=1e3?fmt(v/1e3,1)+'k':fmt(v)},splitLine:{lineStyle:{color:'#183c34'}}});
-    options.title={text:'每日持币人收入（USD）',left:65,top:'57%',textStyle:{color:'#8fb5ac',fontSize:14}};
+    options.title={text:revenueLabel.replace('（代理口径','\n（代理口径'),left:65,top:'57%',textStyle:{color:'#8fb5ac',fontSize:14}};
     options.axisPointer={link:[{xAxisIndex:[0,1]}]};
     options.tooltip.formatter=params=>{
      const d=params[0]?.axisValue,r=shown.find(r=>r.date===d);if(!r)return '';
      const v=dailyRevenue[d];
-     return d+' UTC<br>'+marker('circ')+'流通倍数：'+fmt(r.circ)+' x<br>'+marker('full')+'全解锁情景倍数：'+fmt(r.full)+' x<br>'+marker('price')+'价格：$'+fmt(r.price,4)+'<br>'+marker('revenue')+'每日持币人收入（USD）：'+(C.valid(v)?'$'+fmt(v):'NA（缺失，未填零）');
+     return d+' UTC<br>'+marker('circ')+'流通倍数：'+fmt(r.circ)+' x<br>'+marker('full')+'全解锁情景倍数：'+fmt(r.full)+' x<br>'+marker('price')+'价格：$'+fmt(r.price,4)+'<br>'+marker('revenue')+revenueLabel+'：'+(C.valid(v)?'$'+fmt(v):'NA（缺失，未填零）');
     };
-    options.series.push({name:'每日持币人收入（USD）',type:'bar',xAxisIndex:1,yAxisIndex:2,barMaxWidth:18,itemStyle:{color:colors.revenue,opacity:0.75},data:shown.map(r=>C.valid(dailyRevenue[r.date])?dailyRevenue[r.date]:null)});
+    options.series.push({name:revenueLabel,type:'bar',xAxisIndex:1,yAxisIndex:2,barMaxWidth:18,itemStyle:{color:colors.revenue,opacity:0.75},data:shown.map(r=>C.valid(dailyRevenue[r.date])?dailyRevenue[r.date]:null)});
    }
    chart.setOption(options);
   }else $('chart').textContent='图表库未加载；下方表格和 CSV 仍可用。';
