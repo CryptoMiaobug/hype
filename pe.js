@@ -14,7 +14,7 @@
  let chainData={},chainSnapshot,chainState=[];
  const bi=(zh,en)=>window.I18n?.lang==='en'?en:zh;
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let seed,rows=[],dailyRevenue={},range=90,chart;
+ let seed,rows=[],dailyRevenue={},range=365,chart; // default view: last 1 year
  // Main-chart line visibility by stable key (survives range/language re-renders). Full-unlock is opt-in.
  const lineShown={circ:true,full:false,price:true,p20:true,p80:true};const lineNames=()=>({circ:t('流通倍数'),full:t('全解锁情景倍数'),price:t('价格 USD'),p20:bi('近1年流通 20分位','1Y circulating P20'),p80:bi('近1年流通 80分位','1Y circulating P80')});const key='hypevalue-pe-v1-'+asset;
  async function json(url){const r=await fetch(url,{signal:AbortSignal.timeout(25000),credentials:'omit'});if(!r.ok)throw Error('HTTP '+r.status+(r.status===429?'（限流，请稍后手动重试）':''));return r.json();}
