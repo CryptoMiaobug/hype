@@ -392,9 +392,10 @@ const I18n = {
   init() {
     // 优先用用户手动选择（localStorage）；
     // 首次访问跟随系统语言：中文（zh / zh-CN / zh-TW / zh-HK...）→ zh，其他一律→ en
-    const saved = localStorage.getItem('hs_lang');
-    const navLang = (navigator.language || '').toLowerCase();
-    this.lang = saved || (navLang.startsWith('zh') ? 'zh' : 'en');
+    let saved;
+    try { saved = localStorage.getItem('hs_lang'); } catch (_) { /* storage denied */ }
+    this.lang = (saved === 'zh' || saved === 'en') ? saved
+      : (/^zh(?:[-_]|$)/i.test(navigator.language || '') ? 'zh' : 'en');
     document.documentElement.lang = this.lang === 'en' ? 'en' : 'zh';
     this.apply();
     this.mountSwitcher();
@@ -425,7 +426,7 @@ const I18n = {
   set(lang) {
     if (lang !== 'zh' && lang !== 'en') return;
     this.lang = lang;
-    localStorage.setItem('hs_lang', lang);
+    try { localStorage.setItem('hs_lang', lang); } catch (_) { /* keep in-memory choice */ }
     document.documentElement.lang = lang;
     this.apply();
     this.updateSwitcherUI();
@@ -442,44 +443,27 @@ const I18n = {
   },
 
   mountSwitcher() {
-    // 主站页面：交给 .topbar（插到 .badge 之前）
+    // Reuse explicit PE controls; create the same controls on other site pages.
+    let sw = document.getElementById('langSwitch');
     const bar = document.querySelector('.topbar');
-    if (bar && !document.getElementById('langSwitch')) {
-      const sw = document.createElement('div');
-      sw.id = 'langSwitch';
-      sw.className = 'lang-switch';
-      sw.innerHTML = `
-        <button data-lang="zh">CN</button>
-        <button data-lang="en">EN</button>
-      `;
-      const badge = bar.querySelector('.badge');
-      if (badge) bar.insertBefore(sw, badge);
-      else bar.appendChild(sw);
-      sw.addEventListener('click', (e) => {
-        const btn = e.target.closest('button[data-lang]');
-        if (btn) this.set(btn.dataset.lang);
-      });
-      this.updateSwitcherUI();
-      return;
-    }
-
-    // 战场页：交给 #top-bar .top-left（服从当前页风格）
     const bfLeft = document.querySelector('#top-bar .top-left');
-    if (bfLeft && !document.getElementById('langSwitch')) {
-      const sw = document.createElement('div');
+    if (!sw && (bar || bfLeft)) {
+      sw = document.createElement('div');
       sw.id = 'langSwitch';
-      sw.className = 'lang-switch lang-switch-bf';
-      sw.innerHTML = `
-        <button data-lang="zh">CN</button>
-        <button data-lang="en">EN</button>
-      `;
-      bfLeft.appendChild(sw);
+      sw.className = bar ? 'lang-switch' : 'lang-switch lang-switch-bf';
+      sw.innerHTML = '<button type="button" data-lang="zh">CN</button><button type="button" data-lang="en">EN</button>';
+      const badge = bar && bar.querySelector('.badge');
+      if (badge) bar.insertBefore(sw, badge);
+      else (bar || bfLeft).appendChild(sw);
+    }
+    if (sw && !sw._languageBound) {
+      sw._languageBound = true;
       sw.addEventListener('click', (e) => {
         const btn = e.target.closest('button[data-lang]');
         if (btn) this.set(btn.dataset.lang);
       });
-      this.updateSwitcherUI();
     }
+    this.updateSwitcherUI();
   },
 
   updateSwitcherUI() {

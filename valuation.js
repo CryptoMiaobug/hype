@@ -56,12 +56,9 @@ function loadFromUrl() {
     }
   }
   if (q.get('mode') === 'peryear') toggleGrowthMode(true, true);
-  // 跟随发起人语言 (不写 localStorage,避免污染朋友自己选的)
-  const hl = q.get('hl');
-  if ((hl === 'zh' || hl === 'en') && window.I18n) {
-    if (typeof I18n.setTemp === 'function') I18n.setTemp(hl);
-    else if (I18n.lang !== hl) I18n.set(hl);
-  }
+  // Language belongs to the viewer: manual preference, otherwise browser language.
+  // Legacy shared-link hl parameters must not override that preference.
+
 }
 function saveToUrl() {
   const q = new URLSearchParams();
