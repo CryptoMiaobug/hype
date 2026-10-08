@@ -14,7 +14,9 @@
    chart??=echarts.init($('chart'));
    const dates=shown.map(r=>r.date),hype=asset==='hype';
    const axis={type:'category',data:dates,axisLabel:{color:'#8fb5ac'}};
-   const options={color:['#50d2c1','#ecb96a','#1fd286'],tooltip:{trigger:'axis'},legend:{textStyle:{color:'#8fb5ac'},data:['流通倍数','全解锁情景倍数','价格 USD']},grid:{left:65,right:65,bottom:55},xAxis:axis,yAxis:[{type:'value',name:'倍数 x',axisLabel:{color:'#8fb5ac'}},{type:'value',name:'USD',axisLabel:{color:'#8fb5ac'},splitLine:{show:false}}],series:[['流通倍数','circ',0],['全解锁情景倍数','full',0],['价格 USD','price',1]].map(([name,k,yAxisIndex])=>({name,type:'line',showSymbol:false,connectNulls:false,yAxisIndex,data:shown.map(r=>r[k])}))};
+   const colors={circ:'#38BDF8',full:'#FBBF24',price:'#C084FC',revenue:'#50d2c1'};
+   const marker=k=>`<span style="display:inline-block;margin-right:4px;border-radius:50%;width:10px;height:10px;background-color:${colors[k]}"></span>`;
+   const options={color:[colors.circ,colors.full,colors.price],tooltip:{trigger:'axis'},legend:{textStyle:{color:'#8fb5ac'},data:['流通倍数','全解锁情景倍数','价格 USD']},grid:{left:65,right:65,bottom:55},xAxis:axis,yAxis:[{type:'value',name:'倍数 x',axisLabel:{color:'#8fb5ac'}},{type:'value',name:'USD',axisLabel:{color:'#8fb5ac'},splitLine:{show:false}}],series:[['流通倍数','circ',0],['全解锁情景倍数','full',0],['价格 USD','price',1]].map(([name,k,yAxisIndex])=>({name,type:'line',showSymbol:false,connectNulls:false,yAxisIndex,lineStyle:{color:colors[k]},itemStyle:{color:colors[k]},data:shown.map(r=>r[k])}))};
    if(hype){
     options.tooltip.confine=true;
     // One chart / two grids: identical UTC categories and linked pointers on mouse or touch.
@@ -26,9 +28,9 @@
     options.tooltip.formatter=params=>{
      const d=params[0]?.axisValue,r=shown.find(r=>r.date===d);if(!r)return '';
      const v=dailyRevenue[d];
-     return d+' UTC<br>流通倍数：'+fmt(r.circ)+' x<br>全解锁情景倍数：'+fmt(r.full)+' x<br>价格：$'+fmt(r.price,4)+'<br>每日持币人收入（USD）：'+(C.valid(v)?'$'+fmt(v):'NA（缺失，未填零）');
+     return d+' UTC<br>'+marker('circ')+'流通倍数：'+fmt(r.circ)+' x<br>'+marker('full')+'全解锁情景倍数：'+fmt(r.full)+' x<br>'+marker('price')+'价格：$'+fmt(r.price,4)+'<br>'+marker('revenue')+'每日持币人收入（USD）：'+(C.valid(v)?'$'+fmt(v):'NA（缺失，未填零）');
     };
-    options.series.push({name:'每日持币人收入（USD）',type:'bar',xAxisIndex:1,yAxisIndex:2,barMaxWidth:18,itemStyle:{color:'#50d2c1',opacity:0.75},data:shown.map(r=>C.valid(dailyRevenue[r.date])?dailyRevenue[r.date]:null)});
+    options.series.push({name:'每日持币人收入（USD）',type:'bar',xAxisIndex:1,yAxisIndex:2,barMaxWidth:18,itemStyle:{color:colors.revenue,opacity:0.75},data:shown.map(r=>C.valid(dailyRevenue[r.date])?dailyRevenue[r.date]:null)});
    }
    chart.setOption(options);
   }else $('chart').textContent='图表库未加载；下方表格和 CSV 仍可用。';

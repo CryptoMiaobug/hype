@@ -25,6 +25,19 @@ async function run(asset,{cache={},online=false,end='2026-10-08'}={}){
  const inc=await run('hype',{online:true});assert.equal(inc.option.series[3].data.at(-2),777);
  const early=await run('hype',{end:'2026-10-01'});assert.equal(early.option.series[3].data.at(-1),early.seed.revenue[early.seed.last]);
  const u=await run('uni');assert.equal(u.option.series.length,3);assert.equal(u.option.yAxis.length,2);assert.equal(u.option.xAxis.type,'category');assert.equal(u.option.title,undefined);assert.equal(u.nodes.tbody.children[0].children.length,6);
+ // Stable semantic colors: legend/default UNI tooltip inherit itemStyle; HYPE custom tooltip uses matching markers.
+ for(const page of [h,u]){
+  assert.deepEqual(Array.from(page.option.color),['#38BDF8','#FBBF24','#C084FC']);
+  for(const [i,name,color] of [[0,'流通倍数','#38BDF8'],[1,'全解锁情景倍数','#FBBF24'],[2,'价格 USD','#C084FC']]){
+   assert.equal(page.option.legend.data[i],name);assert.equal(page.option.series[i].name,name);
+   assert.equal(page.option.series[i].lineStyle.color,color);assert.equal(page.option.series[i].itemStyle.color,color);
+  }
+ }
+ assert.equal(h.option.series[3].itemStyle.color,'#50d2c1');assert.ok(!h.option.color.includes(h.option.series[3].itemStyle.color));
+ const tooltip=h.option.tooltip.formatter([{axisValue:h.seed.last}]);
+ for(const [color,label] of [['#38BDF8','流通倍数'],['#FBBF24','全解锁情景倍数'],['#C084FC','价格'],['#50d2c1','每日持币人收入（USD）']])assert.ok(tooltip.includes('background-color:'+color+'"></span>'+label+'：'));
+ assert.equal(u.option.tooltip.formatter,undefined);
+ for(const asset of ['hype','uni'])assert.ok(fs.readFileSync(__dirname+'/'+asset+'-pe.html','utf8').includes('pe.js?v=20261008contrast'));
  assert.ok(h.nodes.cards.innerHTML.includes('最近有效，非目标日'));assert.ok(h.nodes.status.textContent.includes('当日收入缺失'));
  console.log('PASS chart: raw daily mapping, frozen/cache/API precedence, zero/missing, tooltip, table, all 3 ranges, linked UTC axes, unchanged historical curves, API increment, early clock, UNI regression, latest-valid cards');
 })().catch(e=>{console.error(e);process.exitCode=1});
