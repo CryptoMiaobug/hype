@@ -22,7 +22,7 @@ function english(h){
  assert.ok(!hasChinese(h.option.tooltip.formatter([{axisValue:'2026-10-08'}])));
  assert.ok(!hasChinese(h.byId.chart.attrs['aria-label']));
  for(const item of [...h.option.series,...h.option.yAxis])assert.ok(!hasChinese(item.name));
- assert.equal(h.root.lang,'en');assert.equal(h.option.series.length,h.byId['chain-summary']?9:5);
+ assert.equal(h.root.lang,'en');assert.equal(h.option.series.length,h.byId['chain-summary']?11:7);
 }
 (async()=>{
  for(const asset of ['hype','uni']){

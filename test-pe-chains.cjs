@@ -18,7 +18,7 @@ async function run(online=false,stored={},lang='en'){
  await vm.runInNewContext(fs.readFileSync('pe.js','utf8'),ctx);return {nodes,buttons,requests,window,stored,get option(){return option}};
 }
 (async()=>{
- const h=await run();assert.equal(h.option.series.length,9);assert.match(h.nodes['chain-summary'].innerHTML,/29\/30/);assert.match(h.nodes['chain-summary'].innerHTML,/API failed/);
+ const h=await run();assert.equal(h.option.series.length,11);assert.match(h.nodes['chain-summary'].innerHTML,/29\/30/);assert.match(h.nodes['chain-summary'].innerHTML,/API failed/);
  for(const b of h.buttons){b.onclick();assert.deepEqual(h.option.xAxis[0].data,h.option.xAxis[1].data);for(const s of h.option.series)assert.equal(s.data.length,h.option.xAxis[0].data.length);for(let i=0;i<h.option.xAxis[0].data.length;i++){const d=h.option.xAxis[0].data[i];for(let j=0;j<6;j++)assert.equal(h.option.series[j+3].data[i],B.group(data[d],[...B.main,'Others'][j]));}}
  seed.rows.forEach((r,i)=>['circ','full','price'].forEach((k,j)=>assert.equal(h.option.series[j].data[i],r[k])));
  assert.match(h.option.tooltip.formatter([{axisValue:seed.last}]),/Difference vs valuation revenue/);
