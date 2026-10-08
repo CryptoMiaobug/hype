@@ -5,10 +5,10 @@ async function run(asset,{cache={},online=false,end='2026-10-08'}={}){
  const seed=JSON.parse(fs.readFileSync(__dirname+'/pe-data/'+asset+'.json')),nodes={},buttons=[30,90,0].map(range=>({dataset:{range}}));let option,saved;const requests=[];
  const make=()=>({children:[],textContent:'',innerHTML:'',append(x){this.children.push(x)},replaceChildren(...x){this.children=x}});
  const document={body:{dataset:{asset}},getElementById(id){return nodes[id]??=make()},querySelectorAll(){return buttons},createElement:make};
- const echarts={init(){return {setOption(o){option=o},resize(){}}}};
+ const chartEvents={};const echarts={init(){return {setOption(o){option=o},resize(){},on(n,f){chartEvents[n]=f}}}};
  const ctx={PECore:{...C,yesterday:()=>end},document,window:{echarts,addEventListener(){}},echarts,localStorage:{getItem(){return JSON.stringify({seedHash:seed.sourceSHA256,...cache})},setItem(k,v){saved=JSON.parse(v)}},fetch:async url=>{requests.push(url);if(url.startsWith('pe-data'))return {ok:true,json:async()=>seed};if(!online)throw Error('offline');return {ok:true,json:async()=>url.includes('llama')?{id:'parent#'+(asset==='hype'?'hyperliquid':'uniswap'),totalDataChart:[[C.time(seed.last)/1000,999],[C.time('2026-10-07')/1000,777],[C.time('2026-10-08')/1000,null]]}:{prices:[],market_caps:[]}}},AbortSignal:{timeout(){}},Blob,URL,setTimeout,console};
  await vm.runInNewContext(source,ctx);
- return {seed,nodes,buttons,get option(){return option},saved,requests};
+ return {seed,nodes,buttons,chartEvents,get option(){return option},saved,requests};
 }
 (async()=>{
  for(const asset of ['hype','uni']){
@@ -21,6 +21,13 @@ async function run(asset,{cache={},online=false,end='2026-10-08'}={}){
  assert.equal(h.nodes.tbody.children[0].children[4].textContent,'NA');assert.equal(h.nodes.tbody.children[1].children[4].textContent,'0');
  for(const b of h.buttons){b.onclick();const expected=+b.dataset.range||h.seed.rows.length+2;assert.equal(h.option.xAxis[0].data.length,expected);assert.deepEqual(h.option.xAxis[0].data,h.option.xAxis[1].data);assert.equal(h.nodes.tbody.children.length,expected);for(const s of h.option.series)assert.equal(s.data.length,expected);h.option.xAxis[1].data.forEach((d,i)=>assert.equal(h.option.series[3].data[i],h.saved.revenue[d]??null));}
  assert.deepEqual(Array.from(h.option.axisPointer.link[0].xAxisIndex),[0,1]);
+ // Default visibility: circulating + price on, full-unlock off until the user clicks it; choice survives re-render.
+ const main=Array.isArray(h.option.legend)?h.option.legend[0]:h.option.legend;
+ assert.deepEqual({...main.selected},{'流通倍数':true,'全解锁情景倍数':false,'价格 USD':true});
+ h.chartEvents.legendselectchanged({selected:{'流通倍数':true,'全解锁情景倍数':true,'价格 USD':true}});h.buttons[0].onclick();
+ assert.equal((Array.isArray(h.option.legend)?h.option.legend[0]:h.option.legend).selected['全解锁情景倍数'],true);
+ h.chartEvents.legendselectchanged({selected:{'流通倍数':true,'全解锁情景倍数':false,'价格 USD':true}});h.buttons[1].onclick();
+ assert.equal((Array.isArray(h.option.legend)?h.option.legend[0]:h.option.legend).selected['全解锁情景倍数'],false);h.buttons[2].onclick();
  // The original 3 series are unchanged for every archived day.
  h.seed.rows.forEach((r,i)=>['circ','full','price'].forEach((k,j)=>assert.equal(h.option.series[j].data[i],r[k])));
  const inc=await run(asset,{online:true});assert.equal(inc.option.series[3].data.at(-2),777);
@@ -43,7 +50,7 @@ async function run(asset,{cache={},online=false,end='2026-10-08'}={}){
  const tooltip=h.option.tooltip.formatter([{axisValue:h.seed.last}]);
  for(const [color,tooltipLabel] of [['#38BDF8','流通倍数'],['#FBBF24','全解锁情景倍数'],['#C084FC','价格'],['#50d2c1',label]])assert.ok(tooltip.includes('background-color:'+color+'"></span>'+tooltipLabel+'：'));
 
- for(const asset of ['hype','uni'])assert.ok(fs.readFileSync(__dirname+'/'+asset+'-pe.html','utf8').includes('pe.js?v=20261008sources'));
+ for(const asset of ['hype','uni'])assert.ok(fs.readFileSync(__dirname+'/'+asset+'-pe.html','utf8').includes('pe.js?v=20261008fulloff'));
  assert.ok(h.nodes.cards.innerHTML.includes('最近有效，非目标日'));assert.ok(h.nodes.status.textContent.includes('当日收入缺失'));
  console.log('PASS chart',asset,': raw daily mapping, frozen/cache/API precedence, zero/missing, tooltip, table, all 3 ranges, linked UTC axes, unchanged historical curves, API increment, early clock, latest-valid cards');
  }

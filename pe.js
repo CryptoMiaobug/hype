@@ -12,7 +12,9 @@
  let chainData={},chainSnapshot,chainState=[];
  const bi=(zh,en)=>window.I18n?.lang==='en'?en:zh;
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let seed,rows=[],dailyRevenue={},range=90,chart;const key='hypevalue-pe-v1-'+asset;
+ let seed,rows=[],dailyRevenue={},range=90,chart;
+ // Main-chart line visibility by stable key (survives range/language re-renders). Full-unlock is opt-in.
+ const lineShown={circ:true,full:false,price:true};const lineNames=()=>({circ:t('流通倍数'),full:t('全解锁情景倍数'),price:t('价格 USD')});const key='hypevalue-pe-v1-'+asset;
  async function json(url){const r=await fetch(url,{signal:AbortSignal.timeout(25000),credentials:'omit'});if(!r.ok)throw Error('HTTP '+r.status+(r.status===429?'（限流，请稍后手动重试）':''));return r.json();}
  function render(){
   const target=rows.at(-1),complete=[...rows].reverse().find(r=>r.circ!=null),latest=complete??target;
@@ -29,7 +31,7 @@
    $('source-summary').innerHTML='<h3>'+bi('近30个完整 UTC 日 · 收入来源占比','Last 30 complete UTC days · revenue sources')+'</h3><p>'+C.yesterday()+' · '+bi('完整明细覆盖','Complete breakdown coverage')+' '+sum.covered+'/30 · '+bi('同期已报告合计','Reported total for covered days')+' $'+fmt(sum.sum)+'</p><p>'+esc(t(sourceState.map(([zh,en])=>bi(zh,en)).join(' · ')))+'</p><p>'+bi('仅统计两组均有效的日期；缺失不是零，不完整覆盖不是完整30日收入。不缩放明细以匹配估值底稿。','Only days with both valid groups are included; missing is not zero. Incomplete coverage is not a full 30-day total. Components are never scaled to match valuation inputs.')+'</p><div class="scroll-y"><table><thead><tr><th>'+bi('来源','Source')+'</th><th>USD</th><th>%</th><th>'+bi('覆盖天数','Days covered')+'</th></tr></thead><tbody>'+sum.rows.map(r=>'<tr><td>'+sourceName(r.name)+'</td><td>'+fmt(r.days?r.value:null)+'</td><td>'+fmt(r.share==null?null:r.share*100)+'</td><td>'+r.days+'/30</td></tr>').join('')+'</tbody></table></div>';
   }
   if(window.echarts){
-   chart??=echarts.init($('chart'));
+   if(!chart){chart=echarts.init($('chart'));chart.on?.('legendselectchanged',e=>{for(const [k,n] of Object.entries(lineNames()))if(Object.hasOwn(e.selected||{},n))lineShown[k]=!!e.selected[n];});}
    const dates=shown.map(r=>r.date),revenueLabel=asset==='hype'?t('每日持币人收入（USD）'):t('每日回购／销毁价值（代理口径，USD）');
    const axis={type:'category',data:dates,axisLabel:{color:'#8fb5ac'}};
    const colors={circ:'#38BDF8',full:'#FBBF24',price:'#C084FC',revenue:'#50d2c1'};
@@ -82,6 +84,7 @@
      return base(params)+'<hr>'+H.keys.map(k=>sourceName(k)+': $'+fmt(row?.[k])+' · '+fmt(H.valid(row?.[k])&&total>0?row[k]/total*100:null)+'%').join('<br>')+'<br>'+bi('明细同期合计','Same-day breakdown total')+': $'+fmt(total)+'<br>'+bi('与估值底稿差额（明细减底稿）','Difference vs valuation input (breakdown minus input)')+': $'+fmt(H.valid(total)&&C.valid(original)?total-original:null)+'<br>'+bi('NA 为缺失；差异保留，不缩放、不覆盖历史。','NA means missing; differences are retained, never scaled or written over history.');
     };
    }
+   const main=Array.isArray(options.legend)?options.legend[0]:options.legend;main.selected=Object.fromEntries(Object.entries(lineNames()).map(([k,n])=>[n,lineShown[k]]));
    chart.setOption(options, {notMerge:true});
   }else $('chart').textContent=t('图表库未加载；下方表格和 CSV 仍可用。');
  }
