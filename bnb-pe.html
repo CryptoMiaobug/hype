@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BNB PE — HypeValue</title>
+<link rel="stylesheet" href="style.css?v=20261008pe"><link rel="stylesheet" href="pe.css?v=20261008langauto">
+<script defer src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script defer src="i18n.js?v=20261008langauto"></script><script defer src="bnb-i18n.js?v=20261009bnb"></script>
+<script defer src="bnb-core.js?v=20261009bnb"></script><script defer src="bnb-pe.js?v=20261009bnb"></script>
+<script data-goatcounter="https://cryptomiao.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script></head>
+<body data-asset="bnb"><div class="topbar"><a class="logo" href="index.html"><span class="dot"></span>HypeValue</a><nav class="topnav"><a href="index.html" data-i18n="nav.dashboard">仪表盘</a><a href="valuation.html" data-i18n="nav.valuation">价值测算</a><a href="hype-pe.html">HYPE PE</a><a href="uni-pe.html">UNI PE</a><a href="bnb-pe.html" class="active" aria-current="page">BNB PE</a><a href="battlefield/index.html" data-i18n="nav.battle">战况</a></nav><div class="spacer"></div><div id="langSwitch" class="lang-switch"><button type="button" data-lang="zh">CN</button><button type="button" data-lang="en">EN</button></div></div>
+<main class="container">
+<h1 data-i18n="bnb.title">BNB 销毁 PE 观察台</h1>
+<p class="pe-muted" data-i18n="bnb.subtitle">最近 4 次季度 Auto-Burn + 30 日 Gas 实时销毁年化 · 非会计利润 PE · 非实时行情</p>
+<p id="asof" class="pe-muted">…</p>
+<div class="pe-controls"><button id="refresh" type="button" data-i18n="bnb.refresh">联网补缺 / 重试</button><button id="download" type="button" data-i18n="bnb.download">下载当前 CSV</button><a href="pe-data/bnb.json" download data-i18n="bnb.seed">固化原始数据 JSON</a></div>
+<p id="status" role="status" aria-live="polite">…</p>
+<p id="stale" class="pe-muted" role="note" hidden></p>
+<div class="stat-grid" id="cards"></div>
+<section class="panel"><h3 data-i18n="bnb.chartTitle">销毁 PE、价格与每日 Gas 销毁</h3>
+<div class="pe-controls" role="group" data-i18n-aria="bnb.rangeGroup" aria-label="时间范围"><button type="button" data-range="30" data-i18n="bnb.r30">近30日</button><button type="button" data-range="90" data-i18n="bnb.r90">近90日</button><button type="button" data-range="365" data-i18n="bnb.r365">近1年</button><button type="button" data-range="0" data-i18n="bnb.rAll">全部</button></div>
+<p class="pe-muted" data-i18n="bnb.chartNote">上图：销毁 PE（左轴）与价格（右轴），虚线为近 1 年 PE 20/80 分位，竖线为季度销毁日。下图：每日 Gas 实时销毁（USD）。共用 UTC 日期。</p>
+<div id="chart" role="img" data-pe-aria="bnb.chartAria" aria-label="上方为 BNB 销毁 PE 与价格，下方为每日 Gas 销毁柱状图；详细数值见下方表格"></div></section>
+<section class="panel"><h3 data-i18n="bnb.burnsTitle">季度 Auto-Burn（链上核实）</h3><p class="pe-muted" data-i18n="bnb.burnsNote">数量取 BSC 链上转入 0x…dEaD 的金额（不含 Pioneer Burn）；美元 = 数量 × bnbburn.info 季度中位价。每季度新公告发布后由维护者手动加入。</p>
+<div class="scroll-y"><table><thead><tr><th data-i18n="bnb.colN">次数</th><th data-i18n="bnb.colQuarter">季度</th><th data-i18n="bnb.colBurnDate">销毁日 UTC</th><th data-i18n="bnb.colAmount">链上数量 BNB</th><th data-i18n="bnb.colMedian">中位价 USD</th><th data-i18n="bnb.colUsd">折合 USD</th><th data-i18n="bnb.colTx">交易</th></tr></thead><tbody id="burns"></tbody></table></div></section>
+<section class="panel pe-method"><h3 data-i18n="bnb.methodTitle">计算口径与数据边界</h3>
+<p data-i18n="bnb.m1">销毁 PE = 流通市值 / 年化销毁额。年化销毁额 = 最近 4 次已执行的季度 Auto-Burn 美元合计 + Gas 实时销毁近 30 日合计 × 365/30。这是销毁价值代理，不是会计利润、手续费总额或回购。</p>
+<p data-i18n="bnb.m2">季度销毁从第 27 次（2024-04-24）起计入，这是第一次可在 BSC 链上核实的销毁；第 26 次及以前在已下线的 Beacon Chain 执行，不纳入。第 30 次（2025-01-23）后才凑满 4 个季度，曲线从这一天开始。数量统一取链上实际销毁量：第 29 次含补烧上季的 62,569.63 BNB，第 30、32、34 次剔除 Pioneer Burn。</p>
+<p data-i18n="bnb.m3">季度分母在每次销毁当天跳变，图表呈阶梯状；两次销毁之间只有 Gas 部分和市值在变。季度数据由维护者每季度手动更新，新一季公告发布前，页面继续使用最近 4 次。</p>
+<p data-i18n="bnb.m4">Gas 实时销毁取 DefiLlama BSC dailyRevenue（BEP-95 销毁的 10% Gas 费，USD）。日 D 的价格和市值取 D+1 00:00 UTC 精确时点，作为近似收盘；30 日窗口缺任何一天即 NA。</p>
+<p data-i18n="bnb.m5">市值：最近 365 天取 CoinGecko 市值；更早的日期 = DefiLlama 价格 × 倒推供应量。倒推供应量 = CoinGecko 首日隐含流通量 + 之后每天的季度销毁和 Gas 销毁。两段在 2025-10-09 衔接，口径不同；CoinGecko 的流通量本身有日间波动（例如 2026-04-01 至 04-10 曾偏低约 319 万 BNB），按原值保留，不做修正。</p>
+<p data-i18n="bnb.m6">固化档案之后的日期，打开页面时按设备 UTC 昨日尝试从 DefiLlama 与 CoinGecko 补齐，增量只存本浏览器 localStorage。上游延迟、CORS、限流或网络失败时保留 NA。仅供研究，不是投资建议。</p>
+<p><span data-i18n="bnb.sources">来源：</span><a href="https://www.bnbburn.info/" target="_blank" rel="noopener">bnbburn.info</a> · <a href="https://www.bnbchain.org/en/blog" target="_blank" rel="noopener">BNB Chain Blog</a> · <a href="https://bscscan.com/address/0x000000000000000000000000000000000000dEaD" target="_blank" rel="noopener">BscScan</a> · <a href="https://api.llama.fi/summary/fees/bsc?dataType=dailyRevenue" target="_blank" rel="noopener">DefiLlama</a> · <a href="https://www.coingecko.com/en/coins/bnb" target="_blank" rel="noopener">CoinGecko</a></p></section>
+<section class="panel"><h3 data-i18n="bnb.tableTitle">每日数据 · UTC（新到旧）</h3><div class="scroll-y"><table><thead><tr><th data-i18n="bnb.colDate">日期</th><th data-i18n="bnb.colPrice">价格 USD</th><th data-i18n="bnb.colPe">销毁 PE</th><th data-i18n="bnb.colQ">季度年化 USD</th><th data-i18n="bnb.colGasDay">当日 Gas 销毁 USD</th><th data-i18n="bnb.colGas">Gas 年化 USD</th><th data-i18n="bnb.colMcapSrc">市值来源</th><th data-i18n="bnb.colStatus">状态/来源</th></tr></thead><tbody id="tbody"></tbody></table></div></section>
+</main><footer class="visit-counter" id="visitCounter" aria-live="polite">
+<span data-i18n="pe.text35">总访问量</span>：<b id="vcTotal">加载中…</b><span class="vc-sep">·</span><span data-i18n="pe.text36">今日访问量</span>：<b id="vcToday">加载中…</b>
+<br><span data-i18n="pe.text37">GoatCounter 站点汇总（与首页相同） · 今日按 UTC</span>
+</footer><script defer src="visit-counter.js?v=20261008footer"></script></body></html>
