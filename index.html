@@ -2,6 +2,12 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
+  <script>
+    // Root URL opens the PE overview; explicit index.html remains the HYPE dashboard.
+    if (location.pathname === '/') {
+      location.replace('/pe-list.html' + location.search + location.hash);
+    }
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CoinValue — Hyperliquid Dashboard</title>
   <link rel="stylesheet" href="style.css?v=20260709t" />
