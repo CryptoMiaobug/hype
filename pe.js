@@ -22,6 +22,7 @@
   const target=rows.at(-1),complete=[...rows].reverse().find(r=>r.circ!=null),latest=complete??target;
   $('asof').textContent=t('目标完整 UTC 日：')+C.yesterday()+t(' · 表中截至：')+target.date+t(' · 卡片有效估值日：')+(complete?.date??t('无'));
   $('cards').innerHTML=[[t('流通')+(asset==='hype'?t('收入倍数'):t('销毁 PE')),fmt(latest.circ)+' x'],[t('全解锁')+(asset==='hype'?t('情景倍数'):t('销毁 PE（估算）')),fmt(latest.full)+' x'],[t('近似收盘价格'),'$'+fmt(latest.price,4)],[t('30日')+(asset==='hype'?t('持币人收入'):t('销毁价值')),'$'+fmt(latest.r30)],[t('年化分母'),'$'+fmt(latest.annual)],[t('情景总供应'),fmt(latest.supply,2)]].map(([k,v])=>`<div class="stat-card"><div class="label">${t(k)}</div><div class="value">${v}</div><div class="sub">${latest.date} UTC${latest.date!==target.date?t(' · 最近有效，非目标日'):''}</div></div>`).join('');
+  if(window.DCACore&&$('dca'))$('dca').innerHTML=DCACore.panel(rows,'circ',bi);
   const shown=range?rows.slice(-range):rows;
   $('tbody').replaceChildren(...[...shown].reverse().map(r=>{const tr=document.createElement('tr');for(const v of [r.date,fmt(r.price,4),fmt(r.circ),fmt(r.full),fmt(dailyRevenue[r.date]),fmt(r.r30),r.source==='bundled'?t('固化历史'):r.status==='ok'?t('浏览器增量'):t(r.status)]){const td=document.createElement('td');td.textContent=v;tr.append(td);}return tr;}));
   if(asset==='uni'&&B){

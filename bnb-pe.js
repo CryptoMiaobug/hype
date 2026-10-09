@@ -47,6 +47,7 @@
       for (const v of [r.date, fmt(r.price, 2), fmt(r.pe), usd(r.quarterly), usd(rev[r.date]), usd(r.gas), r.mcapSource === 'backcast' ? t('倒推') : r.mcapSource ?? 'NA', src]) { const td = document.createElement('td'); td.textContent = v; tr.append(td); }
       return tr;
     }));
+    if (window.DCACore && $('dca')) $('dca').innerHTML = DCACore.panel(rows, 'pe', (zh, e) => en() ? e : zh);
     drawChart(shown);
   }
 

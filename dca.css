@@ -1,24 +1,14 @@
-.dca-base{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:16px 0}
-.dca-base input{background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 12px;width:140px;font-size:16px}
-.dca-base input:focus-visible{outline:2px solid var(--accent)}
-.dca-base input[aria-invalid="true"]{border-color:var(--red)}
-#total{color:var(--accent-2);font-weight:600;margin:8px 0 16px}
-.dca-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px}
-.dca-card{min-width:0;background:var(--card);border:1px solid var(--border);border-top:4px solid var(--tier,var(--border));border-radius:12px;padding:18px;box-shadow:var(--shadow)}
-.dca-card header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.dca-card h3{margin:0;font-size:20px}
-.dca-badge{background:var(--tier);color:#0b1f1b;font-weight:700;font-size:13px;padding:4px 10px;border-radius:999px}
-.dca-big{font-size:32px;font-weight:700;color:var(--tier)}
-.dca-muted{color:var(--text-dim);font-size:13px}
-.dca-meter{position:relative;height:10px;border-radius:5px;margin:16px 0 4px;background:linear-gradient(90deg,#4ADE80 0 20%,#FACC15 20% 50%,#FB923C 50% 80%,#F87171 80% 100%)}
+/* In-page DCA suggestion panel on the PE pages. */
+.dca-body{border-left:4px solid var(--tier);padding-left:14px}
+.dca-main{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.dca-ratio{font-size:36px;font-weight:700;color:var(--tier)}
+.dca-badge{background:var(--tier);color:#0b1f1b;font-weight:700;font-size:14px;padding:4px 12px;border-radius:999px}
+.dca-meter{position:relative;height:10px;max-width:520px;border-radius:5px;margin:14px 0 4px;background:linear-gradient(90deg,#4ADE80 0 20%,#FACC15 20% 50%,#FB923C 50% 80%,#F87171 80% 100%)}
 .dca-meter i{position:absolute;top:-4px;width:4px;height:18px;margin-left:-2px;background:#fff;border-radius:2px;box-shadow:0 0 4px #000}
-.dca-scale{position:relative;height:16px;font-size:12px;color:var(--text-dim)}
+.dca-scale{position:relative;height:16px;max-width:520px;font-size:12px;color:var(--text-dim)}
 .dca-scale span{position:absolute;transform:translateX(-50%)}
 .dca-scale span:nth-child(1){left:0;transform:none}.dca-scale span:nth-child(2){left:20%}.dca-scale span:nth-child(3){left:50%}.dca-scale span:nth-child(4){left:80%}.dca-scale span:nth-child(5){right:0;transform:none}
-.dca-card dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:14px 0;font-size:13px}
-.dca-card dt{color:var(--text-dim)}.dca-card dd{margin:0;text-align:right}
-.dca-link{font-size:13px}
-.dca-rules{margin-top:24px}.dca-rules ul{padding-left:22px}.dca-rules li{margin:6px 0;color:var(--text-dim)}
-.dca-rules li::marker{color:var(--c)}
-.dca-card dd{overflow-wrap:anywhere}
-@media(max-width:700px){.dca-big{font-size:28px}.dca-base input{width:100%}}
+.dca-metrics{margin-top:10px}.dca-metrics span{white-space:nowrap}.dca-note{text-wrap:pretty}
+.dca-rules{padding-left:22px;margin:10px 0}.dca-rules li{margin:4px 0;color:var(--text-dim)}.dca-rules li::marker{color:var(--c)}
+.dca-rules li.on{color:var(--text);font-weight:600}
+@media(max-width:700px){.dca-ratio{font-size:30px}}
