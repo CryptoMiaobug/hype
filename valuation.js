@@ -256,7 +256,7 @@ function getParams() {
 function computeDCF(p) {
   const { base, growths, perp, wacc } = p;
   // 帮用户排查：打印每次计算的入参
-  console.log('[HypeValue.DCF]', { base, growths, perp, wacc, currentMcap: state.currentMcap, currentPrice: state.currentPrice });
+  console.log('[CoinValue.DCF]', { base, growths, perp, wacc, currentMcap: state.currentMcap, currentPrice: state.currentPrice });
   // 前 5 年 FCF
   const fcf = [];
   let prev = base;

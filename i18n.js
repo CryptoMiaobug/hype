@@ -17,7 +17,7 @@ const I18N_DICT = {
     'list.colRank': '近 1 年分位', 'list.colBand': 'P20 / P50 / P80', 'list.colDca': '定投建议', 'list.colAnnual': '年化回馈额', 'list.colDate': '数据日 UTC',
     'nav.battle': '战况',
     // ---- 战场页 ----
-    'bf.brand': 'HypeValue',
+    'bf.brand': 'CoinValue',
     'bf.orderbook': '订单簿',
     'bf.buyWall': '买单墙',
     'bf.sellWall': '卖单墙',
@@ -88,7 +88,7 @@ const I18N_DICT = {
     'idx.spotMarkets': '现货市场',
     'idx.richList': 'HyperEVM 富豪榜 · Rich List',
     'idx.nativeHolders': '原生代币持有榜',
-    'idx.footer': 'HypeValue · 数据来自 Hyperliquid 官方 API 与公开索引服务 · 仅供参考',
+    'idx.footer': 'CoinValue · 数据来自 Hyperliquid 官方 API 与公开索引服务 · 仅供参考',
 
     // 表格表头
     'tbl.coin': '币种',
@@ -190,7 +190,7 @@ const I18N_DICT = {
     'val.shareLinkBtn': '🔗 复制链接',
     'val.shareLinkBtnTip': '只拷贝链接,不带文案',
     'val.shareLinkCopied': '✅ 已复制',
-    'val.shareTitle': 'HYPE 估值 · HypeValue',
+    'val.shareTitle': 'HYPE 估值 · CoinValue',
     'val.shareText': '我预测 HYPE 真实估值为 ${price}（当前 ${cur}，{sign}{diff}%），快来看看吧！👇',
     'val.shareTextNoCmp': '我预测 HYPE 真实估值为 ${price}，快来看看吧！👇',
     'val.shareTextFallback': '我的 HYPE 估值参数，快来看看吧！👇',
@@ -211,7 +211,7 @@ const I18N_DICT = {
     'list.colRank': '1Y percentile', 'list.colBand': 'P20 / P50 / P80', 'list.colDca': 'DCA suggestion', 'list.colAnnual': 'Annualized return to holders', 'list.colDate': 'As of UTC',
     'nav.battle': 'Battle',
     // ---- Battlefield ----
-    'bf.brand': 'HypeValue',
+    'bf.brand': 'CoinValue',
     'bf.orderbook': 'Order Book',
     'bf.buyWall': 'Buy Wall',
     'bf.sellWall': 'Sell Wall',
@@ -282,7 +282,7 @@ const I18N_DICT = {
     'idx.spotMarkets': 'Spot',
     'idx.richList': 'HyperEVM Rich List',
     'idx.nativeHolders': 'Native Token Holders',
-    'idx.footer': 'HypeValue · Data from Hyperliquid API and public indexers · For reference only',
+    'idx.footer': 'CoinValue · Data from Hyperliquid API and public indexers · For reference only',
 
     'tbl.coin': 'Coin',
     'tbl.markPrice': 'Mark Price',
@@ -383,7 +383,7 @@ const I18N_DICT = {
     'val.shareLinkBtn': '🔗 Copy Link',
     'val.shareLinkBtnTip': 'Copy the link only, no message',
     'val.shareLinkCopied': '✅ Copied',
-    'val.shareTitle': 'HYPE Valuation · HypeValue',
+    'val.shareTitle': 'HYPE Valuation · CoinValue',
     'val.shareText': 'My HYPE fair value prediction: ${price} (current ${cur}, {sign}{diff}%). Come check it out! 👇',
     'val.shareTextNoCmp': 'My HYPE fair value prediction: ${price}. Come check it out! 👇',
     'val.shareTextFallback': 'My HYPE valuation params. Come check it out! 👇',
