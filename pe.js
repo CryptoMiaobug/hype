@@ -16,12 +16,12 @@
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let seed,rows=[],dailyRevenue={},range=365,chart; // default view: last 1 year
  // Main-chart line visibility by stable key (survives range/language re-renders). Full-unlock is opt-in.
- const lineShown={circ:true,full:false,price:true,p20:true,p50:true,p80:true};const lineNames=()=>({circ:t('流通倍数'),full:t('全解锁情景倍数'),price:t('价格 USD'),p20:bi('近1年流通 20分位','1Y circulating P20'),p50:bi('近1年流通 50分位（中位数）','1Y circulating P50 (median)'),p80:bi('近1年流通 80分位','1Y circulating P80')});const key='hypevalue-pe-v1-'+asset;
+ const lineShown={circ:true,full:false,price:true,p20:true,p50:true,p80:true};const lineNames=()=>({circ:t('流通 PE'),full:t('解锁 PE'),price:t('价格 USD'),p20:bi('近1年流通 PE 20分位','1Y circulating PE P20'),p50:bi('近1年流通 PE 50分位（中位数）','1Y circulating PE P50 (median)'),p80:bi('近1年流通 PE 80分位','1Y circulating PE P80')});const key='hypevalue-pe-v1-'+asset;
  async function json(url){const r=await fetch(url,{signal:AbortSignal.timeout(25000),credentials:'omit'});if(!r.ok)throw Error('HTTP '+r.status+(r.status===429?'（限流，请稍后手动重试）':''));return r.json();}
  function render(){
   const target=rows.at(-1),complete=[...rows].reverse().find(r=>r.circ!=null),latest=complete??target;
   $('asof').textContent=t('目标完整 UTC 日：')+C.yesterday()+t(' · 表中截至：')+target.date+t(' · 卡片有效估值日：')+(complete?.date??t('无'));
-  $('cards').innerHTML=[[t('流通')+(asset==='hype'?t('收入倍数'):t('销毁 PE')),fmt(latest.circ)+' x'],[t('全解锁')+(asset==='hype'?t('情景倍数'):t('销毁 PE（估算）')),fmt(latest.full)+' x'],[t('近似收盘价格'),'$'+fmt(latest.price,4)],[t('30日')+(asset==='hype'?t('持币人收入'):t('销毁价值')),'$'+fmt(latest.r30)],[t('年化分母'),'$'+fmt(latest.annual)],[t('情景总供应'),fmt(latest.supply,2)]].map(([k,v])=>`<div class="stat-card"><div class="label">${t(k)}</div><div class="value">${v}</div><div class="sub">${latest.date} UTC${latest.date!==target.date?t(' · 最近有效，非目标日'):''}</div></div>`).join('');
+  $('cards').innerHTML=[[t('流通 PE'),fmt(latest.circ)+' x'],[t('解锁 PE'),fmt(latest.full)+' x'],[t('近似收盘价格'),'$'+fmt(latest.price,4)],[t('30日')+(asset==='hype'?t('持币人收入'):t('销毁价值')),'$'+fmt(latest.r30)],[t('年化分母'),'$'+fmt(latest.annual)],[t('情景总供应'),fmt(latest.supply,2)]].map(([k,v])=>`<div class="stat-card"><div class="label">${t(k)}</div><div class="value">${v}</div><div class="sub">${latest.date} UTC${latest.date!==target.date?t(' · 最近有效，非目标日'):''}</div></div>`).join('');
   if(window.DCACore&&$('dca'))$('dca').innerHTML=DCACore.panel(rows,'circ',bi);
   const shown=range?rows.slice(-range):rows;
   $('tbody').replaceChildren(...[...shown].reverse().map(r=>{const tr=document.createElement('tr');for(const v of [r.date,fmt(r.price,4),fmt(r.circ),fmt(r.full),fmt(dailyRevenue[r.date]),fmt(r.r30),r.source==='bundled'?t('固化历史'):r.status==='ok'?t('浏览器增量'):t(r.status)]){const td=document.createElement('td');td.textContent=v;tr.append(td);}return tr;}));
@@ -40,7 +40,7 @@
    const axis={type:'category',data:dates,axisLabel:{color:'#8fb5ac'}};
    const colors={circ:'#38BDF8',full:'#FBBF24',price:'#C084FC',revenue:'#50d2c1',p20:'#4ADE80',p50:'#A5B4FC',p80:'#F87171'};
    const marker=k=>`<span style="display:inline-block;margin-right:4px;border-radius:50%;width:10px;height:10px;background-color:${colors[k]}"></span>`;
-   const options={color:[colors.circ,colors.full,colors.price],tooltip:{trigger:'axis'},legend:{textStyle:{color:'#8fb5ac'},data:[t('流通倍数'),t('全解锁情景倍数'),t('价格 USD')]},grid:{left:65,right:65,bottom:55},xAxis:axis,yAxis:[{type:'value',name:t('倍数 x'),axisLabel:{color:'#8fb5ac'}},{type:'value',name:'USD',axisLabel:{color:'#8fb5ac'},splitLine:{show:false}}],series:[[t('流通倍数'),'circ',0],[t('全解锁情景倍数'),'full',0],[t('价格 USD'),'price',1]].map(([name,k,yAxisIndex])=>({name,type:'line',showSymbol:false,connectNulls:false,yAxisIndex,lineStyle:{color:colors[k]},itemStyle:{color:colors[k]},data:shown.map(r=>r[k])}))};
+   const options={color:[colors.circ,colors.full,colors.price],tooltip:{trigger:'axis'},legend:{textStyle:{color:'#8fb5ac'},data:[t('流通 PE'),t('解锁 PE'),t('价格 USD')]},grid:{left:65,right:65,bottom:55},xAxis:axis,yAxis:[{type:'value',name:t('PE x'),axisLabel:{color:'#8fb5ac'}},{type:'value',name:'USD',axisLabel:{color:'#8fb5ac'},splitLine:{show:false}}],series:[[t('流通 PE'),'circ',0],[t('解锁 PE'),'full',0],[t('价格 USD'),'price',1]].map(([name,k,yAxisIndex])=>({name,type:'line',showSymbol:false,connectNulls:false,yAxisIndex,lineStyle:{color:colors[k]},itemStyle:{color:colors[k]},data:shown.map(r=>r[k])}))};
    {
     options.tooltip.confine=true;
     // One chart / two grids: identical UTC categories and linked pointers on mouse or touch.
@@ -52,7 +52,7 @@
     options.tooltip.formatter=params=>{
      const d=params[0]?.axisValue,r=shown.find(r=>r.date===d);if(!r)return '';
      const v=dailyRevenue[d];
-     return d+' UTC<br>'+marker('circ')+t('流通倍数：')+fmt(r.circ)+' x<br>'+marker('full')+t('全解锁情景倍数：')+fmt(r.full)+' x<br>'+marker('price')+t('价格：$')+fmt(r.price,4)+'<br>'+(band.n?marker('p20')+bi('近1年流通 20分位：','1Y circ. P20: ')+fmt(band.p20)+' x · '+marker('p50')+bi('50分位：','P50: ')+fmt(band.p50)+' x · '+marker('p80')+bi('80分位：','P80: ')+fmt(band.p80)+' x<br><span style="opacity:.7">'+bi('样本：','Sample: ')+band.from+' – '+band.to+' · '+band.n+bi(' 个有效日',' valid days')+(band.n<365?bi('（不足365天，按全部可用历史）',' (fewer than 365; uses all available history)'):'')+'</span><br>':'')+marker('revenue')+revenueLabel+t('：')+(C.valid(v)?'$'+fmt(v):t('NA（缺失，未填零）'));
+     return d+' UTC<br>'+marker('circ')+t('流通 PE：')+fmt(r.circ)+' x<br>'+marker('full')+t('解锁 PE：')+fmt(r.full)+' x<br>'+marker('price')+t('价格：$')+fmt(r.price,4)+'<br>'+(band.n?marker('p20')+bi('近1年流通 PE 20分位：','1Y circ. P20: ')+fmt(band.p20)+' x · '+marker('p50')+bi('50分位：','P50: ')+fmt(band.p50)+' x · '+marker('p80')+bi('80分位：','P80: ')+fmt(band.p80)+' x<br><span style="opacity:.7">'+bi('样本：','Sample: ')+band.from+' – '+band.to+' · '+band.n+bi(' 个有效日',' valid days')+(band.n<365?bi('（不足365天，按全部可用历史）',' (fewer than 365; uses all available history)'):'')+'</span><br>':'')+marker('revenue')+revenueLabel+t('：')+(C.valid(v)?'$'+fmt(v):t('NA（缺失，未填零）'));
     };
     options.series.push({name:revenueLabel,type:'bar',xAxisIndex:1,yAxisIndex:2,barMaxWidth:18,itemStyle:{color:colors.revenue,opacity:0.75},data:shown.map(r=>C.valid(dailyRevenue[r.date])?dailyRevenue[r.date]:null)});
    }

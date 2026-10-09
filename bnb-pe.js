@@ -17,14 +17,14 @@
     if (!r.ok) throw Error('HTTP ' + r.status + (r.status === 429 ? '（限流，请稍后手动重试）' : ''));
     return r.json();
   }
-  const names = () => ({ pe: t('销毁 PE'), price: t('价格 USD'), p20: t('近1年 PE 20分位'), p50: t('近1年 PE 50分位（中位数）'), p80: t('近1年 PE 80分位') });
+  const names = () => ({ pe: t('流通 PE'), price: t('价格 USD'), p20: t('近1年流通 PE 20分位'), p50: t('近1年流通 PE 50分位（中位数）'), p80: t('近1年流通 PE 80分位') });
 
   function render() {
     const target = rows.at(-1), ok = [...rows].reverse().find(r => r.pe != null), latest = ok ?? target;
     $('asof').textContent = t('目标完整 UTC 日：') + C.yesterday() + t(' · 表中截至：') + target.date + t(' · 卡片有效估值日：') + (ok?.date ?? t('无'));
     const sub = latest.date + ' UTC' + (latest.date !== target.date ? t(' · 最近有效，非目标日') : '');
     $('cards').innerHTML = [
-      ['销毁 PE', fmt(latest.pe) + ' x'], ['近似收盘价格', '$' + fmt(latest.price, 2)], ['流通市值', usd(latest.mcap)],
+      ['流通 PE', fmt(latest.pe) + ' x'], ['近似收盘价格', '$' + fmt(latest.price, 2)], ['流通市值', usd(latest.mcap)],
       ['季度销毁年化（最近4次）', usd(latest.quarterly)], ['Gas 销毁年化（30日）', usd(latest.gas)], ['年化销毁额合计', usd(latest.annual)],
     ].map(([k, v]) => `<div class="stat-card"><div class="label">${t(k)}</div><div class="value">${v}</div><div class="sub">${sub}</div></div>`).join('');
 
@@ -82,7 +82,7 @@
       tooltip: { trigger: 'axis', confine: true, formatter: ps => {
         const d = ps[0]?.axisValue, r = byDate[d];
         if (!r) return d;
-        return [d + ' UTC', t('销毁 PE') + ': ' + fmt(r.pe) + ' x', t('价格 USD') + ': $' + fmt(r.price, 2), t('流通市值') + ': ' + usd(r.mcap) + (r.mcapSource === 'backcast' ? ' (' + t('倒推') + ')' : ''),
+        return [d + ' UTC', t('流通 PE') + ': ' + fmt(r.pe) + ' x', t('价格 USD') + ': $' + fmt(r.price, 2), t('流通市值') + ': ' + usd(r.mcap) + (r.mcapSource === 'backcast' ? ' (' + t('倒推') + ')' : ''),
           t('季度销毁年化（最近4次）') + ': ' + usd(r.quarterly) + (r.burnsUsed?.length ? ' [#' + r.burnsUsed.join(', #') + ']' : ''), t('Gas 销毁年化（30日）') + ': ' + usd(r.gas), t('每日 Gas 销毁（USD）') + ': ' + usd(rev[d]),
           [['p20', p20], ['p50', p50], ['p80', p80]].filter(([, v]) => v != null).map(([k, v]) => n[k] + ': ' + fmt(v) + ' x').join(' · ')].join('<br>');
       } },
@@ -92,7 +92,7 @@
       grid: [{ left: 60, right: 65, top: 65, height: '44%' }, { left: 60, right: 65, top: '69%', bottom: 55 }],
       xAxis: [{ ...axis, gridIndex: 0 }, { ...axis, gridIndex: 1 }],
       yAxis: [
-        { type: 'value', gridIndex: 0, name: t('倍数 x'), scale: true, axisLabel: { color: '#8fb5ac' }, splitLine: { lineStyle: { color: '#183c34' } } },
+        { type: 'value', gridIndex: 0, name: t('PE x'), scale: true, axisLabel: { color: '#8fb5ac' }, splitLine: { lineStyle: { color: '#183c34' } } },
         { type: 'value', gridIndex: 0, name: 'USD', scale: true, axisLabel: { color: '#8fb5ac' }, splitLine: { show: false } },
         { type: 'value', gridIndex: 1, name: 'USD', min: 0, axisLabel: { color: '#8fb5ac', formatter: v => v >= 1e6 ? fmt(v / 1e6, 1) + 'M' : v >= 1e3 ? fmt(v / 1e3, 0) + 'k' : fmt(v) }, splitLine: { lineStyle: { color: '#183c34' } } },
       ],

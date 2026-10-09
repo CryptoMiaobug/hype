@@ -116,7 +116,7 @@ async function smoke({ online, lang = 'zh' }) {
   console.log('PASS UI online increment fills target day');
 
   const e = await smoke({ online: false, lang: 'en' });
-  assert.ok(e.nodes.cards.innerHTML.includes('Burn PE'));
+  assert.ok(e.nodes.cards.innerHTML.includes('Circulating PE'));
   assert.ok(e.nodes.cards.innerHTML.includes('latest valid, not target day'));
   assert.ok(!/[\u4e00-\u9fff]/.test(e.nodes.cards.innerHTML), e.nodes.cards.innerHTML);
   assert.ok(!/[\u4e00-\u9fff]/.test(e.nodes.asof.textContent), e.nodes.asof.textContent);
