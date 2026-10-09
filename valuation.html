@@ -13,12 +13,9 @@
 <body>
   <div class="topbar">
     <div class="logo"><span class="dot"></span> CoinValue</div>
-    <nav class="topnav">
-      <a href="index.html" data-i18n="nav.dashboard">仪表盘</a>
-      <a href="valuation.html" class="active" data-i18n="nav.valuation">价值测算</a>
-<details class="nav-pe"><summary data-i18n="nav.pe">PE 监控</summary><div class="nav-pe-menu"><a href="pe-list.html" data-i18n="nav.peAll">全部总览</a><a href="hype-pe.html">HYPE PE</a><a href="uni-pe.html">UNI PE</a><a href="bnb-pe.html">BNB PE</a></div></details>
-      <a href="battlefield/index.html" data-i18n="nav.battle">战况</a>
-    </nav>
+    <nav class="topnav"><details class="nav-pe"><summary data-i18n="nav.pe">PE 监控</summary><div class="nav-pe-menu"><a href="pe-list.html" data-i18n="nav.peAll">全部总览</a><a href="hype-pe.html">HYPE PE</a><a href="uni-pe.html">UNI PE</a><a href="bnb-pe.html">BNB PE</a></div></details>
+<details class="nav-pe nav-hype active"><summary data-i18n="nav.hype">Hype监控</summary><div class="nav-pe-menu"><a href="index.html" data-i18n="nav.dashboard">仪表盘</a><a href="valuation.html" class="active" data-i18n="nav.valuation">价值测算</a></div></details>
+<a href="battlefield/index.html" data-i18n="nav.battle">多空战况</a></nav>
     <div class="spacer"></div>
     <span class="badge" id="clock">—</span>
   </div>
@@ -230,8 +227,8 @@
   })();
   </script>
 
-  <script src="i18n.js?v=20261010coinvalue"></script>
+  <script src="i18n.js?v=20261010navhype"></script>
   <script src="api.js?v=20260709t"></script>
   <script src="valuation.js?v=20261008langauto"></script>
-<script src="nav-pe.js?v=20261009list"></script></body>
+<script src="nav-pe.js?v=20261010navhype"></script></body>
 </html>
