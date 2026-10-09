@@ -16,7 +16,7 @@
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let seed,rows=[],dailyRevenue={},range=365,chart; // default view: last 1 year
  // Main-chart line visibility by stable key (survives range/language re-renders). Full-unlock is opt-in.
- const lineShown={circ:true,full:false,price:true,p20:true,p80:true};const lineNames=()=>({circ:t('流通倍数'),full:t('全解锁情景倍数'),price:t('价格 USD'),p20:bi('近1年流通 20分位','1Y circulating P20'),p80:bi('近1年流通 80分位','1Y circulating P80')});const key='hypevalue-pe-v1-'+asset;
+ const lineShown={circ:true,full:false,price:true,p20:true,p50:true,p80:true};const lineNames=()=>({circ:t('流通倍数'),full:t('全解锁情景倍数'),price:t('价格 USD'),p20:bi('近1年流通 20分位','1Y circulating P20'),p50:bi('近1年流通 50分位（中位数）','1Y circulating P50 (median)'),p80:bi('近1年流通 80分位','1Y circulating P80')});const key='hypevalue-pe-v1-'+asset;
  async function json(url){const r=await fetch(url,{signal:AbortSignal.timeout(25000),credentials:'omit'});if(!r.ok)throw Error('HTTP '+r.status+(r.status===429?'（限流，请稍后手动重试）':''));return r.json();}
  function render(){
   const target=rows.at(-1),complete=[...rows].reverse().find(r=>r.circ!=null),latest=complete??target;
@@ -34,10 +34,10 @@
   }
   if(window.echarts){
    if(!chart){chart=echarts.init($('chart'));chart.on?.('legendselectchanged',e=>{for(const [k,n] of Object.entries(lineNames()))if(Object.hasOwn(e.selected||{},n))lineShown[k]=!!e.selected[n];});}
-   const yearRows=rows.slice(-365),yearVals=yearRows.map(r=>r.circ).filter(v=>v!=null&&Number.isFinite(v)),band={p20:pct(yearVals,0.2),p80:pct(yearVals,0.8),n:yearVals.length,from:yearRows[0]?.date,to:yearRows.at(-1)?.date};
+   const yearRows=rows.slice(-365),yearVals=yearRows.map(r=>r.circ).filter(v=>v!=null&&Number.isFinite(v)),band={p20:pct(yearVals,0.2),p50:pct(yearVals,0.5),p80:pct(yearVals,0.8),n:yearVals.length,from:yearRows[0]?.date,to:yearRows.at(-1)?.date};
    const dates=shown.map(r=>r.date),revenueLabel=asset==='hype'?t('每日持币人收入（USD）'):t('每日回购／销毁价值（代理口径，USD）');
    const axis={type:'category',data:dates,axisLabel:{color:'#8fb5ac'}};
-   const colors={circ:'#38BDF8',full:'#FBBF24',price:'#C084FC',revenue:'#50d2c1',p20:'#4ADE80',p80:'#F87171'};
+   const colors={circ:'#38BDF8',full:'#FBBF24',price:'#C084FC',revenue:'#50d2c1',p20:'#4ADE80',p50:'#A5B4FC',p80:'#F87171'};
    const marker=k=>`<span style="display:inline-block;margin-right:4px;border-radius:50%;width:10px;height:10px;background-color:${colors[k]}"></span>`;
    const options={color:[colors.circ,colors.full,colors.price],tooltip:{trigger:'axis'},legend:{textStyle:{color:'#8fb5ac'},data:[t('流通倍数'),t('全解锁情景倍数'),t('价格 USD')]},grid:{left:65,right:65,bottom:55},xAxis:axis,yAxis:[{type:'value',name:t('倍数 x'),axisLabel:{color:'#8fb5ac'}},{type:'value',name:'USD',axisLabel:{color:'#8fb5ac'},splitLine:{show:false}}],series:[[t('流通倍数'),'circ',0],[t('全解锁情景倍数'),'full',0],[t('价格 USD'),'price',1]].map(([name,k,yAxisIndex])=>({name,type:'line',showSymbol:false,connectNulls:false,yAxisIndex,lineStyle:{color:colors[k]},itemStyle:{color:colors[k]},data:shown.map(r=>r[k])}))};
    {
@@ -51,7 +51,7 @@
     options.tooltip.formatter=params=>{
      const d=params[0]?.axisValue,r=shown.find(r=>r.date===d);if(!r)return '';
      const v=dailyRevenue[d];
-     return d+' UTC<br>'+marker('circ')+t('流通倍数：')+fmt(r.circ)+' x<br>'+marker('full')+t('全解锁情景倍数：')+fmt(r.full)+' x<br>'+marker('price')+t('价格：$')+fmt(r.price,4)+'<br>'+(band.n?marker('p20')+bi('近1年流通 20分位：','1Y circ. P20: ')+fmt(band.p20)+' x · '+marker('p80')+bi('80分位：','P80: ')+fmt(band.p80)+' x<br><span style="opacity:.7">'+bi('样本：','Sample: ')+band.from+' – '+band.to+' · '+band.n+bi(' 个有效日',' valid days')+(band.n<365?bi('（不足365天，按全部可用历史）',' (fewer than 365; uses all available history)'):'')+'</span><br>':'')+marker('revenue')+revenueLabel+t('：')+(C.valid(v)?'$'+fmt(v):t('NA（缺失，未填零）'));
+     return d+' UTC<br>'+marker('circ')+t('流通倍数：')+fmt(r.circ)+' x<br>'+marker('full')+t('全解锁情景倍数：')+fmt(r.full)+' x<br>'+marker('price')+t('价格：$')+fmt(r.price,4)+'<br>'+(band.n?marker('p20')+bi('近1年流通 20分位：','1Y circ. P20: ')+fmt(band.p20)+' x · '+marker('p50')+bi('50分位：','P50: ')+fmt(band.p50)+' x · '+marker('p80')+bi('80分位：','P80: ')+fmt(band.p80)+' x<br><span style="opacity:.7">'+bi('样本：','Sample: ')+band.from+' – '+band.to+' · '+band.n+bi(' 个有效日',' valid days')+(band.n<365?bi('（不足365天，按全部可用历史）',' (fewer than 365; uses all available history)'):'')+'</span><br>':'')+marker('revenue')+revenueLabel+t('：')+(C.valid(v)?'$'+fmt(v):t('NA（缺失，未填零）'));
     };
     options.series.push({name:revenueLabel,type:'bar',xAxisIndex:1,yAxisIndex:2,barMaxWidth:18,itemStyle:{color:colors.revenue,opacity:0.75},data:shown.map(r=>C.valid(dailyRevenue[r.date])?dailyRevenue[r.date]:null)});
    }
@@ -89,7 +89,7 @@
    }
    const main=Array.isArray(options.legend)?options.legend[0]:options.legend;
    // 1Y circulating-PE percentile bands: appended last so existing series order is unchanged.
-   for(const k of ['p20','p80'])if(band[k]!=null){options.series.push({name:lineNames()[k],type:'line',showSymbol:false,xAxisIndex:0,yAxisIndex:0,silent:true,lineStyle:{type:'dashed',width:1.5,color:colors[k]},itemStyle:{color:colors[k]},data:shown.map(()=>band[k]),z:1});main.data.push(lineNames()[k]);}main.selected=Object.fromEntries(Object.entries(lineNames()).map(([k,n])=>[n,lineShown[k]]));
+   for(const k of ['p20','p50','p80'])if(band[k]!=null){options.series.push({name:lineNames()[k],type:'line',showSymbol:false,xAxisIndex:0,yAxisIndex:0,silent:true,lineStyle:{type:'dashed',width:1.5,color:colors[k]},itemStyle:{color:colors[k]},data:shown.map(()=>band[k]),z:1});main.data.push(lineNames()[k]);}main.selected=Object.fromEntries(Object.entries(lineNames()).map(([k,n])=>[n,lineShown[k]]));
    chart.setOption(options, {notMerge:true});
   }else $('chart').textContent=t('图表库未加载；下方表格和 CSV 仍可用。');
  }

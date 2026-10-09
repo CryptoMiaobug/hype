@@ -9,7 +9,7 @@
   const pct = (vals, q) => { const v = vals.filter(Number.isFinite).sort((a, b) => a - b); if (!v.length) return null; const i = (v.length - 1) * q, lo = Math.floor(i), hi = Math.ceil(i); return v[lo] + (v[hi] - v[lo]) * (i - lo); };
   const KEY = 'hypevalue-pe-v1-bnb';
   let seed, rows = [], rev = {}, range = 365, chart, statusText = '加载中…';
-  const shownLines = { pe: true, price: true, p20: true, p80: true };
+  const shownLines = { pe: true, price: true, p20: true, p50: true, p80: true };
 
   const status = s => { statusText = s; $('status').textContent = t(s); };
   async function json(url) {
@@ -17,7 +17,7 @@
     if (!r.ok) throw Error('HTTP ' + r.status + (r.status === 429 ? '（限流，请稍后手动重试）' : ''));
     return r.json();
   }
-  const names = () => ({ pe: t('销毁 PE'), price: t('价格 USD'), p20: t('近1年 PE 20分位'), p80: t('近1年 PE 80分位') });
+  const names = () => ({ pe: t('销毁 PE'), price: t('价格 USD'), p20: t('近1年 PE 20分位'), p50: t('近1年 PE 50分位（中位数）'), p80: t('近1年 PE 80分位') });
 
   function render() {
     const target = rows.at(-1), ok = [...rows].reverse().find(r => r.pe != null), latest = ok ?? target;
@@ -56,9 +56,9 @@
       chart = echarts.init($('chart'));
       chart.on?.('legendselectchanged', e => { for (const [k, n] of Object.entries(names())) if (Object.hasOwn(e.selected || {}, n)) shownLines[k] = !!e.selected[n]; });
     }
-    const year = rows.slice(-365).map(r => r.pe).filter(v => v != null), p20 = pct(year, 0.2), p80 = pct(year, 0.8);
+    const year = rows.slice(-365).map(r => r.pe).filter(v => v != null), p20 = pct(year, 0.2), p50 = pct(year, 0.5), p80 = pct(year, 0.8);
     const dates = shown.map(r => r.date), n = names();
-    const colors = { pe: '#F0B90B', price: '#C084FC', gas: '#50d2c1', p20: '#4ADE80', p80: '#F87171' };
+    const colors = { pe: '#F0B90B', price: '#C084FC', gas: '#50d2c1', p20: '#4ADE80', p50: '#A5B4FC', p80: '#F87171' };
     const axis = { type: 'category', data: dates, axisLabel: { color: '#8fb5ac' }, boundaryGap: true };
     const burnLines = seed.burns.filter(b => dates.includes(b.date)).map(b => ({ xAxis: b.date, label: { formatter: '#' + b.n, color: '#8fb5ac' } }));
     const series = [
@@ -68,8 +68,9 @@
       { name: t('每日 Gas 销毁（USD）'), type: 'bar', xAxisIndex: 1, yAxisIndex: 2, barMaxWidth: 18, itemStyle: { color: colors.gas }, data: shown.map(r => rev[r.date] ?? null) },
     ];
     const legend = [n.pe, n.price];
-    for (const k of ['p20', 'p80']) {
-      const v = k === 'p20' ? p20 : p80;
+    const bands = { p20, p50, p80 };
+    for (const k of ['p20', 'p50', 'p80']) {
+      const v = bands[k];
       if (v == null) continue;
       series.push({ name: n[k], type: 'line', showSymbol: false, silent: true, xAxisIndex: 0, yAxisIndex: 0, z: 1, lineStyle: { type: 'dashed', width: 1.5, color: colors[k] }, itemStyle: { color: colors[k] }, data: shown.map(() => v) });
       legend.push(n[k]);
@@ -81,7 +82,8 @@
         const d = ps[0]?.axisValue, r = byDate[d];
         if (!r) return d;
         return [d + ' UTC', t('销毁 PE') + ': ' + fmt(r.pe) + ' x', t('价格 USD') + ': $' + fmt(r.price, 2), t('流通市值') + ': ' + usd(r.mcap) + (r.mcapSource === 'backcast' ? ' (' + t('倒推') + ')' : ''),
-          t('季度销毁年化（最近4次）') + ': ' + usd(r.quarterly) + (r.burnsUsed?.length ? ' [#' + r.burnsUsed.join(', #') + ']' : ''), t('Gas 销毁年化（30日）') + ': ' + usd(r.gas), t('每日 Gas 销毁（USD）') + ': ' + usd(rev[d])].join('<br>');
+          t('季度销毁年化（最近4次）') + ': ' + usd(r.quarterly) + (r.burnsUsed?.length ? ' [#' + r.burnsUsed.join(', #') + ']' : ''), t('Gas 销毁年化（30日）') + ': ' + usd(r.gas), t('每日 Gas 销毁（USD）') + ': ' + usd(rev[d]),
+          [['p20', p20], ['p50', p50], ['p80', p80]].filter(([, v]) => v != null).map(([k, v]) => n[k] + ': ' + fmt(v) + ' x').join(' · ')].join('<br>');
       } },
       axisPointer: { link: [{ xAxisIndex: 'all' }] },
       legend: { textStyle: { color: '#8fb5ac' }, data: legend, selected: Object.fromEntries(Object.entries(n).map(([k, v]) => [v, shownLines[k]])) },

@@ -13,7 +13,7 @@ async function run(asset,{cache={},online=false,end='2026-10-08'}={}){
 (async()=>{
  for(const asset of ['hype','uni']){
  const h=await run(asset,{online:true,cache:{revenue:{'2026-10-06':999,'2026-10-07':0}}});
- assert.equal(h.option.series.length,6);
+ assert.equal(h.option.series.length,7);
  // Default view on entry is the last 1 year (capped at available history).
  assert.equal(h.option.xAxis[0].data.length,Math.min(365,h.seed.rows.length+2));assert.equal(h.option.xAxis[0].data.at(-1),'2026-10-08');assert.equal(h.option.series[3].type,'bar');assert.equal(h.option.series[3].yAxisIndex,2);
  assert.equal(h.option.series[3].data.at(-2),0);assert.equal(h.option.series[3].data.at(-1),null);
@@ -25,16 +25,16 @@ async function run(asset,{cache={},online=false,end='2026-10-08'}={}){
  assert.deepEqual(Array.from(h.option.axisPointer.link[0].xAxisIndex),[0,1]);
  // Default visibility: circulating + price on, full-unlock off until the user clicks it; choice survives re-render.
  const main=Array.isArray(h.option.legend)?h.option.legend[0]:h.option.legend;
- assert.deepEqual({...main.selected},{'流通倍数':true,'全解锁情景倍数':false,'价格 USD':true,'近1年流通 20分位':true,'近1年流通 80分位':true});
+ assert.deepEqual({...main.selected},{'流通倍数':true,'全解锁情景倍数':false,'价格 USD':true,'近1年流通 20分位':true,'近1年流通 50分位（中位数）':true,'近1年流通 80分位':true});
  // 1Y percentile bands: dashed, constant, computed from the last 365 rows' valid circulating PE, independent of the displayed range.
  {const pv=(v,q)=>{v=v.filter(x=>x!=null&&Number.isFinite(x)).sort((a,b)=>a-b);const i=(v.length-1)*q,lo=Math.floor(i),hi=Math.ceil(i);return v[lo]+(v[hi]-v[lo])*(i-lo)};
   const yr=C.calculate(h.seed,h.saved.revenue,h.saved.market,'2026-10-08').slice(-365).map(r=>r.circ);
-  const p20=h.option.series.find(s=>s.name==='近1年流通 20分位'),p80=h.option.series.find(s=>s.name==='近1年流通 80分位');
-  assert.equal(p20.lineStyle.type,'dashed');assert.equal(p80.lineStyle.type,'dashed');
+  const p20=h.option.series.find(s=>s.name==='近1年流通 20分位'),p50=h.option.series.find(s=>s.name==='近1年流通 50分位（中位数）'),p80=h.option.series.find(s=>s.name==='近1年流通 80分位');
+  assert.equal(p20.lineStyle.type,'dashed');assert.equal(p80.lineStyle.type,'dashed');assert.equal(p50.lineStyle.type,'dashed');assert.ok(Math.abs(p50.data[0]-pv(yr,0.5))<1e-9);assert.ok(p20.data[0]<=p50.data[0]&&p50.data[0]<=p80.data[0]);
   assert.ok(Math.abs(p20.data[0]-pv(yr,0.2))<1e-9);assert.ok(Math.abs(p80.data[0]-pv(yr,0.8))<1e-9);assert.ok(p20.data[0]<p80.data[0]);
   assert.ok(main.data.includes('近1年流通 20分位')&&main.data.includes('近1年流通 80分位'));
   const before=p20.data[0];h.buttons[0].onclick();assert.equal(h.option.series.find(s=>s.name==='近1年流通 20分位').data[0],before);
-  assert.ok(h.option.tooltip.formatter([{axisValue:h.seed.last}]).includes('近1年流通 20分位：'));}
+  assert.ok(h.option.tooltip.formatter([{axisValue:h.seed.last}]).includes('近1年流通 20分位：')&&h.option.tooltip.formatter([{axisValue:h.seed.last}]).includes('50分位：'));}
  h.chartEvents.legendselectchanged({selected:{'流通倍数':true,'全解锁情景倍数':true,'价格 USD':true}});h.buttons[0].onclick();
  assert.equal((Array.isArray(h.option.legend)?h.option.legend[0]:h.option.legend).selected['全解锁情景倍数'],true);
  h.chartEvents.legendselectchanged({selected:{'流通倍数':true,'全解锁情景倍数':false,'价格 USD':true}});h.buttons[1].onclick();
@@ -61,7 +61,7 @@ async function run(asset,{cache={},online=false,end='2026-10-08'}={}){
  const tooltip=h.option.tooltip.formatter([{axisValue:h.seed.last}]);
  for(const [color,tooltipLabel] of [['#38BDF8','流通倍数'],['#FBBF24','全解锁情景倍数'],['#C084FC','价格'],['#50d2c1',label]])assert.ok(tooltip.includes('background-color:'+color+'"></span>'+tooltipLabel+'：'));
 
- for(const asset of ['hype','uni'])assert.ok(fs.readFileSync(__dirname+'/'+asset+'-pe.html','utf8').includes('pe.js?v=20261009default1y'));
+ for(const asset of ['hype','uni'])assert.ok(fs.readFileSync(__dirname+'/'+asset+'-pe.html','utf8').includes('pe.js?v=20261009p50b'));
  assert.ok(h.nodes.cards.innerHTML.includes('最近有效，非目标日'));assert.ok(h.nodes.status.textContent.includes('当日收入缺失'));
  console.log('PASS chart',asset,': raw daily mapping, frozen/cache/API precedence, zero/missing, tooltip, table, all 3 ranges, linked UTC axes, unchanged historical curves, API increment, early clock, latest-valid cards');
  }

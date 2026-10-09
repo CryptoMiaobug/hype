@@ -2,10 +2,10 @@
 <html lang="zh"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BNB PE — HypeValue</title>
 <link rel="stylesheet" href="style.css?v=20261008pe"><link rel="stylesheet" href="pe.css?v=20261008langauto">
 <script defer src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
-<script defer src="i18n.js?v=20261009pemon"></script><script defer src="bnb-i18n.js?v=20261009bnb"></script>
-<script defer src="bnb-core.js?v=20261009bnb"></script><script defer src="bnb-pe.js?v=20261009bnb"></script>
+<script defer src="i18n.js?v=20261009dca"></script><script defer src="bnb-i18n.js?v=20261009p50"></script>
+<script defer src="bnb-core.js?v=20261009bnb"></script><script defer src="bnb-pe.js?v=20261009p50b"></script>
 <script data-goatcounter="https://cryptomiao.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script><link rel="stylesheet" href="nav-pe.css?v=20261009nav2"></head>
-<body data-asset="bnb"><div class="topbar"><a class="logo" href="index.html"><span class="dot"></span>HypeValue</a><nav class="topnav"><a href="index.html" data-i18n="nav.dashboard">仪表盘</a><a href="valuation.html" data-i18n="nav.valuation">价值测算</a><details class="nav-pe active"><summary data-i18n="nav.pe">PE 监控</summary><div class="nav-pe-menu"><a href="hype-pe.html">HYPE PE</a><a href="uni-pe.html">UNI PE</a><a href="bnb-pe.html" class="active" aria-current="page">BNB PE</a></div></details><a href="battlefield/index.html" data-i18n="nav.battle">战况</a></nav><div class="spacer"></div><div id="langSwitch" class="lang-switch"><button type="button" data-lang="zh">CN</button><button type="button" data-lang="en">EN</button></div></div>
+<body data-asset="bnb"><div class="topbar"><a class="logo" href="index.html"><span class="dot"></span>HypeValue</a><nav class="topnav"><a href="index.html" data-i18n="nav.dashboard">仪表盘</a><a href="valuation.html" data-i18n="nav.valuation">价值测算</a><details class="nav-pe active"><summary data-i18n="nav.pe">PE 监控</summary><div class="nav-pe-menu"><a href="hype-pe.html">HYPE PE</a><a href="uni-pe.html">UNI PE</a><a href="bnb-pe.html" class="active" aria-current="page">BNB PE</a><a href="dca.html" data-i18n="nav.dca">DCA 定投建议</a></div></details><a href="battlefield/index.html" data-i18n="nav.battle">战况</a></nav><div class="spacer"></div><div id="langSwitch" class="lang-switch"><button type="button" data-lang="zh">CN</button><button type="button" data-lang="en">EN</button></div></div>
 <main class="container">
 <h1 data-i18n="bnb.title">BNB 销毁 PE 观察台</h1>
 <p class="pe-muted" data-i18n="bnb.subtitle">最近 4 次季度 Auto-Burn + 30 日 Gas 实时销毁年化 · 非会计利润 PE · 非实时行情</p>
@@ -16,7 +16,7 @@
 <div class="stat-grid" id="cards"></div>
 <section class="panel"><h3 data-i18n="bnb.chartTitle">销毁 PE、价格与每日 Gas 销毁</h3>
 <div class="pe-controls" role="group" data-i18n-aria="bnb.rangeGroup" aria-label="时间范围"><button type="button" data-range="30" data-i18n="bnb.r30">近30日</button><button type="button" data-range="90" data-i18n="bnb.r90">近90日</button><button type="button" data-range="365" data-i18n="bnb.r365">近1年</button><button type="button" data-range="0" data-i18n="bnb.rAll">全部</button></div>
-<p class="pe-muted" data-i18n="bnb.chartNote">上图：销毁 PE（左轴）与价格（右轴），虚线为近 1 年 PE 20/80 分位，竖线为季度销毁日。下图：每日 Gas 实时销毁（USD）。共用 UTC 日期。</p>
+<p class="pe-muted" data-i18n="bnb.chartNote">上图：销毁 PE（左轴）与价格（右轴），虚线为近 1 年 PE 20/50/80 分位，竖线为季度销毁日。下图：每日 Gas 实时销毁（USD）。共用 UTC 日期。</p>
 <div id="chart" role="img" data-pe-aria="bnb.chartAria" aria-label="上方为 BNB 销毁 PE 与价格，下方为每日 Gas 销毁柱状图；详细数值见下方表格"></div></section>
 <section class="panel"><h3 data-i18n="bnb.burnsTitle">季度 Auto-Burn（链上核实）</h3><p class="pe-muted" data-i18n="bnb.burnsNote">数量取 BSC 链上转入 0x…dEaD 的金额（不含 Pioneer Burn）；美元 = 数量 × bnbburn.info 季度中位价。每季度新公告发布后由维护者手动加入。</p>
 <div class="scroll-y"><table><thead><tr><th data-i18n="bnb.colN">次数</th><th data-i18n="bnb.colQuarter">季度</th><th data-i18n="bnb.colBurnDate">销毁日 UTC</th><th data-i18n="bnb.colAmount">链上数量 BNB</th><th data-i18n="bnb.colMedian">中位价 USD</th><th data-i18n="bnb.colUsd">折合 USD</th><th data-i18n="bnb.colTx">交易</th></tr></thead><tbody id="burns"></tbody></table></div></section>

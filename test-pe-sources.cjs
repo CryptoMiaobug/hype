@@ -20,7 +20,7 @@ async function run(online=false,stored={},lang='en'){
  await vm.runInNewContext(fs.readFileSync('pe.js','utf8'),ctx);return {nodes,buttons,requests,window,stored,get option(){return option}};
 }
 (async()=>{
- const h=await run();assert.equal(h.option.series.length,7);assert.match(h.nodes['source-summary'].innerHTML,/29\/30/);assert.match(h.nodes['source-summary'].innerHTML,/API failed/);
+ const h=await run();assert.equal(h.option.series.length,8);assert.match(h.nodes['source-summary'].innerHTML,/29\/30/);assert.match(h.nodes['source-summary'].innerHTML,/API failed/);
  for(const b of h.buttons){b.onclick();assert.deepEqual(h.option.xAxis[0].data,h.option.xAxis[1].data);for(const series of h.option.series)assert.equal(series.data.length,h.option.xAxis[0].data.length);}
  seed.rows.forEach((r,i)=>['circ','full','price'].forEach((k,j)=>assert.equal(h.option.series[j].data[i],r[k])));
  const live=await run(true);assert.equal(live.requests.filter(u=>u.includes('llama')).length,1);assert.equal(live.option.series[3].data.at(-1),0);assert.equal(live.option.series[4].data.at(-1),8);assert.match(live.option.tooltip.formatter([{axisValue:'2026-10-08'}]),/\$-2/);
