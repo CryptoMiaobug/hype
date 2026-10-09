@@ -12,7 +12,7 @@ function boot(page,language,store={},denied=false){
  return {c,sw,sample,lang:()=>document.documentElement.lang};
 }
 for(const page of pages){
- const html=fs.readFileSync(page,'utf8');assert.match(html,/i18n.js\?v=20261009navpe/);
+ const html=fs.readFileSync(page,'utf8');assert.match(html,/i18n.js\?v=20261009pemon/);
  for(const language of ['zh','zh-CN','zh-TW','zh-HK','zh-Hans','zh-Hant','ZH_tw','en','ja','fr','',undefined,'zhfake']){
   const expected=/^zh(?:[-_]|$)/i.test(language||'')?'zh':'en';
   for(const saved of [undefined,'invalid','','zh','en']){

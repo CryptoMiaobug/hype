@@ -1,4 +1,4 @@
-/* "PE 测算" dropdown in the top navigation. Shared by main-site pages and battlefield.
+/* "PE 监控" dropdown in the top navigation. Shared by main-site pages and battlefield.
    <details> gives click/tap + keyboard toggling without JS; hover opening is handled by a small inline script (closed <details> content can't be revealed by CSS). */
 .nav-pe { position: relative; display: inline-flex; align-self: center; pointer-events: auto; }
 .nav-pe > summary {
