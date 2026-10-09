@@ -1,6 +1,6 @@
 // Shared initialization contract for every published entry; no browser dependency.
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
-const pages=['index.html','valuation.html','hype-pe.html','uni-pe.html','battlefield/index.html'];
+const pages=['index.html','valuation.html','hype-pe.html','uni-pe.html','battlefield/index.html','pe-list.html'];
 function boot(page,language,store={},denied=false){
  const html=fs.readFileSync(page,'utf8'),events={},buttons=['zh','en'].map(lang=>({dataset:{lang},classList:{toggle(){}}}));
  let sw=html.includes('id="langSwitch"')?node():null;
@@ -12,7 +12,7 @@ function boot(page,language,store={},denied=false){
  return {c,sw,sample,lang:()=>document.documentElement.lang};
 }
 for(const page of pages){
- const html=fs.readFileSync(page,'utf8');assert.match(html,/i18n.js\?v=20261009dca/);
+ const html=fs.readFileSync(page,'utf8');assert.match(html,/i18n.js\?v=20261009list2/);
  for(const language of ['zh','zh-CN','zh-TW','zh-HK','zh-Hans','zh-Hant','ZH_tw','en','ja','fr','',undefined,'zhfake']){
   const expected=/^zh(?:[-_]|$)/i.test(language||'')?'zh':'en';
   for(const saved of [undefined,'invalid','','zh','en']){

@@ -12,6 +12,9 @@ const I18N_DICT = {
     'nav.dashboard': '仪表盘',
     'nav.valuation': '价值测算',
     'nav.pe': 'PE 监控',
+    'nav.peAll': '全部总览',
+    'list.colCoin': '币种', 'list.colPrice': '价格', 'list.colMcap': '流通市值', 'list.colPe': '流通 PE', 'list.colFull': '解锁 PE',
+    'list.colRank': '近 1 年分位', 'list.colBand': 'P20 / P50 / P80', 'list.colDca': '定投建议', 'list.colAnnual': '年化回馈额', 'list.colDate': '数据日 UTC',
     'nav.battle': '战况',
     // ---- 战场页 ----
     'bf.brand': 'HypeValue',
@@ -203,6 +206,9 @@ const I18N_DICT = {
     'nav.dashboard': 'Dashboard',
     'nav.valuation': 'Valuation',
     'nav.pe': 'PE Monitor',
+    'nav.peAll': 'Overview',
+    'list.colCoin': 'Asset', 'list.colPrice': 'Price', 'list.colMcap': 'Circ. market cap', 'list.colPe': 'Circulating PE', 'list.colFull': 'Diluted PE',
+    'list.colRank': '1Y percentile', 'list.colBand': 'P20 / P50 / P80', 'list.colDca': 'DCA suggestion', 'list.colAnnual': 'Annualized return to holders', 'list.colDate': 'As of UTC',
     'nav.battle': 'Battle',
     // ---- Battlefield ----
     'bf.brand': 'HypeValue',
