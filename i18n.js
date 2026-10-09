@@ -11,6 +11,7 @@ const I18N_DICT = {
     // ---- 通用 ----
     'nav.dashboard': '仪表盘',
     'nav.valuation': '价值测算',
+    'nav.pe': 'PE 测算',
     'nav.battle': '战况',
     // ---- 战场页 ----
     'bf.brand': 'HypeValue',
@@ -201,6 +202,7 @@ const I18N_DICT = {
     // ---- Generic ----
     'nav.dashboard': 'Dashboard',
     'nav.valuation': 'Valuation',
+    'nav.pe': 'PE',
     'nav.battle': 'Battle',
     // ---- Battlefield ----
     'bf.brand': 'HypeValue',
