@@ -4,11 +4,11 @@
    computed with the same cores as the coin pages, so numbers match them. */
 Object.assign(I18N_DICT.zh, {
   'list.title': 'PE 监控总览', 'list.subtitle': '各币种 PE、近 1 年分位与定投建议 · 点击币种查看详情 · 非会计利润 PE · 非实时行情',
-  'list.note': 'PE = 流通市值 ÷ 年化回馈额（HYPE：持币人收入；UNI：协议销毁价值代理；BNB：季度 Auto-Burn + Gas 销毁）。分位 = 近 365 日有效流通 PE 中低于当前值的天数占比；定投建议 = 平时定投金额 × 建议比例（低于 20 分位 200%，20–50 分位 100%，50–80 分位 50%，80 分位以上 0%）。价格为 D+1 00:00 UTC 近似收盘。仅供研究，不是投资建议。',
+  'list.note': 'PE = 流通市值 ÷ 年化回馈额（HYPE：持币人收入；UNI：协议销毁价值代理；BNB：季度 Auto-Burn + Gas 销毁；AAVE：DAO 协议收入，非实际回购）。分位 = 近 365 日有效流通 PE 中低于当前值的天数占比；定投建议 = 平时定投金额 × 建议比例（低于 20 分位 200%，20–50 分位 100%，50–80 分位 50%，80 分位以上 0%）。价格为 D+1 00:00 UTC 近似收盘。仅供研究，不是投资建议。',
 });
 Object.assign(I18N_DICT.en, {
   'list.title': 'PE Monitor Overview', 'list.subtitle': 'PE, 1-year percentile and DCA suggestion per asset · tap an asset for details · not accounting-profit PE · not real-time',
-  'list.note': 'PE = circulating market cap ÷ annualized value returned to holders (HYPE: holders revenue; UNI: protocol burn-value proxy; BNB: quarterly Auto-Burn + gas burn). Percentile = share of valid days in the last 365 with circulating PE below the current value. DCA suggestion = your usual DCA amount × the ratio (below P20 200%, P20–P50 100%, P50–P80 50%, above P80 0%). Prices are approximate closes at D+1 00:00 UTC. Research only, not investment advice.',
+  'list.note': 'PE = circulating market cap ÷ annualized value returned to holders (HYPE: holders revenue; UNI: protocol burn-value proxy; BNB: quarterly Auto-Burn + gas burn; AAVE: DAO protocol revenue, not executed buybacks). Percentile = share of valid days in the last 365 with circulating PE below the current value. DCA suggestion = your usual DCA amount × the ratio (below P20 200%, P20–P50 100%, P50–P80 50%, above P80 0%). Prices are approximate closes at D+1 00:00 UTC. Research only, not investment advice.',
 });
 (async () => {
   const D = DCACore, $ = id => document.getElementById(id);
@@ -26,6 +26,8 @@ Object.assign(I18N_DICT.en, {
       llama: 'https://api.llama.fi/summary/fees/uniswap?dataType=dailyRevenue', llamaId: 'parent#uniswap', gecko: 'uniswap', basis: ['销毁价值代理', 'Burn-value proxy'] },
     { id: 'bnb', name: 'BNB', full: 'BNB Chain', page: 'bnb-pe.html', field: 'pe', core: () => window.BNBCore, mergeSeedMarket: false,
       llama: 'https://api.llama.fi/summary/fees/bsc?dataType=dailyRevenue', llamaId: null, gecko: 'binancecoin', basis: ['季度 Auto-Burn + Gas 销毁', 'Quarterly Auto-Burn + gas burn'] },
+    { id: 'aave', name: 'AAVE', full: 'Aave', page: 'aave-pe.html', field: 'circ', core: () => window.PECore, mergeSeedMarket: true,
+      llama: 'https://api.llama.fi/summary/fees/aave?dataType=dailyRevenue', llamaId: 'parent#aave', gecko: 'aave', basis: ['DAO 协议收入', 'DAO protocol revenue'] },
   ];
   const data = {};
 

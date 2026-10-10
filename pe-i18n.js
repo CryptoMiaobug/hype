@@ -104,6 +104,8 @@ const PE_TEXT = {
   "30日": "30-day ",
   "持币人收入": "holders revenue",
   "销毁价值": "burn value",
+  "协议收入": "protocol revenue",
+  "每日协议收入（USD）": "Daily protocol revenue (USD)",
   "年化分母": "Annualized denominator",
   "情景总供应": "Scenario total supply",
   " · 最近有效，非目标日": " · Latest valid, not target day",
@@ -160,3 +162,23 @@ Object.entries({"zh": {"pe.text3": "HYPE PE 观察台", "pe.text35": "总访问�
 
 Object.entries({zh:{"pe.clearSources":"清除来源明细缓存","pe.sourceMethod":"永续相关收入包含永续交易回购资金、优先订单费用销毁价值、AQAv2收益；现货及拍卖相关收入包含现货交易回购资金、HIP-1拍卖销毁价值。这些合计不是纯交易费，也不等于已核实的实际回购。HIP-3不另行重复加总。当前公开日序列可靠拆分为两组，不凭方法标签虚构五条每日数据。"},en:{"pe.clearSources":"Clear revenue-source cache","pe.sourceMethod":"Perpetual-related revenue includes perpetual-trading buyback allocations, priority-order fee burn value and AQAv2 yields. Spot & auction-related revenue includes spot-trading buyback allocations and HIP-1 auction burn value. These totals are not pure trading fees or verified executed buybacks. HIP-3 is not added again. The available daily series reliably separates two groups; methodology labels alone do not justify inventing five daily series."}}).forEach(([lang,entries])=>Object.assign(I18N_DICT[lang],entries));
 Object.entries({zh:{"pe.range365":"近1年"},en:{"pe.range365":"1 year"}}).forEach(([lang,entries])=>Object.assign(I18N_DICT[lang],entries));
+
+Object.entries({zh:{
+ "pe.aaveTitle":"AAVE PE 观察台",
+ "pe.aaveChart":"PE、价格与每日协议收入",
+ "pe.aaveChartNote":"上下图共用 UTC 日期及时间筛选。柱状图为估值分母同一条 DefiLlama Aave dailyRevenue 原始序列（V2 + V3 + V4 进入 Aave 国库的收入），不是实际回购金额；真实零保留，缺失留空。",
+ "pe.aaveMethod":"分母采用 DefiLlama Aave dailyRevenue，即 V2、V3、V4 计入 Aave 国库的 DAO 收入；不是包含存款人利息的协议总费用，不是扣除运营开支后的净利润，也不是实际执行的 AAVE 回购。回购近期已暂停（DefiLlama holdersRevenue 自 2026-07 起为 0），按正常执行约 25% 收入用于回购估算时，回购 PE ≈ 本页 PE × 4，分位与定投建议不变。解锁 PE = 1,600 万 AAVE 最大供应 × 当日价格 ÷ 年化收入。",
+ "pe.aaveArchive":"固化历史截至 2026-10-09，来自 2026-10-10 归档。固化记录和已缓存的有效原始输入不被新 API 历史修订覆盖。打开页面按设备系统日期尝试补到 UTC 昨日；上游延迟、CORS、限流和网络失败均可能使补齐失败。",
+ "pe.aaveCache":"增量仅保存在本浏览器 localStorage，不同步其他设备、不写回服务器；清除浏览器数据即丢失增量。公共行情接口仅覆盖最近365天，长时间未访问可能留下无法自动补齐的缺口。",
+ "pe.aaveDaily":"每日协议收入 USD",
+ "pe.aria.aave":"上方为流通 PE、解锁 PE及价格，下方为每日 Aave 协议收入 USD 柱状图；共用UTC日期"
+},en:{
+ "pe.aaveTitle":"AAVE PE Dashboard",
+ "pe.aaveChart":"PE, price and daily protocol revenue",
+ "pe.aaveChartNote":"Both grids share UTC dates and range filters. Bars are the same DefiLlama Aave dailyRevenue series used for the denominator (V2 + V3 + V4 revenue to the Aave treasury), not executed buybacks. True zeros are kept; missing days stay blank.",
+ "pe.aaveMethod":"The denominator is DefiLlama Aave dailyRevenue: DAO revenue from V2, V3 and V4 that goes to the Aave treasury. It is not total fees (which include supplier interest), not net income after operating costs, and not executed AAVE buybacks. Buybacks are currently paused (DefiLlama holdersRevenue is 0 since 2026-07). Under a normal ~25% buyback share, buyback PE ≈ this PE × 4; percentile and DCA suggestion are unchanged. Diluted PE = 16M AAVE max supply × daily price ÷ annualized revenue.",
+ "pe.aaveArchive":"Bundled history runs through 2026-10-09 from the 2026-10-10 archive. Bundled rows and cached valid raw inputs are never overwritten by later API revisions. The page tries to fill up to UTC yesterday by device date; upstream delay, CORS, rate limits or network failures can prevent this.",
+ "pe.aaveCache":"Increments live only in this browser's localStorage; they do not sync across devices or write back to the server. The public market API covers only the last 365 days, so long absences can leave gaps that cannot be refilled automatically.",
+ "pe.aaveDaily":"Daily protocol revenue USD",
+ "pe.aria.aave":"Top: circulating PE, diluted PE and price. Bottom: daily Aave protocol revenue in USD. Shared UTC dates."
+}}).forEach(([lang,entries])=>Object.assign(I18N_DICT[lang],entries));

@@ -20,7 +20,7 @@ function calculate(seed,rev,prices,end){
   const d=date(t),pm=prices[d];let sum=0,missing=0;
   for(let i=0;i<30;i++){const v=rev[date(t-i*DAY)];if(!valid(v))missing++;else sum+=v;}
   const annual=missing?null:sum*365/30;
-  if(seed.asset==='hype')supply=seed.fixedSupply;
+  if(seed.fixedSupply!=null)supply=seed.fixedSupply; // HYPE: archived supply; AAVE: 16M max supply
   else if(supply!=null&&valid(rev[d])&&pm)supply-=rev[d]/pm[0];else supply=null;
   if(supply!=null&&supply<0)supply=null;
   rows.push({date:d,price:pm?.[0]??null,mcap:pm?.[1]??null,r30:missing?null:sum,annual,circ:annual>0&&pm?pm[1]/annual:null,full:annual>0&&pm&&supply!=null?supply*pm[0]/annual:null,supply,status:missing?'收入窗口缺 '+missing+' 天':!pm?'缺价格/市值':annual===0?'零分母':'ok',source:'browser'});

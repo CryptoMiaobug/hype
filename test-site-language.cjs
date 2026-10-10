@@ -1,6 +1,6 @@
 // Shared initialization contract for every published entry; no browser dependency.
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
-const pages=['index.html','valuation.html','hype-pe.html','uni-pe.html','battlefield/index.html','pe-list.html'];
+const pages=['index.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','aave-pe.html','battlefield/index.html','pe-list.html'];
 function boot(page,language,store={},denied=false){
  const html=fs.readFileSync(page,'utf8'),events={},buttons=['zh','en'].map(lang=>({dataset:{lang},classList:{toggle(){}}}));
  let sw=html.includes('id="langSwitch"')?node():null;
@@ -12,7 +12,7 @@ function boot(page,language,store={},denied=false){
  return {c,sw,sample,lang:()=>document.documentElement.lang};
 }
 for(const page of pages){
- const html=fs.readFileSync(page,'utf8');assert.match(html,/i18n.js\?v=20261009list2/);
+ const html=fs.readFileSync(page,'utf8');assert.match(html,/src="(?:\.\.\/)?i18n\.js\?v=\d{8}[a-z0-9]+"/,'shared i18n.js versioned: '+page);
  for(const language of ['zh','zh-CN','zh-TW','zh-HK','zh-Hans','zh-Hant','ZH_tw','en','ja','fr','',undefined,'zhfake']){
   const expected=/^zh(?:[-_]|$)/i.test(language||'')?'zh':'en';
   for(const saved of [undefined,'invalid','','zh','en']){
@@ -29,4 +29,4 @@ for(const page of pages){
  console.log('PASS',page,': locale matrix, invalid/blocked storage, actual button event, manual persistence, system changes, static navigation');
 }
 assert.ok(!fs.readFileSync('valuation.js','utf8').includes('I18n.setTemp(hl)'), 'legacy shared URL cannot override viewer language');
-console.log('PASS shared valuation URL respects viewer language; five published HTML entries covered');
+console.log('PASS shared valuation URL respects viewer language; all published HTML entries covered');
