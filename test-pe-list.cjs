@@ -1,10 +1,10 @@
 // PE overview list: renders one clickable row per asset; values match the coin pages' cores.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const D=require('./dca-core.js'),PC=require('./pe-core.js'),BC=require('./bnb-core.js');
+const PO=require('./payout-core.js'),D=require('./dca-core.js'),PC=require('./pe-core.js'),BC=require('./bnb-core.js');
 (async()=>{
  for(const lang of ['zh','en']){
   const nodes={},make=()=>({innerHTML:'',addEventListener(k,f){this['on'+k]=f}}),dict={zh:{},en:{}};
-  const ctx={I18N_DICT:dict,DCACore:D,PECore:{...PC,yesterday:()=>'2026-10-08'},BNBCore:{...BC,yesterday:()=>'2026-10-08'},
+  const ctx={I18N_DICT:dict,DCACore:D,PayoutCore:PO,PECore:{...PC,yesterday:()=>'2026-10-08'},BNBCore:{...BC,yesterday:()=>'2026-10-08'},
    document:{getElementById:id=>nodes[id]??=make()},localStorage:{getItem:()=>null},AbortSignal:{timeout(){}},location:{href:''},
    fetch:async u=>{if(u.startsWith('pe-data'))return {ok:true,json:async()=>JSON.parse(fs.readFileSync(u))};throw Error('offline')}};
   ctx.window={...ctx,I18n:{lang}};ctx.window.I18n.lang=lang;ctx.window.window=ctx.window;

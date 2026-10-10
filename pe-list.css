@@ -1,6 +1,6 @@
 /* PE overview list. */
 .pl-scroll{overflow-x:auto}
-.pl-table{min-width:980px}
+.pl-table{min-width:1080px}
 .pl-table th{white-space:nowrap;color:var(--text-dim);font-weight:500}
 .pl-table td{vertical-align:middle;white-space:nowrap;font-variant-numeric:tabular-nums}
 .pl-table tbody tr{cursor:pointer;box-shadow:inset 4px 0 0 var(--tier,transparent);transition:background .15s}

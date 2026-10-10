@@ -12,3 +12,6 @@
 .dca-rules{padding-left:22px;margin:10px 0}.dca-rules li{margin:4px 0;color:var(--text-dim)}.dca-rules li::marker{color:var(--c)}
 .dca-rules li.on{color:var(--text);font-weight:600}
 @media(max-width:700px){.dca-ratio{font-size:30px}}
+
+/* Payout-paused flag (overview payout column + coin-page payout panel). */
+.pl-flag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9px;font-size:11px;font-weight:600;color:#1a1200;background:#FBBF24;vertical-align:2px}
