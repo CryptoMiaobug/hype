@@ -29,5 +29,5 @@ const PO=require('./payout-core.js'),D=require('./dca-core.js'),PC=require('./pe
 // Site entry: index.html redirects to the PE overview; dashboard + logo links are not pointed back at index.html.
 {const fs=require('node:fs'),assert=require('node:assert/strict'),idx=fs.readFileSync('index.html','utf8');
  assert.match(idx,/location\.replace\('pe-list\.html'/);assert.match(idx,/url=pe-list\.html/);assert.ok(!idx.includes('app.js'));
- for(const p of ['dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','aave-pe.html','pe-list.html','battlefield/index.html']){const h=fs.readFileSync(p,'utf8');assert.match(h,/href="\/?dashboard\.html"[^>]*data-i18n="nav\.dashboard"/,p);assert.ok(!/href="\/?index\.html"/.test(h),p);}
+ for(const p of ['dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','aave-pe.html','pe-list.html','battlefield/index.html']){const h=fs.readFileSync(p,'utf8');assert.match(h,/href="\/?dashboard\.html"[^>]*data-i18n="nav\.dashboard"/,p);assert.ok(!/href="\/?index\.html"/.test(h),p);if(p!=='battlefield/index.html')assert.match(h,/<a class="logo" href="pe-list\.html">/,p+' logo link');}
  console.log('PASS index.html -> pe-list.html; dashboard.html nav');}
