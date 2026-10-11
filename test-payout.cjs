@@ -58,5 +58,9 @@ test('parse rejects wrong id, keeps only complete days ≤ end',()=>{assert.thro
  console.log('PASS coin-page payout panel ×4 assets ×2 langs');n++;
  for(const p of ['hype-pe.html','uni-pe.html','aave-pe.html','bnb-pe.html']){const h=fs.readFileSync(p,'utf8');assert.ok(h.includes('id="payout"')&&h.includes('payout-core.js')&&h.includes('payout-panel.js'),p);}
  assert.match(fs.readFileSync('pe-list.html','utf8'),/payout-core\.js[^]*pe-list\.js/);
+ // Coin-page section order: chart -> DCA -> (page extras) -> daily table -> payout -> method (last).
+ for(const p of ['hype-pe.html','uni-pe.html','aave-pe.html','bnb-pe.html']){const h=fs.readFileSync(p,'utf8'),at=k=>h.indexOf(k);
+  const o=[at('id="chart"'),at('id="dca"'),at('id="tbody"'),at('id="payout"'),at('pe-method')];assert.ok(o.every((v,i)=>v>0&&(i===0||v>o[i-1])),p+' '+o);
+  assert.ok(h.lastIndexOf('<section')<at('pe-method'),p+' method last');}
  console.log('PASS page wiring');console.log(n+2+' tests passed');
 })().catch(e=>{console.error(e);process.exit(1)});
