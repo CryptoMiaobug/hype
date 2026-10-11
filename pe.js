@@ -10,7 +10,7 @@
  const B=window.PEChains,chainKey='hypevalue-uni-chains-v1';
  const H=window.PESources,sourceKey='hypevalue-hype-sources-v1';
  let sourceData={},sourceSnapshot,sourceState=[];
- const sourceName=k=>k==='Hyperliquid Perps'?bi('永续相关收入','Perpetual-related revenue'):bi('现货及拍卖相关收入','Spot & auction-related revenue');
+ const sourceName=k=>k==='Hyperliquid Perps'?bi('永续相关收入','Perpetual-related revenue'):k==='Hyperliquid Outcomes'?bi('结果市场（HIP-4）收入','Outcome markets (HIP-4) revenue'):bi('现货及拍卖相关收入','Spot & auction-related revenue');
  let chainData={},chainSnapshot,chainState=[];
  const bi=(zh,en)=>window.I18n?.lang==='en'?en:zh;
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -31,7 +31,7 @@
   }
   if(asset==='hype'&&H){
    const sum=H.summary(sourceData,C.yesterday());
-   $('source-summary').innerHTML='<h3>'+bi('近30个完整 UTC 日 · 收入来源占比','Last 30 complete UTC days · revenue sources')+'</h3><p>'+C.yesterday()+' · '+bi('完整明细覆盖','Complete breakdown coverage')+' '+sum.covered+'/30 · '+bi('同期已报告合计','Reported total for covered days')+' $'+fmt(sum.sum)+'</p><p>'+esc(t(sourceState.map(([zh,en])=>bi(zh,en)).join(' · ')))+'</p><p>'+bi('仅统计两组均有效的日期；缺失不是零，不完整覆盖不是完整30日收入。不缩放明细以匹配估值底稿。','Only days with both valid groups are included; missing is not zero. Incomplete coverage is not a full 30-day total. Components are never scaled to match valuation inputs.')+'</p><div class="scroll-y"><table><thead><tr><th>'+bi('来源','Source')+'</th><th>USD</th><th>%</th><th>'+bi('覆盖天数','Days covered')+'</th></tr></thead><tbody>'+sum.rows.map(r=>'<tr><td>'+sourceName(r.name)+'</td><td>'+fmt(r.days?r.value:null)+'</td><td>'+fmt(r.share==null?null:r.share*100)+'</td><td>'+r.days+'/30</td></tr>').join('')+'</tbody></table></div>';
+   $('source-summary').innerHTML='<h3>'+bi('近30个完整 UTC 日 · 收入来源占比','Last 30 complete UTC days · revenue sources')+'</h3><p>'+C.yesterday()+' · '+bi('完整明细覆盖','Complete breakdown coverage')+' '+sum.covered+'/30 · '+bi('同期已报告合计','Reported total for covered days')+' $'+fmt(sum.sum)+'</p><p>'+esc(t(sourceState.map(([zh,en])=>bi(zh,en)).join(' · ')))+'</p><p>'+bi('仅统计永续与现货两组均有效的日期；结果市场（HIP-4）在 DefiLlama 未报告的日期不计入其覆盖天数，已报告但无效时整日不计。缺失不是零，不完整覆盖不是完整30日收入。不缩放明细以匹配估值底稿。','Only days with valid perpetual and spot groups are included; outcome markets (HIP-4) count only on days DefiLlama reports them, and a reported but invalid value voids the day. Missing is not zero. Incomplete coverage is not a full 30-day total. Components are never scaled to match valuation inputs.')+'</p><div class="scroll-y"><table><thead><tr><th>'+bi('来源','Source')+'</th><th>USD</th><th>%</th><th>'+bi('覆盖天数','Days covered')+'</th></tr></thead><tbody>'+sum.rows.map(r=>'<tr><td>'+sourceName(r.name)+'</td><td>'+fmt(r.days?r.value:null)+'</td><td>'+fmt(r.share==null?null:r.share*100)+'</td><td>'+r.days+'/30</td></tr>').join('')+'</tbody></table></div>';
   }
   if(window.echarts){
    if(!chart){chart=echarts.init($('chart'));chart.on?.('legendselectchanged',e=>{for(const [k,n] of Object.entries(lineNames()))if(Object.hasOwn(e.selected||{},n))lineShown[k]=!!e.selected[n];});}
@@ -79,7 +79,7 @@
    }
    if(asset==='hype'&&H){
     options.series.pop();
-    H.keys.forEach((k,i)=>options.series.push({name:sourceName(k),type:'bar',stack:'hype-sources',xAxisIndex:1,yAxisIndex:2,barMaxWidth:18,itemStyle:{color:['#50d2c1','#FB923C'][i]},data:shown.map(r=>sourceData[r.date]?.[k]??null)}));
+    H.keys.forEach((k,i)=>options.series.push({name:sourceName(k),type:'bar',stack:'hype-sources',xAxisIndex:1,yAxisIndex:2,barMaxWidth:18,itemStyle:{color:['#50d2c1','#FB923C','#A78BFA'][i]},data:shown.map(r=>sourceData[r.date]?.[k]??null)}));
     options.legend=[options.legend,{type:'scroll',left:20,right:20,top:'63%',textStyle:{color:'#8fb5ac',fontSize:10},data:H.keys.map(sourceName)}];
     options.tooltip.enterable=true;options.tooltip.extraCssText='max-height:360px;overflow-y:auto;max-width:calc(100vw - 40px);white-space:normal';
     const base=options.tooltip.formatter;

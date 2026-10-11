@@ -5,10 +5,19 @@ const parse=r=>B.parse(payload([[ts,r]]),end)[end];
 assert.equal(B.total(parse(row(2,3))),5);assert.equal(B.total(parse(row(0,0))),0);
 for(const x of [null,-1,'3',undefined])assert.equal(B.total(parse(row(2,x))),null);
 assert.equal(B.total(parse({...row(2,3),Unknown:{x:1}})),null);
+// HIP-4 Outcomes: optional third group. Absent = not reported (day still valid); present must be valid.
+const row3=(a,b,c)=>({'Hyperliquid L1':{'Hyperliquid Perps':a,'Hyperliquid Spot Orderbook':b,'Hyperliquid Outcomes':c}});
+assert.equal(B.total(parse(row3(2,3,4))),9);assert.equal(B.total(parse(row3(2,3,0))),5);assert.equal(Object.hasOwn(parse(row(2,3)),'Hyperliquid Outcomes'),false);
+for(const x of [null,-1,'3'])assert.equal(B.total(parse(row3(2,3,x))),null);
+{const d={};for(let i=0;i<30;i++)d[C.date(C.time(end)-i*C.DAY)]=parse(i<10?row3(6,3,1):row(6,4));const s=B.summary(d,end),o=s.rows.find(r=>r.name==='Hyperliquid Outcomes');
+ assert.equal(s.covered,30);assert.equal(s.sum,300);assert.equal(o.days,10);assert.equal(o.value,10);assert.equal(o.share,10/300);assert.equal(s.rows[0].days,30);assert.ok(Math.abs(s.rows.reduce((a,r)=>a+r.value,0)-s.sum)<1e-9);}
+{const d={[end]:parse(row(1,1))};assert.equal(B.summary(d,end).rows[2].share,null);}
 assert.throws(()=>B.parse(payload([[ts,{}],[ts,{}]]),end));assert.equal(Object.keys(B.parse(payload([[ts+86400,row(1,2)]]),end)).length,0);
 const days={};for(let i=0;i<30;i++)days[C.date(C.time(end)-i*C.DAY)]=parse(row(1,0));
 assert.equal(B.summary(days,end).covered,30);assert.equal(B.summary(days,end).rows[1].share,0);delete days[end];assert.equal(B.summary(days,end).covered,29);
-const snapshot=JSON.parse(fs.readFileSync('pe-data/hype-sources.json')),data=B.parse(snapshot,end),seed=JSON.parse(fs.readFileSync('pe-data/hype.json'));
+const snapshot=(()=>{const s=JSON.parse(fs.readFileSync('pe-data/hype-sources.json'));return {...s,totalDataChartBreakdown:s.totalDataChartBreakdown.filter(([t])=>C.date(t*1000)<=end)};})(), // fixture window ends at `end`
+ data=B.parse(snapshot,end),seed=(()=>{const s=JSON.parse(fs.readFileSync('pe-data/hype.json')),cut=C.date(C.time(end)-C.DAY),keep=o=>Object.fromEntries(Object.entries(o).filter(([d])=>d<=cut));// Fixture: pin seed to the day before the sources fixture window so the panel test is independent of seed refreshes.
+ return {...s,last:cut,rows:s.rows.filter(r=>r.date<=cut),revenue:keep(s.revenue),market:keep(s.market)};})();
 let matched=0,different=0;for(const [d,v] of Object.entries(seed.revenue)){const t=B.total(data[d]);if(C.valid(t)&&C.valid(v)){if(Math.abs(t-v)>.01)different++;else matched++;}}
 console.log('HYPE snapshot reconciliation', {matched,different,coverage:B.summary(data,end).covered});
 async function run(online=false,stored={},lang='en'){
@@ -20,7 +29,7 @@ async function run(online=false,stored={},lang='en'){
  await vm.runInNewContext(fs.readFileSync('pe.js','utf8'),ctx);return {nodes,buttons,requests,window,stored,get option(){return option}};
 }
 (async()=>{
- const h=await run();assert.equal(h.option.series.length,8);assert.match(h.nodes['source-summary'].innerHTML,/29\/30/);assert.match(h.nodes['source-summary'].innerHTML,/API failed/);
+ const h=await run();assert.equal(h.option.series.length,9);assert.equal(h.option.series[5].name,'Outcome markets (HIP-4) revenue');assert.match(h.nodes['source-summary'].innerHTML,/Outcome markets \(HIP-4\) revenue/);assert.match(h.nodes['source-summary'].innerHTML,/29\/30/);assert.match(h.nodes['source-summary'].innerHTML,/API failed/);
  for(const b of h.buttons){b.onclick();assert.deepEqual(h.option.xAxis[0].data,h.option.xAxis[1].data);for(const series of h.option.series)assert.equal(series.data.length,h.option.xAxis[0].data.length);}
  seed.rows.forEach((r,i)=>['circ','full','price'].forEach((k,j)=>assert.equal(h.option.series[j].data[i],r[k])));
  const live=await run(true);assert.equal(live.requests.filter(u=>u.includes('llama')).length,1);assert.equal(live.option.series[3].data.at(-1),0);assert.equal(live.option.series[4].data.at(-1),8);assert.match(live.option.tooltip.formatter([{axisValue:'2026-10-08'}]),/\$-2/);
