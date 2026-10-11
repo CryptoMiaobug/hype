@@ -2,14 +2,15 @@
 .dca-body{border-left:4px solid var(--tier);padding-left:14px}
 .dca-main{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .dca-ratio{font-size:36px;font-weight:700;color:var(--tier)}
-.dca-badge{background:var(--tier);color:#0b1f1b;font-weight:700;font-size:14px;padding:4px 12px;border-radius:999px}
-.dca-meter{position:relative;height:10px;max-width:520px;border-radius:5px;margin:14px 0 4px;background:linear-gradient(90deg,#4ADE80 0 20%,#FACC15 20% 50%,#FB923C 50% 80%,#F87171 80% 100%)}
+.dca-badge{background:var(--tier);color:var(--ink,#0b1f1b);font-weight:700;font-size:14px;padding:4px 12px;border-radius:999px}
+.dca-meter{position:relative;height:10px;max-width:520px;border-radius:5px;margin:14px 0 4px;background:#333}
 .dca-meter i{position:absolute;top:-4px;width:4px;height:18px;margin-left:-2px;background:#fff;border-radius:2px;box-shadow:0 0 4px #000}
 .dca-scale{position:relative;height:16px;max-width:520px;font-size:12px;color:var(--text-dim)}
 .dca-scale span{position:absolute;transform:translateX(-50%)}
-.dca-scale span:nth-child(1){left:0;transform:none}.dca-scale span:nth-child(2){left:20%}.dca-scale span:nth-child(3){left:50%}.dca-scale span:nth-child(4){left:80%}.dca-scale span:nth-child(5){right:0;transform:none}
+.dca-scale span:first-child{transform:none}.dca-scale span:last-child{transform:translateX(-100%)}
 .dca-metrics{margin-top:10px}.dca-metrics span{white-space:nowrap}.dca-note{text-wrap:pretty}
 .dca-rules{padding-left:22px;margin:10px 0}.dca-rules li{margin:4px 0;color:var(--text-dim)}.dca-rules li::marker{color:var(--c)}
+@media(max-width:700px){.dca-scale span:nth-child(even){display:none}}
 .dca-rules li.on{color:var(--text);font-weight:600}
 @media(max-width:700px){.dca-ratio{font-size:30px}}
 
