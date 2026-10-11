@@ -37,7 +37,7 @@ test('parse rejects wrong id, keeps only complete days ≤ end',()=>{assert.thro
   const h=nodes['pe-list'].innerHTML,rows=h.split('<tr ').slice(1),row=id=>rows.find(r=>r.includes(id+'-pe.html'));
   assert.ok(row('hype').includes('<b>100.0%</b>'),'hype');assert.ok(row('uni').includes('<b>100.0%</b>'),'uni');
   assert.ok(row('aave').includes('<b>0.0%</b>')&&row('aave').includes('pl-flag'),'aave paused');assert.ok(/1Y |近1年 /.test(row('aave'))&&/20\.\d%/.test(row('aave')),'aave 1y');
-  assert.ok(row('bnb').includes('Gas 100%')&&row('bnb').includes('Auto-Burn'),'bnb split');
+  assert.ok(row('bnb').includes(lang==='en'?'N/A':'不适用')&&row('bnb').includes('Auto-Burn')&&!row('bnb').includes('Gas 100%'),'bnb n/a');
   for(const id of ['hype','uni','bnb'])assert.ok(!row(id).includes('pl-flag'),id);
   assert.equal(rows.every(r=>(r.match(/<td/g)||[]).length===11),true);
   if(lang==='en')assert.ok(!/[\u4e00-\u9fff]/.test(h));
@@ -50,7 +50,7 @@ test('parse rejects wrong id, keeps only complete days ≤ end',()=>{assert.thro
   ctx.window={...ctx,I18n:{lang}};ctx.window.window=ctx.window;
   await vm.runInNewContext(fs.readFileSync('payout-panel.js','utf8'),Object.assign(ctx,{window:ctx.window}));await new Promise(r=>setTimeout(r,30));
   const h=el.innerHTML;assert.ok(!/读取失败|Load failed|加载中|Loading/.test(h),asset+h.slice(0,200));
-  if(asset==='bnb')assert.ok(h.includes('100%')&&h.includes('Auto-Burn'));
+  if(asset==='bnb')assert.ok(h.includes(lang==='en'?'N/A':'不适用')&&h.includes('Auto-Burn')&&!h.includes('Gas-burn payout ratio')&&!h.includes('Gas 销毁回馈率'));
   else{assert.ok(h.includes('<tbody><tr>'));if(asset==='aave'){assert.ok(h.includes('pl-flag'));assert.ok(/(实际回馈 PE|Actual-payout PE)<\/div><div class="value">NA</.test(h));}else assert.ok(/(实际回馈 PE|Actual-payout PE)<\/div><div class="value">[\d,.]+ x/.test(h),asset);}
   if(lang==='en')assert.ok(!/[\u4e00-\u9fff]/.test(h),asset);
   ctx.window.onI18nChange();

@@ -4,11 +4,11 @@
    computed with the same cores as the coin pages, so numbers match them. */
 Object.assign(I18N_DICT.zh, {
   'list.colPayout': '回馈率', 'list.payoutPaused': '回馈暂停', 'list.title': 'PE 监控总览', 'list.subtitle': '各币种 PE、近 1 年分位与定投建议 · 点击币种查看详情 · 非会计利润 PE · 非实时行情',
-  'list.note': 'PE = 流通市值 ÷ 年化回馈额（HYPE：持币人收入；UNI：协议销毁价值代理；BNB：季度 Auto-Burn + Gas 销毁；AAVE：DAO 协议收入，非实际回购）。分位 = 近 365 日有效流通 PE 中低于当前值的天数占比；定投建议 = 平时定投金额 × 建议比例（低于 20 分位 200%，20–50 分位 100%，50–80 分位 50%，80 分位以上 0%）。价格为 D+1 00:00 UTC 近似收盘。回馈率 = 实际回馈持币人金额 ÷ 协议收入（DefiLlama dailyHoldersRevenue ÷ dailyRevenue），显示近 30 日，小字为近 1 年；近 30 日低于 10% 标「回馈暂停」。BNB 只有 Gas 销毁来自链上收入（100% 销毁），季度 Auto-Burn 按公式从存量销毁，与收入无关，单独显示其占年化回馈额的比例。仅供研究，不是投资建议。',
+  'list.note': 'PE = 流通市值 ÷ 年化回馈额（HYPE：持币人收入；UNI：协议销毁价值代理；BNB：季度 Auto-Burn + Gas 销毁；AAVE：DAO 协议收入，非实际回购）。分位 = 近 365 日有效流通 PE 中低于当前值的天数占比；定投建议 = 平时定投金额 × 建议比例（低于 20 分位 200%，20–50 分位 100%，50–80 分位 50%，80 分位以上 0%）。价格为 D+1 00:00 UTC 近似收盘。回馈率 = 实际回馈持币人金额 ÷ 协议收入（DefiLlama dailyHoldersRevenue ÷ dailyRevenue），显示近 30 日，小字为近 1 年；近 30 日低于 10% 标「回馈暂停」。BNB 的回馈主体是季度 Auto-Burn，按公式从存量销毁，与收入无关，回馈率显示「不适用」，小字为 Auto-Burn 占年化回馈额的比例。仅供研究，不是投资建议。',
 });
 Object.assign(I18N_DICT.en, {
   'list.colPayout': 'Payout ratio', 'list.payoutPaused': 'Payout paused', 'list.title': 'PE Monitor Overview', 'list.subtitle': 'PE, 1-year percentile and DCA suggestion per asset · tap an asset for details · not accounting-profit PE · not real-time',
-  'list.note': 'PE = circulating market cap ÷ annualized value returned to holders (HYPE: holders revenue; UNI: protocol burn-value proxy; BNB: quarterly Auto-Burn + gas burn; AAVE: DAO protocol revenue, not executed buybacks). Percentile = share of valid days in the last 365 with circulating PE below the current value. DCA suggestion = your usual DCA amount × the ratio (below P20 200%, P20–P50 100%, P50–P80 50%, above P80 0%). Prices are approximate closes at D+1 00:00 UTC. Payout ratio = value actually returned to holders ÷ protocol revenue (DefiLlama dailyHoldersRevenue ÷ dailyRevenue), last 30 days with the 1-year figure below; under 10% over 30 days is flagged “payout paused”. For BNB only the gas burn is funded by on-chain revenue (100% burned); the quarterly Auto-Burn is formula-driven from existing supply and unrelated to revenue, so its share of the annualized value is shown separately. Research only, not investment advice.',
+  'list.note': 'PE = circulating market cap ÷ annualized value returned to holders (HYPE: holders revenue; UNI: protocol burn-value proxy; BNB: quarterly Auto-Burn + gas burn; AAVE: DAO protocol revenue, not executed buybacks). Percentile = share of valid days in the last 365 with circulating PE below the current value. DCA suggestion = your usual DCA amount × the ratio (below P20 200%, P20–P50 100%, P50–P80 50%, above P80 0%). Prices are approximate closes at D+1 00:00 UTC. Payout ratio = value actually returned to holders ÷ protocol revenue (DefiLlama dailyHoldersRevenue ÷ dailyRevenue), last 30 days with the 1-year figure below; under 10% over 30 days is flagged “payout paused”. For BNB the payout is dominated by the quarterly Auto-Burn, which is formula-driven from existing supply and unrelated to revenue, so the ratio shows N/A, with the Auto-Burn share of the annualized value below. Research only, not investment advice.',
 });
 (async () => {
   const D = DCACore, $ = id => document.getElementById(id);
@@ -95,7 +95,7 @@ Object.assign(I18N_DICT.en, {
     if (a.id === 'bnb') {
       const b = P.bnb(s.row);
       if (!b) return 'NA';
-      return `<span title="${bi('Gas 销毁来自链上收入，100% 销毁', 'Gas burn is funded by on-chain revenue, 100% burned')}">${bi('Gas 100%', 'Gas 100%')}</span><small>${bi('Auto-Burn 占 ', 'Auto-Burn ')}${pct(b.autoShare)}${bi('（非收入来源）', ' (not revenue-funded)')}</small>`;
+      return `<span title="${bi('回馈主体为季度 Auto-Burn，按公式销毁，不来自收入', 'Payout is mostly the formula-driven quarterly Auto-Burn, not revenue-funded')}">${bi('不适用', 'N/A')}</span><small>${bi('Auto-Burn 占 ', 'Auto-Burn ')}${pct(b.autoShare)}${bi('（非收入来源）', ' (not revenue-funded)')}</small>`;
     }
     const src = payout?.seed?.assets?.[a.id];
     if (!src) return payout === false ? 'NA' : '…';

@@ -25,12 +25,11 @@
     if (asset === 'bnb') {
       const r = state.row, b = P.bnb(r);
       el.innerHTML = h3 + `<div class="stat-grid">`
-        + card(bi('Gas 销毁回馈率', 'Gas-burn payout ratio'), b ? '100%' : 'NA', bi('BEP-95：10% gas 费直接销毁', 'BEP-95: 10% of gas fees burned'))
+        + card(bi('收入回馈率', 'Payout ratio'), bi('不适用', 'N/A'), bi('回馈主体不来自收入', 'Main payout is not revenue-funded'))
         + card(bi('季度 Auto-Burn 占年化回馈', 'Quarterly Auto-Burn share'), pct(b?.autoShare), bi('非收入来源 · ', 'not revenue-funded · ') + (r?.date ?? '') + ' UTC')
-        + card(bi('Gas 销毁占年化回馈', 'Gas burn share'), pct(b?.gasShare), usd(r?.gas) + bi(' / 年', ' / yr'))
         + `</div><p class="pe-muted">${bi(
-          '只有 Gas 实时销毁来自链上收入（DefiLlama BSC dailyRevenue 即被销毁的 10% gas 费），回馈率按定义为 100%。季度 Auto-Burn 按出块数和 BNB 均价的公式从存量 BNB 中销毁，不随链上手续费或币安利润变化；本页 PE 的分母主要由 Auto-Burn 构成，不会随链上业务增长。',
-          'Only the real-time gas burn is funded by on-chain revenue (DefiLlama BSC dailyRevenue is the 10% of gas fees that is burned), so its payout ratio is 100% by definition. The quarterly Auto-Burn removes existing BNB by a formula based on block count and average BNB price; it does not track on-chain fees or Binance profit. Most of this page\'s PE denominator is Auto-Burn, which does not grow with on-chain activity.')}</p>`;
+          'BNB 的回馈主体是季度 Auto-Burn，按出块数和 BNB 均价的公式从存量 BNB 中销毁，不随链上手续费或币安利润变化，因此「回馈 ÷ 收入」口径不适用。Gas 实时销毁（BEP-95，10% gas 费）虽来自链上收入，但占比很小，不足以代表整体。本页 PE 的分母主要由 Auto-Burn 构成，不会随链上业务增长。',
+          'BNB\'s payout is dominated by the quarterly Auto-Burn, which removes existing BNB by a formula based on block count and average BNB price and does not track on-chain fees or Binance profit, so a payout ÷ revenue ratio does not apply. The real-time gas burn (BEP-95, 10% of gas fees) is revenue-funded but too small to represent the whole. Most of this page\'s PE denominator is Auto-Burn, which does not grow with on-chain activity.')}</p>`;
       return;
     }
     const src = state.payout.seed.assets[asset], s = P.summary(src, P.lastValid(src, state.end));
