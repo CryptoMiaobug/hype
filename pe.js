@@ -10,7 +10,7 @@
  const B=window.PEChains,chainKey='hypevalue-uni-chains-v1';
  const H=window.PESources,sourceKey='hypevalue-hype-sources-v1';
  let sourceData={},sourceSnapshot,sourceState=[];
- const sourceName=k=>k==='Hyperliquid Perps'?bi('永续相关收入','Perpetual-related revenue'):k==='Hyperliquid Outcomes'?bi('结果市场（HIP-4）收入','Outcome markets (HIP-4) revenue'):bi('现货及拍卖相关收入','Spot & auction-related revenue');
+ const sourceName=k=>k==='Hyperliquid Perps'?bi('永续相关收入','Perpetual-related revenue'):k==='Hyperliquid Outcomes'?bi('预测市场（HIP-4）收入','Prediction markets (HIP-4) revenue'):bi('现货及拍卖相关收入','Spot & auction-related revenue');
  let chainData={},chainSnapshot,chainState=[];
  const bi=(zh,en)=>window.I18n?.lang==='en'?en:zh;
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -31,12 +31,14 @@
   }
   if(asset==='hype'&&H){
    const sum=H.summary(sourceData,C.yesterday());
-   $('source-summary').innerHTML='<h3>'+bi('近30个完整 UTC 日 · 收入来源占比','Last 30 complete UTC days · revenue sources')+'</h3><p>'+C.yesterday()+' · '+bi('完整明细覆盖','Complete breakdown coverage')+' '+sum.covered+'/30 · '+bi('同期已报告合计','Reported total for covered days')+' $'+fmt(sum.sum)+'</p><p>'+esc(t(sourceState.map(([zh,en])=>bi(zh,en)).join(' · ')))+'</p><p>'+bi('仅统计永续与现货两组均有效的日期；结果市场（HIP-4）在 DefiLlama 未报告的日期不计入其覆盖天数，已报告但无效时整日不计。缺失不是零，不完整覆盖不是完整30日收入。不缩放明细以匹配估值底稿。','Only days with valid perpetual and spot groups are included; outcome markets (HIP-4) count only on days DefiLlama reports them, and a reported but invalid value voids the day. Missing is not zero. Incomplete coverage is not a full 30-day total. Components are never scaled to match valuation inputs.')+'</p><div class="scroll-y"><table><thead><tr><th>'+bi('来源','Source')+'</th><th>USD</th><th>%</th><th>'+bi('覆盖天数','Days covered')+'</th></tr></thead><tbody>'+sum.rows.map(r=>'<tr><td>'+sourceName(r.name)+'</td><td>'+fmt(r.days?r.value:null)+'</td><td>'+fmt(r.share==null?null:r.share*100)+'</td><td>'+r.days+'/30</td></tr>').join('')+'</tbody></table></div>';
+   $('source-summary').innerHTML='<h3>'+bi('近30个完整 UTC 日 · 收入来源占比','Last 30 complete UTC days · revenue sources')+'</h3><p>'+C.yesterday()+' · '+bi('完整明细覆盖','Complete breakdown coverage')+' '+sum.covered+'/30 · '+bi('同期已报告合计','Reported total for covered days')+' $'+fmt(sum.sum)+'</p><p>'+esc(t(sourceState.map(([zh,en])=>bi(zh,en)).join(' · ')))+'</p><p>'+bi('仅统计永续与现货两组均有效的日期；预测市场（HIP-4）在 DefiLlama 未报告的日期不计入其覆盖天数，已报告但无效时整日不计。缺失不是零，不完整覆盖不是完整30日收入。不缩放明细以匹配估值底稿。','Only days with valid perpetual and spot groups are included; prediction markets (HIP-4) count only on days DefiLlama reports them, and a reported but invalid value voids the day. Missing is not zero. Incomplete coverage is not a full 30-day total. Components are never scaled to match valuation inputs.')+'</p><div class="scroll-y"><table><thead><tr><th>'+bi('来源','Source')+'</th><th>USD</th><th>%</th><th>'+bi('覆盖天数','Days covered')+'</th></tr></thead><tbody>'+sum.rows.map(r=>'<tr><td>'+sourceName(r.name)+'</td><td>'+fmt(r.days?r.value:null)+'</td><td>'+fmt(r.share==null?null:r.share*100)+'</td><td>'+r.days+'/30</td></tr>').join('')+'</tbody></table></div>';
   }
   if(window.echarts){
    if(!chart){chart=echarts.init($('chart'));chart.on?.('legendselectchanged',e=>{for(const [k,n] of Object.entries(lineNames()))if(Object.hasOwn(e.selected||{},n))lineShown[k]=!!e.selected[n];});}
    const yearRows=rows.slice(-365),yearVals=yearRows.map(r=>r.circ).filter(v=>v!=null&&Number.isFinite(v)),band={p20:pct(yearVals,0.2),p50:pct(yearVals,0.5),p80:pct(yearVals,0.8),n:yearVals.length,from:yearRows[0]?.date,to:yearRows.at(-1)?.date};
    const dates=shown.map(r=>r.date),revenueLabel=asset==='hype'?t('每日持币人收入（USD）'):asset==='aave'?t('每日协议收入（USD）'):t('每日回购／销毁价值（代理口径，USD）');
+   // Narrow screens: title, wrapping legend and lower grid each get their own band so nothing overlaps.
+   const narrow=($('chart')?.clientWidth||1000)<600,lowerLegend={left:'center',width:narrow?'92%':'80%',top:narrow?'62%':'59%',textStyle:{color:'#8fb5ac',fontSize:10},...(narrow?{}:{type:'scroll'})};
    const axis={type:'category',data:dates,axisLabel:{color:'#8fb5ac'}};
    const colors={circ:'#38BDF8',full:'#FBBF24',price:'#C084FC',revenue:'#50d2c1',p20:'#4ADE80',p50:'#A5B4FC',p80:'#F87171'};
    const marker=k=>`<span style="display:inline-block;margin-right:4px;border-radius:50%;width:10px;height:10px;background-color:${colors[k]}"></span>`;
@@ -44,10 +46,10 @@
    {
     options.tooltip.confine=true;
     // One chart / two grids: identical UTC categories and linked pointers on mouse or touch.
-    options.grid=[{left:65,right:65,top:65,height:'42%'},{left:65,right:65,top:'67%',bottom:55}];
+    options.grid=narrow?[{left:65,right:65,top:65,height:'38%'},{left:65,right:65,top:'78%',bottom:55}]:[{left:65,right:65,top:65,height:'42%'},{left:65,right:65,top:'67%',bottom:55}];
     options.xAxis=[{...axis,gridIndex:0,boundaryGap:true},{...axis,gridIndex:1,boundaryGap:true}];
     options.yAxis.push({type:'value',gridIndex:1,name:'USD',min:0,axisLabel:{color:'#8fb5ac',formatter:v=>v>=1e6?fmt(v/1e6,1)+'M':v>=1e3?fmt(v/1e3,1)+'k':fmt(v)},splitLine:{lineStyle:{color:'#183c34'}}});
-    options.title={text:revenueLabel.replace(t('（代理口径'),t('\n（代理口径')),left:65,top:'57%',textStyle:{color:'#8fb5ac',fontSize:14}};
+    options.title={text:revenueLabel.replace(t('（代理口径'),t('\n（代理口径')),left:narrow?'center':65,top:narrow?'55%':'57%',textStyle:{color:'#8fb5ac',fontSize:narrow?12:14}};
     options.axisPointer={link:[{xAxisIndex:[0,1]}]};
     options.tooltip.formatter=params=>{
      const d=params[0]?.axisValue,r=shown.find(r=>r.date===d);if(!r)return '';
@@ -64,7 +66,7 @@
     options.title.text=options.title.text.replace('（','\n（').replace(' (','\n(');
     options.series.pop();
     names.forEach((name,i)=>options.series.push({name:name==='Others'?bi('其他链','Others'):name,type:'bar',stack:'chain-revenue',xAxisIndex:1,yAxisIndex:2,barMaxWidth:18,itemStyle:{color:palette[i]},data:shown.map(r=>B.group(chainData[r.date],name))}));
-    options.legend=[options.legend,{type:'scroll',left:20,right:20,top:'63%',textStyle:{color:'#8fb5ac',fontSize:10},data:names.map(n=>n==='Others'?bi('其他链','Others'):n)}];
+    options.legend=[options.legend,{...lowerLegend,data:names.map(n=>n==='Others'?bi('其他链','Others'):n)}];
     const baseTooltip=options.tooltip.formatter;
     options.tooltip.formatter=params=>{
      const d=params[0]?.axisValue,cs=chainData[d],total=B.total(cs),original=dailyRevenue[d];
@@ -80,7 +82,7 @@
    if(asset==='hype'&&H){
     options.series.pop();
     H.keys.forEach((k,i)=>options.series.push({name:sourceName(k),type:'bar',stack:'hype-sources',xAxisIndex:1,yAxisIndex:2,barMaxWidth:18,itemStyle:{color:['#50d2c1','#FB923C','#A78BFA'][i]},data:shown.map(r=>sourceData[r.date]?.[k]??null)}));
-    options.legend=[options.legend,{type:'scroll',left:20,right:20,top:'63%',textStyle:{color:'#8fb5ac',fontSize:10},data:H.keys.map(sourceName)}];
+    options.legend=[options.legend,{...lowerLegend,data:H.keys.map(sourceName)}];
     options.tooltip.enterable=true;options.tooltip.extraCssText='max-height:360px;overflow-y:auto;max-width:calc(100vw - 40px);white-space:normal';
     const base=options.tooltip.formatter;
     options.tooltip.formatter=params=>{

@@ -62,7 +62,7 @@ async function run(asset,{cache={},online=false,end=dd(2)}={}){
  const tooltip=h.option.tooltip.formatter([{axisValue:h.seed.last}]);
  for(const [color,tooltipLabel] of [['#38BDF8','流通 PE'],['#FBBF24','解锁 PE'],['#C084FC','价格'],['#50d2c1',label]])assert.ok(tooltip.includes('background-color:'+color+'"></span>'+tooltipLabel+'：'));
 
- for(const asset of ['hype','uni'])assert.ok(fs.readFileSync(__dirname+'/'+asset+'-pe.html','utf8').includes('pe.js?v=20261011outcomes'));
+ for(const asset of ['hype','uni'])assert.ok(fs.readFileSync(__dirname+'/'+asset+'-pe.html','utf8').includes('pe.js?v=20261011predict'));
  assert.ok(h.nodes.cards.innerHTML.includes('最近有效，非目标日'));assert.ok(h.nodes.status.textContent.includes('当日收入缺失'));
  console.log('PASS chart',asset,': raw daily mapping, frozen/cache/API precedence, zero/missing, tooltip, table, all 3 ranges, linked UTC axes, unchanged historical curves, API increment, early clock, latest-valid cards');
  }
