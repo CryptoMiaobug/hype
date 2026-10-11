@@ -17,7 +17,7 @@ Limits: these are VM/DOM-contract tests, not full browser rendering. OpenClaw br
 
 ## Site-wide browser-language hardening (2026-10-08)
 
-Published entry inventory: `/` (same as `/index.html`), `/valuation.html`,
+Published entry inventory: `/` and `/index.html` (redirect to `/pe-list.html`), `/dashboard.html` (HYPE dashboard), `/valuation.html`,
 `/hype-pe.html`, `/uni-pe.html`, `/battlefield/` (same as
 `/battlefield/index.html`). No other HTML entries are present in this Pages tree.
 All use the same `i18n.js` and `hs_lang` key. Only stored `zh`/`en` count as a

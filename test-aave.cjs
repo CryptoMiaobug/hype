@@ -8,7 +8,7 @@ test('circ = mcap / (R30*365/30), full = 16M*price / annual',()=>{const r=A.rows
 test('increment keeps 16M fixed supply (not HYPE-only anymore)',()=>{const n=C.date(C.time(A.last)+C.DAY),rev={...A.revenue,[n]:100000},pm={...A.market,[n]:[100,1.5e9]};const r=C.calculate(A,rev,pm,n).at(-1);assert.equal(r.supply,16e6);assert.equal(r.status,'ok');assert.equal(r.source,'browser');});
 test('UNI still uses burn-backed supply (fixedSupply null)',()=>{const U=JSON.parse(fs.readFileSync(__dirname+'/pe-data/uni.json'));assert.equal(U.fixedSupply,null);});
 test('page wiring',()=>{const h=fs.readFileSync('aave-pe.html','utf8');assert.match(h,/data-asset="aave"/);assert.match(h,/pe-data\/aave\.json/);assert.ok(!/uniswap|pe-chains|chain-summary|clear-chains/i.test(h));assert.match(h,/aria-current="page">AAVE PE/);
- for(const p of ['index.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','pe-list.html','aave-pe.html','battlefield/index.html'])assert.match(fs.readFileSync(p,'utf8'),/aave-pe\.html"[^>]*>AAVE PE</,p);
+ for(const p of ['dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','pe-list.html','aave-pe.html','battlefield/index.html'])assert.match(fs.readFileSync(p,'utf8'),/aave-pe\.html"[^>]*>AAVE PE</,p);
  const keys=[...h.matchAll(/data-i18n="([^"]+)"/g)].map(m=>m[1]),dict={zh:{},en:{}};vm.runInNewContext(fs.readFileSync('i18n.js','utf8').replace(/document\.addEventListener[\s\S]*$/,''),{window:{},document:{addEventListener(){}},navigator:{},localStorage:{getItem(){}},I18N_DICT:dict,console});
 });
 console.log(count+' tests passed');

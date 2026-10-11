@@ -27,7 +27,7 @@ for(const [a,f] of [['hype','circ'],['uni','circ'],['bnb','pe']]){const s=JSON.p
 // Pages: each PE page has the panel slot and loads dca-core; no standalone page or nav entry remains.
 for(const p of ['hype-pe.html','uni-pe.html','bnb-pe.html']){const s=fs.readFileSync(p,'utf8');assert.ok(s.includes('id="dca"')&&s.includes('dca-core.js'),p);}
 assert.ok(!fs.existsSync('dca.html'));
-for(const p of ['index.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','battlefield/index.html'])assert.ok(!fs.readFileSync(p,'utf8').includes('dca.html'),p);
+for(const p of ['dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','battlefield/index.html'])assert.ok(!fs.readFileSync(p,'utf8').includes('dca.html'),p);
 // pe.js renders the panel into #dca (offline, bundled archive).
 (async()=>{
  for(const asset of ['hype','uni']){

@@ -15,13 +15,13 @@ async function run(reply, lang = 'zh') {
   return { nodes, urls };
 }
 (async () => {
-  for (const page of ['index.html', 'hype-pe.html', 'uni-pe.html']) {
+  for (const page of ['dashboard.html', 'hype-pe.html', 'uni-pe.html']) {
     const html = fs.readFileSync(page, 'utf8');
     for (const id of ['visitCounter', 'vcTotal', 'vcToday']) assert.equal(html.split(`id="${id}"`).length - 1, 1);
     assert.equal((html.match(/data-goatcounter=/g) || []).length, 1);
     assert.equal((html.match(/src="visit-counter.js/g) || []).length, 1);
     assert.match(html, /总访问量/); assert.match(html, /今日访问量/);
-    if (page !== 'index.html') assert.doesNotMatch(html, /src="app.js|data-i18n="visit\./);
+    if (page !== 'dashboard.html') assert.doesNotMatch(html, /src="app.js|data-i18n="visit\./);
   }
   const live = await run(async url => ({ok:true, json:async () => url.includes('?') ? {count_unique:'0', count:'9'} : {count_unique:'1,234', count:'9999'}}));
   assert.equal(live.nodes.vcTotal.textContent, '1,234');
