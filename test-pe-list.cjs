@@ -22,6 +22,26 @@ const PO=require('./payout-core.js'),D=require('./dca-core.js'),PC=require('./pe
   const tr={dataset:{href:'uni-pe.html'}};nodes['pe-list'].onclick({target:{closest:s=>s==='a'?null:tr}});assert.equal(ctx.location.href,'uni-pe.html');
   console.log('PASS pe-list',lang);
  }
+ // live fill writes the shared coin-page cache; refresh button reloads and reports status
+ {
+  const nodes={},make=()=>({innerHTML:'',textContent:'',disabled:false,addEventListener(k,f){this['on'+k]=f}}),store={};let calls=0;
+  const seeds=Object.fromEntries(['hype','uni','bnb','aave'].map(a=>[a,JSON.parse(fs.readFileSync('pe-data/'+a+'.json'))]));
+  const day=t=>PC.date(PC.time(seeds.uni.last)+t*PC.DAY);
+  const ctx={I18N_DICT:{zh:{},en:{}},DCACore:D,PayoutCore:PO,PECore:{...PC,yesterday:()=>day(1)},BNBCore:{...BC,yesterday:()=>day(1)},
+   document:{getElementById:id=>nodes[id]??=make()},localStorage:{getItem:k=>store[k]??null,setItem:(k,v)=>{store[k]=v}},AbortSignal:{timeout(){}},location:{href:''},
+   fetch:async u=>{if(u.startsWith('pe-data'))return {ok:true,json:async()=>JSON.parse(fs.readFileSync(u))};
+    if(u.includes('api.llama.fi/summary/fees/uniswap')){if(u.endsWith('dataType=dailyRevenue'))calls++;const t=PC.time(day(1))/1000;return {ok:true,json:async()=>({id:'parent#uniswap',totalDataChart:[[t,12345]]})};}
+    throw Error('offline')}};
+  ctx.window={...ctx,I18n:{lang:'zh'}};ctx.window.window=ctx.window;
+  await vm.runInNewContext(fs.readFileSync('pe-list.js','utf8'),Object.assign(ctx,{window:ctx.window}));
+  await new Promise(r=>setTimeout(r,50));
+  const c=JSON.parse(store['hypevalue-pe-v1-uni']);
+  assert.equal(c.seedHash,seeds.uni.sourceSHA256);assert.equal(c.revenue[day(1)],12345);
+  assert.match(nodes.status.textContent,/更新于/);assert.match(nodes.status.textContent,/行情获取失败/);assert.equal(nodes.refresh.disabled,false);
+  const first=calls;assert.ok(first>0);await nodes.refresh.onclick();assert.equal(calls,first*2,'refresh refetches');
+  console.log('PASS pe-list cache write + refresh');
+ }
+ const html=fs.readFileSync('pe-list.html','utf8');assert.match(html,/<button type="button" id="refresh" data-i18n="list.refresh">/);assert.match(html,/id="status" role="status" aria-live="polite"/);
  // every page's PE menu starts with the overview link
  for(const p of ['dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','aave-pe.html','battlefield/index.html','pe-list.html'])assert.match(fs.readFileSync(p,'utf8'),/<div class="nav-pe-menu"><a href="(\.\.\/)?pe-list\.html"/,p);
  console.log('PASS nav overview link on all pages');

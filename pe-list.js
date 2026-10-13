@@ -1,6 +1,6 @@
 'use strict';
 /* PE overview list: one row per asset with price, PE, 1Y percentile and DCA suggestion.
-   Data = bundled archive + increments the coin pages cached in this browser + a live fill for missing days,
+   Data = bundled archive + increments cached in this browser (shared with the coin pages) + a live fill for missing days,
    computed with the same cores as the coin pages, so numbers match them. */
 Object.assign(I18N_DICT.zh, {
   'list.colPayout': '回馈率', 'list.payoutPaused': '回馈暂停', 'list.title': 'PE 监控总览', 'list.subtitle': '各币种 PE、近 1 年分位与定投建议 · 点击币种查看详情 · 非会计利润 PE · 非实时行情',
@@ -38,10 +38,11 @@ Object.assign(I18N_DICT.en, {
     return r.json();
   }
   // Same precedence as the coin pages: bundled rows win; cached/fetched raw inputs only fill later days.
-  async function rowsFor(a, seed) {
-    const C = a.core();
+  // Fetched increments are written back to the same localStorage key the coin page uses.
+  async function rowsFor(a, seed, notes) {
+    const C = a.core(), KEY = 'hypevalue-pe-v1-' + a.id;
     let cache = {};
-    try { cache = JSON.parse(localStorage.getItem('hypevalue-pe-v1-' + a.id) || '{}'); if (cache.seedHash !== seed.sourceSHA256) cache = {}; } catch { cache = {}; }
+    try { cache = JSON.parse(localStorage.getItem(KEY) || '{}'); if (cache.seedHash !== seed.sourceSHA256) cache = {}; } catch { cache = {}; }
     let rev = C.merge(seed.revenue, Object.fromEntries(Object.entries(cache.revenue || {}).filter(([d, v]) => day.test(d) && C.valid(v))));
     const cMkt = Object.fromEntries(Object.entries(cache.market || {}).filter(([d, v]) => day.test(d) && Array.isArray(v) && v.length === 2 && v.every(x => C.valid(x) && x > 0)));
     let prices = a.mergeSeedMarket ? C.merge(seed.market, cMkt) : cMkt;
@@ -49,8 +50,18 @@ Object.assign(I18N_DICT.en, {
     if (end <= seed.last) return seed.rows;
     let rows = C.calculate(seed, rev, prices, end);
     if (rows.some(r => r.source === 'browser' && (r.price == null || r.r30 == null))) {
-      try { const d = await json(a.llama); if (a.llamaId && d.id !== a.llamaId) throw Error('id'); rev = C.merge(rev, C.revenue(d, end)); } catch { /* keep NA */ }
-      try { prices = C.merge(prices, C.market(await json('https://api.coingecko.com/api/v3/coins/' + a.gecko + '/market_chart?vs_currency=usd&days=365&interval=daily'), end)); } catch { /* keep NA */ }
+      let got = false;
+      try { const d = await json(a.llama); if (a.llamaId && d.id !== a.llamaId) throw Error(bi('协议标识不匹配', 'protocol id mismatch')); rev = C.merge(rev, C.revenue(d, end)); got = true; }
+      catch (e) { notes.push(a.name + bi(' 收入获取失败：', ' revenue fetch failed: ') + e.message); }
+      try { prices = C.merge(prices, C.market(await json('https://api.coingecko.com/api/v3/coins/' + a.gecko + '/market_chart?vs_currency=usd&days=365&interval=daily'), end)); got = true; }
+      catch (e) { notes.push(a.name + bi(' 行情获取失败：', ' market fetch failed: ') + e.message); }
+      if (got) {
+        // Store only raw inputs beyond the bundled archive (same shape the coin pages read).
+        const keep = Object.fromEntries(Object.entries(rev).filter(([d]) => !Object.hasOwn(seed.revenue, d)));
+        const keepM = Object.fromEntries(Object.entries(prices).filter(([d]) => d > seed.last));
+        try { localStorage.setItem(KEY, JSON.stringify({ seedHash: seed.sourceSHA256, revenue: keep, market: keepM, savedAt: new Date().toISOString() })); }
+        catch { notes.push(a.name + bi(' 缓存写入失败，本次增量仅在内存中', ' cache write failed; increments kept in memory only')); }
+      }
       rows = C.calculate(seed, rev, prices, end);
     }
     return rows;
@@ -127,14 +138,31 @@ Object.assign(I18N_DICT.en, {
   window.onI18nChange = render;
   render();
 
-  const payoutJob = window.PayoutCore
-    ? PayoutCore.load(json, PECore.yesterday()).then(r => { payout = r; }, () => { payout = false; }).then(render)
-    : Promise.resolve();
-  await Promise.all([payoutJob, ...ASSETS.map(async a => {
-    try {
-      const rows = await rowsFor(a, await json('pe-data/' + a.id + '.json'));
-      data[a.id] = summarize(a, rows) ?? { error: bi('有效 PE 不足', 'not enough valid PE') };
-    } catch (e) { data[a.id] = { error: e.message }; }
-    render();
-  })]);
+  // Load (or reload via the refresh button): bundled archive + cache, then fill missing days from public APIs.
+  const btn = $('refresh'), status = msg => { const el = $('status'); if (el) el.textContent = msg; };
+  let seeds = {}, busy = false;
+  async function load() {
+    if (busy) return; busy = true; if (btn) btn.disabled = true;
+    status(bi('正在获取最新数据…', 'Fetching latest data…'));
+    const notes = [];
+    const payoutJob = window.PayoutCore
+      ? PayoutCore.load(json, PECore.yesterday()).then(r => { payout = r; }, () => { payout = false; }).then(render)
+      : Promise.resolve();
+    await Promise.all([payoutJob, ...ASSETS.map(async a => {
+      try {
+        seeds[a.id] ??= await json('pe-data/' + a.id + '.json');
+        const rows = await rowsFor(a, seeds[a.id], notes);
+        data[a.id] = summarize(a, rows) ?? { error: bi('有效 PE 不足', 'not enough valid PE') };
+      } catch (e) { data[a.id] = { error: e.message }; }
+      render();
+    })]);
+    const stale = ASSETS.filter(a => data[a.id]?.stale).map(a => a.name);
+    const t = new Date().toLocaleTimeString(window.I18n?.lang === 'en' ? 'en-US' : 'zh-CN', { hour12: false });
+    status([bi('更新于 ', 'Updated ') + t,
+      stale.length ? stale.join(' / ') + bi(' 暂无昨日数据，显示最近有效日（上游可能尚未发布，稍后可再刷新）', ': no data for yesterday yet, showing latest valid day (upstream may not have published; retry later)') : '',
+      ...notes].filter(Boolean).join(' · '));
+    busy = false; if (btn) btn.disabled = false;
+  }
+  if (btn) btn.onclick = load;
+  await load();
 })();
