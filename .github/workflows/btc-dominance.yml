@@ -1,0 +1,33 @@
+# Daily BTC dominance append for btc.html (CoinGecko /global → btc-data/dominance.json).
+name: btc-dominance-daily
+
+on:
+  schedule:
+    - cron: "7 0 * * *"   # 00:07 UTC; records UTC yesterday
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: btc-dominance
+  cancel-in-progress: false
+
+jobs:
+  append:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Append yesterday
+        run: python3 .github/scripts/append_dominance.py
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- btc-data/dominance.json; then
+            echo "no change"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add btc-data/dominance.json
+          git commit -m "BTC dominance: append $(date -u -d yesterday +%F)"
+          git push
