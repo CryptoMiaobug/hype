@@ -2,7 +2,7 @@
 Object.entries({
  zh:{
   'btc.domTitle':'BTC 市值占比',
-  'btc.domNote':'占比 = BTC 市值 ÷ 全市场加密资产总市值。虚线左侧为 CoinMarketCap 历史，右侧为 CoinGecko 每日记录；两家统计币种不同，接口处可能有约 0.5 个百分点的台阶。',
+  'btc.domNote':'占比 = BTC 市值 ÷ 全市场加密资产总市值。虚线左侧为 CoinMarketCap 历史，右侧为 CoinGecko 每日记录；两家统计币种不同，接口处可能有约 0.5 个百分点的台阶。彩色虚线为近 1 年占比的 20 / 50（中位数）/ 80 分位，样本固定为最近 365 天。',
   'btc.rawDom':'市值占比 JSON',
   'btc.aria.dom':'BTC 市值占比面积图，叠加 BTC 价格与市值对数折线',
   'btc.visitNote':'GoatCounter 站点汇总（与首页相同） · 今日按 UTC',
@@ -14,7 +14,7 @@ Object.entries({
   'btc.ddTitle':'历史高点回撤',
   'btc.ddNote':'回撤 = 当日价格 ÷ 截至当日的历史最高日价 − 1。价格为对数坐标。',
   'btc.zTitle':'MVRV Z-Score',
-  'btc.zNote':'Z = (市值 − 已实现市值) ÷ 截至当日市值的标准差。常见读法：低于 0 为低估区，高于 7 为过热区。',
+  'btc.zNote':'Z = (市值 − 已实现市值) ÷ 截至当日市值的标准差。常见读法：低于 0 为低估区，高于 7 为过热区。虚线为近 1 年 Z 的 20 / 50（中位数）/ 80 分位，样本固定为最近 365 天，不随图表范围变化。',
   'btc.mcTitle':'BTC 市值与已实现市值',
   'btc.mcNote':'已实现市值 = 市值 ÷ MVRV，近似全网持币成本。对数坐标。',
   'btc.r1':'近1年','btc.r4':'近4年','btc.rAll':'全部',
@@ -30,7 +30,7 @@ Object.entries({
  },
  en:{
   'btc.domTitle':'BTC dominance',
-  'btc.domNote':'Dominance = BTC market cap ÷ total crypto market cap. Left of the dashed line is CoinMarketCap history, right of it CoinGecko daily records; the two cover different coins, so expect a step of about 0.5 pp at the switch.',
+  'btc.domNote':'Dominance = BTC market cap ÷ total crypto market cap. Left of the dashed line is CoinMarketCap history, right of it CoinGecko daily records; the two cover different coins, so expect a step of about 0.5 pp at the switch. Colored dashed lines are the 1Y P20 / P50 (median) / P80 of dominance over the last 365 days.',
   'btc.rawDom':'Dominance JSON',
   'btc.aria.dom':'BTC dominance area chart with log-scale BTC price and market cap lines',
   'btc.visitNote':'GoatCounter site totals (same as homepage) · today in UTC',
@@ -42,7 +42,7 @@ Object.entries({
   'btc.ddTitle':'Drawdown from all-time high',
   'btc.ddNote':'Drawdown = daily price ÷ highest daily price up to that day − 1. Price on a log scale.',
   'btc.zTitle':'MVRV Z-Score',
-  'btc.zNote':'Z = (market cap − realized cap) ÷ std. dev. of market cap up to that day. Common reading: below 0 is undervalued, above 7 is overheated.',
+  'btc.zNote':'Z = (market cap − realized cap) ÷ std. dev. of market cap up to that day. Common reading: below 0 is undervalued, above 7 is overheated. Dashed lines are the 1Y P20 / P50 (median) / P80 of Z, always over the last 365 days regardless of chart range.',
   'btc.mcTitle':'BTC market cap and realized cap',
   'btc.mcNote':'Realized cap = market cap ÷ MVRV, roughly the aggregate cost basis. Log scale.',
   'btc.r1':'1Y','btc.r4':'4Y','btc.rAll':'All',

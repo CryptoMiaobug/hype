@@ -68,6 +68,11 @@ function dominance(domRows,derived){
  return out;
 }
 
-const api={DAY,date,time,yesterday,parse,merge,derive,zone,dominance,Z_WARMUP};
+// 近 N 天分位（与 PE 页一致：线性插值，numpy 'linear'），只取有效值。
+function quantile(vals,q){const v=vals.filter(x=>x!=null&&Number.isFinite(x)).sort((a,b)=>a-b);if(!v.length)return null;const i=(v.length-1)*q,lo=Math.floor(i),hi=Math.ceil(i);return v[lo]+(v[hi]-v[lo])*(i-lo);}
+function band(series,key,days=365){const w=series.slice(-days),vals=w.map(r=>r[key]).filter(x=>x!=null&&Number.isFinite(x));
+ return {p20:quantile(vals,.2),p50:quantile(vals,.5),p80:quantile(vals,.8),n:vals.length,from:w[0]?.date,to:w.at(-1)?.date};}
+
+const api={DAY,date,time,yesterday,parse,merge,derive,zone,dominance,quantile,band,Z_WARMUP};
 if(typeof module!=='undefined')module.exports=api;else root.BTCCore=api;
 })(globalThis);

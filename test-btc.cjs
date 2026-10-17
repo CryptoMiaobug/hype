@@ -60,6 +60,12 @@ for(let i=1;i<ds.rows.length;i++)assert.ok(ds.rows[i][0]>ds.rows[i-1][0],'递增
 assert.ok(ds.rows.every(r=>r[1]>0&&r[1]<100&&r[2]>0));
 const low=ds.rows.reduce((a,b)=>b[1]<a[1]?b:a);assert.ok(low[0].startsWith('2018-01')&&low[1]<35,'2018-01 低点');
 
+// 近1年分位：线性插值，跳过 null，只取最后 365 天
+assert.equal(C.quantile([1,2,3,4,5],.5),3);assert.equal(C.quantile([1,2,3,4],.2),1.6);assert.equal(C.quantile([null,NaN],.5),null);
+const bs=Array.from({length:400},(_,i)=>({date:C.date(C.time('2020-01-01')+i*C.DAY),v:i<35?1e9:(i===100?null:i)}));
+const bb=C.band(bs,'v');assert.equal(bb.n,364);assert.equal(bb.from,'2020-02-05');assert.equal(bb.p50,217.5);
+const zb=C.band(sd,'z');assert.ok(zb.p20<zb.p50&&zb.p50<zb.p80&&zb.n===365);
+
 // 导航：BTC 数据下拉在 PE 监控后、Hype监控前，含 4 个子页；btc.html 跳转到回撤页
 const sub=['btc-mvrv.html','btc-drawdown.html','btc-dominance.html','btc-mcap.html'];
 for(const pg of [...sub,'dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','aave-pe.html','pe-list.html','battlefield/index.html']){

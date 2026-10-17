@@ -46,6 +46,17 @@
  const logAxis=(name,pos)=>({type:'log',name,position:pos,logBase:10,axisLabel:{color:DIM,formatter:v=>usd(v)},splitLine:{show:pos==='left',lineStyle:{color:GRID}}});
  const line=(name,data,color,y=0,o={})=>({name,type:'line',showSymbol:false,yAxisIndex:y,data,lineStyle:{color,width:1.4},itemStyle:{color},...o});
 
+ // 近1年 P20/P50/P80 虚线（同 PE 页配色），样本固定为最近 365 天，不随图表范围变化。
+ const BAND_C={p20:'#4ADE80',p50:'#A5B4FC',p80:'#F87171'};
+ function bandSeries(b,shown,label,unit){
+  return ['p20','p50','p80'].filter(k=>b[k]!=null).map(k=>({name:bi('近1年'+label+' '+k.slice(1)+'分位'+(k==='p50'?'（中位数）':''),'1Y '+label+' P'+k.slice(1)+(k==='p50'?' (median)':'')),type:'line',showSymbol:false,silent:true,yAxisIndex:0,z:1,
+   lineStyle:{type:'dashed',width:1.5,color:BAND_C[k]},itemStyle:{color:BAND_C[k]},data:shown.map(()=>b[k]),tooltip:{show:false}}));
+ }
+ function bandText(b,unit,d=2){
+  if(!b.n)return '';
+  const dot=k=>`<span style="display:inline-block;margin-right:4px;border-radius:50%;width:10px;height:10px;background:${BAND_C[k]}"></span>`;
+  return '<br>'+dot('p20')+'P20 '+fmt(b.p20,d)+unit+' · '+dot('p50')+'P50 '+fmt(b.p50,d)+unit+' · '+dot('p80')+'P80 '+fmt(b.p80,d)+unit+'<br><span style="opacity:.7">'+bi('近1年样本：','1Y sample: ')+b.from+' – '+b.to+' · '+b.n+bi(' 天',' days')+'</span>';
+ }
  function draw(k){
   if(!window.echarts){$('chart-'+k).textContent=bi('图表库未加载，可下载 CSV 查看数据。','Chart library failed to load; download the CSV instead.');return;}
   const el=$('chart-'+k);charts[k]??=echarts.init(el);
@@ -56,16 +67,16 @@
     series:[line(dName,shown.map(r=>r.dd),'#F87171',0,{areaStyle:{color:'rgba(248,113,113,.25)'}}),line(pName,shown.map(r=>r.price),'#FBBF24',1)]});
    opt.tooltip.formatter=p=>{const r=shown[p[0].dataIndex];return r.date+' UTC<br>'+bi('价格 ','Price ')+'$'+fmt(r.price,2)+'<br>'+bi('回撤 ','Drawdown ')+pct(r.dd)+'<br>'+bi('前高 ','Prior high ')+'$'+fmt(r.ath,2)+' · '+r.athDate;};
   }else if(k==='z'){
-   const zName='MVRV Z-Score';
+   const zName='MVRV Z-Score',zb=C.band(rows,'z');
    opt=base(shown,{yAxis:[{type:'value',name:'Z',axisLabel:{color:DIM},splitLine:{lineStyle:{color:GRID}}},logAxis(pName,'right')],
-    series:[line(zName,shown.map(r=>r.z),'#50d2c1',0,{markLine:{silent:true,symbol:'none',label:{color:DIM,formatter:'{c}'},data:[{yAxis:0,lineStyle:{color:'#4ADE80',type:'dashed'}},{yAxis:7,lineStyle:{color:'#F87171',type:'dashed'}}]}}),line(pName,shown.map(r=>r.price),'#FBBF24',1,{lineStyle:{color:'#FBBF24',width:1,opacity:.6}})]});
-   opt.tooltip.formatter=p=>{const r=shown[p[0].dataIndex];return r.date+' UTC<br>Z '+fmt(r.z,2)+(r.z==null?'':' · '+zoneText(r.z))+'<br>MVRV '+fmt(r.mvrv,3)+'<br>'+bi('价格 ','Price ')+'$'+fmt(r.price,2);};
+    series:[line(zName,shown.map(r=>r.z),'#50d2c1',0,{markLine:{silent:true,symbol:'none',label:{color:DIM,formatter:'{c}'},data:[{yAxis:0,lineStyle:{color:'#4ADE80',type:'dashed'}},{yAxis:7,lineStyle:{color:'#F87171',type:'dashed'}}]}}),line(pName,shown.map(r=>r.price),'#FBBF24',1,{lineStyle:{color:'#FBBF24',width:1,opacity:.6}}),...bandSeries(zb,shown,'Z','')]});
+   opt.tooltip.formatter=p=>{const r=shown[p[0].dataIndex];return r.date+' UTC<br>Z '+fmt(r.z,2)+(r.z==null?'':' · '+zoneText(r.z))+'<br>MVRV '+fmt(r.mvrv,3)+'<br>'+bi('价格 ','Price ')+'$'+fmt(r.price,2)+bandText(zb,'');};
   }else if(k==='dom'){
-   const dn=bi('BTC 市值占比','BTC dominance'),mn=bi('BTC 市值','BTC market cap'),cut=domSeed?.archiveLast;
+   const db=C.band(domRows,'dom'),dn=bi('BTC 市值占比','BTC dominance'),mn=bi('BTC 市值','BTC market cap'),cut=domSeed?.archiveLast;
    const mark=cut&&shown.some(r=>r.date>cut)?{silent:true,symbol:'none',lineStyle:{color:DIM,type:'dashed'},label:{color:DIM,formatter:bi('此后 CoinGecko','CoinGecko after')},data:[{xAxis:cut}]}:undefined;
    opt=base(shown,{yAxis:[{type:'value',name:'%',min:0,max:100,axisLabel:{color:DIM,formatter:'{value}%'},splitLine:{lineStyle:{color:GRID}}},logAxis('USD','right')],
-    series:[line(dn,shown.map(r=>r.dom),'#60A5FA',0,{areaStyle:{color:'rgba(96,165,250,.28)'},markLine:mark}),line(pName,shown.map(r=>r.price),'#FBBF24',1,{lineStyle:{color:'#FBBF24',width:1}}),line(mn,shown.map(r=>r.mcap),'#50d2c1',1,{lineStyle:{color:'#50d2c1',width:1}})]});
-   opt.tooltip.formatter=p=>{const r=shown[p[0].dataIndex];return r.date+' UTC<br>'+dn+' '+(r.dom==null?'NA':fmt(r.dom,2)+'%')+'<br>'+bi('全市场市值 ','Total market cap ')+usd(r.total)+'<br>'+bi('价格 ','Price ')+(r.price==null?'NA':'$'+fmt(r.price,2))+'<br>'+mn+' '+usd(r.mcap)+'<br><span style="opacity:.7">'+(cut&&r.date>cut?'CoinGecko':'CoinMarketCap')+'</span>';};
+    series:[line(dn,shown.map(r=>r.dom),'#60A5FA',0,{areaStyle:{color:'rgba(96,165,250,.28)'},markLine:mark}),line(pName,shown.map(r=>r.price),'#FBBF24',1,{lineStyle:{color:'#FBBF24',width:1}}),line(mn,shown.map(r=>r.mcap),'#50d2c1',1,{lineStyle:{color:'#50d2c1',width:1}}),...bandSeries(db,shown,bi('占比','dominance'),'%')]});
+   opt.tooltip.formatter=p=>{const r=shown[p[0].dataIndex];return r.date+' UTC<br>'+dn+' '+(r.dom==null?'NA':fmt(r.dom,2)+'%')+'<br>'+bi('全市场市值 ','Total market cap ')+usd(r.total)+'<br>'+bi('价格 ','Price ')+(r.price==null?'NA':'$'+fmt(r.price,2))+'<br>'+mn+' '+usd(r.mcap)+'<br><span style="opacity:.7">'+(cut&&r.date>cut?'CoinGecko':'CoinMarketCap')+'</span>'+bandText(db,'%');};
   }else{
    const m=bi('市值','Market cap'),rc=bi('已实现市值','Realized cap');
    opt=base(shown,{yAxis:[logAxis('USD','left')],series:[line(m,shown.map(r=>r.mcap),'#38BDF8'),line(rc,shown.map(r=>r.realized),'#C084FC')]});
