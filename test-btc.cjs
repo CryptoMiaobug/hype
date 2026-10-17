@@ -61,7 +61,7 @@ assert.ok(ds.rows.every(r=>r[1]>0&&r[1]<100&&r[2]>0));
 const low=ds.rows.reduce((a,b)=>b[1]<a[1]?b:a);assert.ok(low[0].startsWith('2018-01')&&low[1]<35,'2018-01 低点');
 
 // 导航：BTC 数据下拉在 PE 监控后、Hype监控前，含 4 个子页；btc.html 跳转到回撤页
-const sub=['btc-drawdown.html','btc-mvrv.html','btc-mcap.html','btc-dominance.html'];
+const sub=['btc-mvrv.html','btc-drawdown.html','btc-dominance.html','btc-mcap.html'];
 for(const pg of [...sub,'dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','aave-pe.html','pe-list.html','battlefield/index.html']){
  const h=fs.readFileSync(pg,'utf8'),pe=h.indexOf('data-i18n="nav.pe"'),btc=h.indexOf('data-i18n="nav.btc"'),hy=h.indexOf('data-i18n="nav.hype"');
  assert.ok(pe>0&&pe<btc&&btc<hy,pg+' 导航顺序');
@@ -74,7 +74,7 @@ for(const pg of [...sub,'dashboard.html','valuation.html','hype-pe.html','uni-pe
   assert.match(h,/details class="nav-pe nav-btc active"/,pg);
  }
 }
-assert.match(fs.readFileSync('btc.html','utf8'),/location\.replace\('btc-drawdown\.html'/);
+assert.match(fs.readFileSync('btc.html','utf8'),/location\.replace\('btc-mvrv\.html'/);
 
 // 词条：页面用到的 key 中英都有
 const ctx={document:{addEventListener(){}},window:{}};vm.createContext(ctx);
