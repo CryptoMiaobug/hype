@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');const C=require('./pe-core.js');
 const A=JSON.parse(fs.readFileSync(__dirname+'/pe-data/aave.json'));let count=0;
 function test(n,f){f();console.log('PASS',n);count++;}
-test('seed metadata',()=>{assert.equal(A.asset,'aave');assert.equal(A.fixedSupply,16000000);assert.equal(A.rows.length,365);assert.equal(A.rows.at(-1).date,A.last);assert.ok(A.rows.every(r=>r.source==='bundled'));});
+test('seed metadata',()=>{assert.equal(A.asset,'aave');assert.equal(A.fixedSupply,16000000);assert.ok(A.rows.length>=365);assert.equal(A.rows[364].date,'2026-10-10');assert.ok(A.rows.every((r,i)=>!i||Date.parse(r.date)-Date.parse(A.rows[i-1].date)===86400000),'rows contiguous');assert.equal(A.rows.at(-1).date,A.last);assert.ok(A.rows.every(r=>r.source==='bundled'));});
 test('every bundled row reproduces from raw revenue + market',()=>{for(const r of A.rows){const base={...A,last:C.date(C.time(r.date)-C.DAY),rows:[{supply:A.fixedSupply}]};const v=C.calculate(base,A.revenue,A.market,r.date).at(-1);for(const k of ['r30','annual','circ','full','price','mcap'])assert.equal(v[k],r[k],r.date+' '+k);assert.equal(v.status,r.status);}});
 test('circ = mcap / (R30*365/30), full = 16M*price / annual',()=>{const r=A.rows.at(-1);assert.ok(Math.abs(r.circ-r.mcap/(r.r30*365/30))<1e-9);assert.ok(Math.abs(r.full-16e6*r.price/r.annual)<1e-9);assert.ok(r.full>=r.circ);});
 test('increment keeps 16M fixed supply (not HYPE-only anymore)',()=>{const n=C.date(C.time(A.last)+C.DAY),rev={...A.revenue,[n]:100000},pm={...A.market,[n]:[100,1.5e9]};const r=C.calculate(A,rev,pm,n).at(-1);assert.equal(r.supply,16e6);assert.equal(r.status,'ok');assert.equal(r.source,'browser');});

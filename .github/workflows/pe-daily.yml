@@ -1,0 +1,42 @@
+# Daily append-only refresh of PE seeds (DefiLlama revenue + CoinGecko market), freezing T-2.
+name: pe-daily
+
+on:
+  schedule:
+    - cron: "7 1 * * *"   # 01:07 UTC = 09:07 Beijing
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-append      # shared with btc-daily / btc-dominance so pushes never race
+  cancel-in-progress: false
+
+jobs:
+  append:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Append new days
+        id: append
+        # Partial success still commits; a non-zero exit is re-raised after the commit so GitHub e-mails.
+        run: node .github/scripts/append_pe.cjs || echo "failed=1" >> "$GITHUB_OUTPUT"
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- pe-data; then
+            echo "no change"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pe-data
+          git commit -m "PE data: daily append (T-2 $(date -u -d '2 days ago' +%F))"
+          git pull --rebase
+          git push
+      - name: Report failures
+        if: steps.append.outputs.failed == '1'
+        run: echo "::error::Some PE files were not updated; see the Append step log" && exit 1
