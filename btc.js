@@ -46,16 +46,16 @@
  const logAxis=(name,pos)=>({type:'log',name,position:pos,logBase:10,axisLabel:{color:DIM,formatter:v=>usd(v)},splitLine:{show:pos==='left',lineStyle:{color:GRID}}});
  const line=(name,data,color,y=0,o={})=>({name,type:'line',showSymbol:false,yAxisIndex:y,data,lineStyle:{color,width:1.4},itemStyle:{color},...o});
 
- // 近1年 P20/P50/P80 虚线（同 PE 页配色），样本固定为最近 365 天，不随图表范围变化。
+ // 全历史 P20/P50/P80 虚线（同 PE 页配色），样本为全部有效数据，不随图表范围变化。
  const BAND_C={p20:'#4ADE80',p50:'#A5B4FC',p80:'#F87171'};
  function bandSeries(b,shown,label,unit){
-  return ['p20','p50','p80'].filter(k=>b[k]!=null).map(k=>({name:bi('近1年'+label+' '+k.slice(1)+'分位'+(k==='p50'?'（中位数）':''),'1Y '+label+' P'+k.slice(1)+(k==='p50'?' (median)':'')),type:'line',showSymbol:false,silent:true,yAxisIndex:0,z:1,
+  return ['p20','p50','p80'].filter(k=>b[k]!=null).map(k=>({name:bi('全历史'+label+' '+k.slice(1)+'分位'+(k==='p50'?'（中位数）':''),'All-time '+label+' P'+k.slice(1)+(k==='p50'?' (median)':'')),type:'line',showSymbol:false,silent:true,yAxisIndex:0,z:1,
    lineStyle:{type:'dashed',width:1.5,color:BAND_C[k]},itemStyle:{color:BAND_C[k]},data:shown.map(()=>b[k]),tooltip:{show:false}}));
  }
  function bandText(b,unit,d=2){
   if(!b.n)return '';
   const dot=k=>`<span style="display:inline-block;margin-right:4px;border-radius:50%;width:10px;height:10px;background:${BAND_C[k]}"></span>`;
-  return '<br>'+dot('p20')+'P20 '+fmt(b.p20,d)+unit+' · '+dot('p50')+'P50 '+fmt(b.p50,d)+unit+' · '+dot('p80')+'P80 '+fmt(b.p80,d)+unit+'<br><span style="opacity:.7">'+bi('近1年样本：','1Y sample: ')+b.from+' – '+b.to+' · '+b.n+bi(' 天',' days')+'</span>';
+  return '<br>'+dot('p20')+'P20 '+fmt(b.p20,d)+unit+' · '+dot('p50')+'P50 '+fmt(b.p50,d)+unit+' · '+dot('p80')+'P80 '+fmt(b.p80,d)+unit+'<br><span style="opacity:.7">'+bi('全历史样本：','All-time sample: ')+b.from+' – '+b.to+' · '+b.n+bi(' 天',' days')+'</span>';
  }
  function draw(k){
   if(!window.echarts){$('chart-'+k).textContent=bi('图表库未加载，可下载 CSV 查看数据。','Chart library failed to load; download the CSV instead.');return;}

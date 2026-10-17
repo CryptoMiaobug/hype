@@ -60,11 +60,13 @@ for(let i=1;i<ds.rows.length;i++)assert.ok(ds.rows[i][0]>ds.rows[i-1][0],'递增
 assert.ok(ds.rows.every(r=>r[1]>0&&r[1]<100&&r[2]>0));
 const low=ds.rows.reduce((a,b)=>b[1]<a[1]?b:a);assert.ok(low[0].startsWith('2018-01')&&low[1]<35,'2018-01 低点');
 
-// 近1年分位：线性插值，跳过 null，只取最后 365 天
+// 分位：线性插值，跳过 null；默认全部历史，可选最近 N 天
 assert.equal(C.quantile([1,2,3,4,5],.5),3);assert.equal(C.quantile([1,2,3,4],.2),1.6);assert.equal(C.quantile([null,NaN],.5),null);
 const bs=Array.from({length:400},(_,i)=>({date:C.date(C.time('2020-01-01')+i*C.DAY),v:i<35?1e9:(i===100?null:i)}));
-const bb=C.band(bs,'v');assert.equal(bb.n,364);assert.equal(bb.from,'2020-02-05');assert.equal(bb.p50,217.5);
-const zb=C.band(sd,'z');assert.ok(zb.p20<zb.p50&&zb.p50<zb.p80&&zb.n===365);
+const bb=C.band(bs,'v',365);assert.equal(bb.n,364);assert.equal(bb.from,'2020-02-05');assert.equal(bb.p50,217.5);
+const ba=C.band(bs,'v');assert.equal(ba.n,399);assert.equal(ba.from,'2020-01-01');
+assert.equal(C.band(sd,'z').from,sd[C.Z_WARMUP].date,'样本起点 = 第一个有效 Z');
+const zb=C.band(sd,'z');assert.ok(zb.p20<zb.p50&&zb.p50<zb.p80&&zb.n===sd.length-C.Z_WARMUP);
 
 // 导航：BTC 数据下拉在 PE 监控后、Hype监控前，含 4 个子页；btc.html 跳转到回撤页
 const sub=['btc-mvrv.html','btc-drawdown.html','btc-dominance.html','btc-mcap.html'];
