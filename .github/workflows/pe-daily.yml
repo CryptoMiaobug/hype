@@ -17,6 +17,8 @@ jobs:
   append:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}   # optional; notification skipped when unset
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,9 +36,20 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add pe-data
-          git commit -m "PE data: daily append (T-2 $(date -u -d '2 days ago' +%F))"
+          msg="PE data: daily append (T-2 $(date -u -d '2 days ago' +%F))"
+          if [ -n "$BURN" ]; then msg="$BURN; $msg"; fi
+          git commit -m "$msg"
           git pull --rebase
           git push
+        env:
+          BURN: ${{ steps.append.outputs.burn }}
+      - name: Notify Discord on new BNB burn
+        if: steps.append.outputs.burn != '' && env.DISCORD_WEBHOOK != ''
+        env:
+          BURN: ${{ steps.append.outputs.burn }}
+        run: |
+          body=$(python3 -c 'import json,os;print(json.dumps({"content":"value.miao77.xyz: "+os.environ["BURN"]+" (auto, verified on BSC)"}))')
+          curl -sf -H 'content-type: application/json' -d "$body" "$DISCORD_WEBHOOK" >/dev/null
       - name: Report failures
         if: steps.append.outputs.failed == '1'
         run: echo "::error::Some PE files were not updated; see the Append step log" && exit 1

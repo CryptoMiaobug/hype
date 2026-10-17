@@ -9,8 +9,8 @@
 //   * Each file is independent; a failed source skips only the files that need it.
 //   * Stop at the first incomplete day (missing/invalid revenue, price, breakdown): no skipping ahead.
 //   * Missed runs self-heal: every run fills (file.last, T-2].
-//   * BNB: quarterly Auto-Burns are entered by hand; rows stop BNB_MAX_BURN_AGE days after the latest
-//     recorded burn (logged as HELD, not a failure) until the new burn is added by hand.
+//   * BNB: the next quarterly Auto-Burn is auto-recorded once bnbburn.info lists its tx AND the tx verifies on
+//     BSC (see nextBurn). Rows stop BNB_MAX_BURN_AGE days after the latest recorded burn (logged as HELD).
 'use strict';
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const FE = path.join(__dirname, '..', '..');
@@ -58,6 +58,7 @@ function assertKept(name, before, after) {
   if (Array.isArray(before.rows) && !same(after.rows.slice(0, before.rows.length), before.rows)) throw Error(name + ': old rows changed');
   for (const k of ['revenue', 'market']) if (before[k]) for (const [d, v] of Object.entries(before[k])) if (!same(after[k][d], v)) throw Error(name + ': ' + k + ' ' + d + ' changed');
   if (Array.isArray(before.totalDataChartBreakdown) && !same(after.totalDataChartBreakdown.slice(0, before.totalDataChartBreakdown.length), before.totalDataChartBreakdown)) throw Error(name + ': old breakdown changed');
+  if (Array.isArray(before.burns) && !same(after.burns.slice(0, before.burns.length), before.burns)) throw Error(name + ': old burns changed');
   if (before.assets) for (const [a, o] of Object.entries(before.assets)) for (const k of ['revenue', 'holders']) for (const [d, v] of Object.entries(o[k])) if (!same(after.assets[a][k][d], v)) throw Error(name + ': ' + a + '.' + k + ' ' + d + ' changed');
 }
 // New keys only (> last), never fill old nulls.
@@ -89,12 +90,68 @@ async function pe(asset, slug, type, cgId) {
   return 'added ' + added.map(x => x.date + ' PE ' + x.circ.toFixed(2)).join(', ') + stop;
 }
 
+// ---- BNB quarterly Auto-Burn: discover via bnbburn.info, verify on BSC, then record ----
+// Same rules as bnbPE/build_seed.py: amount = on-chain value sent to dEaD, usd = amount x bnbburn medianPrice,
+// date = UTC date of the burn block. Only the next burn number is accepted; older burns are never touched.
+const BURN_API = 'https://www.bnbburn.info/api/getQuarterBurns';
+const BURN_FROM = '0x00389542170d59184dc056f942b3a8234d5318c9', DEAD = '0x000000000000000000000000000000000000dead';
+const BURN_TOLERANCE = 0.01; // on-chain vs bnbburn amount (historic max ~0.1% excluding #29/#30 make-up burns)
+const RPCS = (process.env.BSC_RPCS || 'https://bsc-dataseed.bnbchain.org,https://bsc-dataseed1.defibit.io,https://bsc-mainnet.public.blastapi.io').split(',');
+async function rpc(method, params) {
+  if (global.__mockRpc) return global.__mockRpc(method, params);
+  let last;
+  for (const url of RPCS) {
+    try {
+      const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }), signal: AbortSignal.timeout(30000) });
+      const j = await r.json();
+      if (j.result != null) return j.result;
+      last = Error(method + ' ' + url + ' ' + JSON.stringify(j.error || 'null result'));
+    } catch (e) { last = e; }
+  }
+  throw last;
+}
+const weiToBnb = hex => { const w = BigInt(hex), u = 10n ** 18n; return Number(w / u) + Number(w % u) / 1e18; };
+
+// Returns { burn } when a new burn was verified, { pending } when not published yet; throws on verification failure.
+async function nextBurn(seed) {
+  const prev = seed.burns.at(-1), n = prev.n + 1;
+  let list; try { list = (await get(BURN_API)).json; } catch (e) { return { pending: 'bnbburn.info unreachable (' + e.message + '), retry next run' }; }
+  const q = list.quarters?.find(x => x.rank === n);
+  if (!q) return { pending: 'bnbburn.info has no entry #' + n };
+  const m = /^https:\/\/bscscan\.com\/tx\/(0x[0-9a-fA-F]{64})$/.exec(q.txLink || '');
+  if (!q.burnDate || !m) return { pending: '#' + n + ' ' + q.name + ' not executed yet' };
+  const tx = m[1].toLowerCase(), price = Number(q.medianPrice), api = Number(q.amount);
+  if (!(price > 0) || !(api > 0)) throw Error('#' + n + ' bnbburn medianPrice/amount invalid');
+  if (seed.burns.some(b => b.tx.toLowerCase() === tx)) throw Error('#' + n + ' tx already recorded as another burn');
+  let t, rc;
+  try { [t, rc] = [await rpc('eth_getTransactionByHash', [tx]), await rpc('eth_getTransactionReceipt', [tx])]; } catch (e) { return { pending: '#' + n + ' listed but BSC RPC unreachable (' + e.message + '), retry next run' }; }
+  if (!t || !rc) return { pending: '#' + n + ' tx not found on BSC yet, retry next run' };
+  if (rc.status !== '0x1') throw Error('#' + n + ' tx failed on chain');
+  if (t.from.toLowerCase() !== BURN_FROM || (t.to || '').toLowerCase() !== DEAD) throw Error('#' + n + ' tx is not ' + BURN_FROM + ' -> dEaD (' + t.from + ' -> ' + t.to + ')');
+  const amount = weiToBnb(t.value);
+  if (!(amount > 0) || Math.abs(amount - api) / api > BURN_TOLERANCE) throw Error('#' + n + ' on-chain ' + amount + ' vs bnbburn ' + api + ' differs >' + BURN_TOLERANCE * 100 + '%');
+  const block = parseInt(t.blockNumber, 16), blk = await rpc('eth_getBlockByNumber', [t.blockNumber, false]);
+  const time = new Date(parseInt(blk.timestamp, 16) * 1000).toISOString().replace(/\.\d+Z$/, 'Z'), date = time.slice(0, 10);
+  if (block <= prev.block || date < prev.date) throw Error('#' + n + ' is not after #' + prev.n);
+  return { burn: { n, quarter: q.name, tx, block, time, date, amount, apiAmount: api, medianPrice: price, usd: amount * price } };
+}
+
 // ---- BNB burn PE ----
 async function bnb() {
   const seed = read('bnb'), before = JSON.parse(JSON.stringify(seed));
+  let burnNote = '';
+  try {
+    const r = await nextBurn(seed);
+    if (r.burn) {
+      if (r.burn.date <= seed.last) throw Error('#' + r.burn.n + ' dated ' + r.burn.date + ' but rows already frozen through ' + seed.last + '; needs manual review');
+      seed.burns.push(r.burn); seed.sources = { ...seed.sources, [STAMP + '/quarter_burns.json']: (await get(BURN_API)).sha };
+      burnNote = 'BNB burn #' + r.burn.n + ' recorded (' + r.burn.quarter + ', ' + r.burn.date + ', ' + r.burn.amount.toFixed(3) + ' BNB, $' + Math.round(r.burn.usd).toLocaleString('en-US') + '); ';
+      console.log('::notice::' + burnNote);
+    } else burnNote = r.pending + '; ';
+  } catch (e) { throw Error('burn check: ' + e.message + ' (rows not frozen)'); }
   const burnCap = C.date(C.time(seed.burns.at(-1).date) + BNB_MAX_BURN_AGE * C.DAY), end = END < burnCap ? END : burnCap;
-  const capNote = end < END ? ' (capped at ' + end + ': latest recorded burn #' + seed.burns.at(-1).n + ' ' + seed.burns.at(-1).date + ' is >' + BNB_MAX_BURN_AGE + 'd old; add the new burn manually)' : '';
-  if (seed.last >= end) return (capNote ? 'HELD at ' : 'up to date ') + seed.last + capNote;
+  const capNote = end < END ? ' (capped at ' + end + ': latest recorded burn #' + seed.burns.at(-1).n + ' ' + seed.burns.at(-1).date + ' is >' + BNB_MAX_BURN_AGE + 'd old; waiting for burn #' + (seed.burns.at(-1).n + 1) + ')' : '';
+  if (seed.last >= end) { if (burnNote.startsWith('BNB burn')) { seed.sourceSHA256 = sha(JSON.stringify(seed.sources, Object.keys(seed.sources).sort())); assertKept('bnb', before, seed); write('bnb', seed); } return burnNote + (capNote ? 'HELD at ' : 'up to date ') + seed.last + capNote; }
   const [l, g] = [await llama('bsc', 'dailyRevenue'), await gecko('binancecoin')];
   const rev = addNew(seed.revenue, B.revenue(l.json, end), seed.last, end), cg = B.market(g.json, end), added = [];
   let stop = '';
@@ -103,14 +160,14 @@ async function bnb() {
     if (x.status !== 'ok') { stop = ' (stopped at ' + d + ': ' + x.status + ')'; break; }
     delete x.status; delete x.source; added.push(x);
   }
-  if (!added.length) return 'nothing complete after ' + seed.last + stop + capNote;
+  if (!added.length) { if (burnNote.startsWith('BNB burn')) { seed.sourceSHA256 = sha(JSON.stringify(seed.sources, Object.keys(seed.sources).sort())); assertKept('bnb', before, seed); write('bnb', seed); } return burnNote + 'nothing complete after ' + seed.last + stop + capNote; }
   const last = added.at(-1).date;
   for (const x of added) seed.market[x.date] = [...cg[x.date], 'coingecko'];
   seed.rows.push(...added); seed.revenue = trim(rev, last); seed.last = last; seed.builtAt = STAMP;
   seed.sources = { ...seed.sources, [STAMP + '/bsc_dailyRevenue.json']: l.sha, [STAMP + '/cg_binancecoin.json']: g.sha };
   seed.sourceSHA256 = sha(JSON.stringify(seed.sources, Object.keys(seed.sources).sort()));
   assertKept('bnb', before, seed); write('bnb', seed);
-  return 'added ' + added.map(x => x.date + ' PE ' + x.pe.toFixed(2)).join(', ') + stop + capNote;
+  return burnNote + 'added ' + added.map(x => x.date + ' PE ' + x.pe.toFixed(2)).join(', ') + stop + capNote;
 }
 
 // ---- payout.json (hype/uni/aave revenue vs holders; one global `last`) ----
@@ -173,6 +230,8 @@ async function main() {
   console.log(report.join('\n'));
   // Partial success still commits (workflow commits whatever changed); exit 1 so GitHub e-mails on any failure.
   if (failures) process.exitCode = 1;
+  const burn = report.find(l => l.includes('BNB burn #'));
+  if (burn && process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, 'burn=' + burn.replace(/^bnb: /, '').split(';')[0] + '\n');
 }
 if (require.main === module) main();
 module.exports = { main, END };
