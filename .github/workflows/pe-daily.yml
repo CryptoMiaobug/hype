@@ -48,8 +48,13 @@ jobs:
         env:
           BURN: ${{ steps.append.outputs.burn }}
         run: |
-          body=$(python3 -c 'import json,os;print(json.dumps({"content":"value.miao77.xyz: "+os.environ["BURN"]+" (auto, verified on BSC)"}))')
+          body=$(python3 -c 'import json,os;print(json.dumps({"content":"🔥 value.miao77.xyz 已自动录入："+os.environ["BURN"]+"（已在 BSC 链上核对）"}))')
           curl -sf -H 'content-type: application/json' -d "$body" "$DISCORD_WEBHOOK" >/dev/null
       - name: Report failures
         if: steps.append.outputs.failed == '1'
         run: echo "::error::Some PE files were not updated; see the Append step log" && exit 1
+      - name: Notify Discord on failure
+        if: failure() && env.DISCORD_WEBHOOK != ''
+        run: |
+          body=$(python3 -c 'import json,os;print(json.dumps({"content":"⚠️ value.miao77.xyz 数据任务失败："+os.environ["GITHUB_WORKFLOW"]+" "+os.environ["GITHUB_SERVER_URL"]+"/"+os.environ["GITHUB_REPOSITORY"]+"/actions/runs/"+os.environ["GITHUB_RUN_ID"]}))')
+          curl -sf -H 'content-type: application/json' -d "$body" "$DISCORD_WEBHOOK" >/dev/null

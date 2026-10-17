@@ -17,6 +17,8 @@ jobs:
   append:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}   # optional; notification skipped when unset
     steps:
       - uses: actions/checkout@v4
       - name: Append new days
@@ -33,3 +35,8 @@ jobs:
           git commit -m "BTC data: append through $last"
           git pull --rebase
           git push
+      - name: Notify Discord on failure
+        if: failure() && env.DISCORD_WEBHOOK != ''
+        run: |
+          body=$(python3 -c 'import json,os;print(json.dumps({"content":"⚠️ value.miao77.xyz 数据任务失败："+os.environ["GITHUB_WORKFLOW"]+" "+os.environ["GITHUB_SERVER_URL"]+"/"+os.environ["GITHUB_REPOSITORY"]+"/actions/runs/"+os.environ["GITHUB_RUN_ID"]}))')
+          curl -sf -H 'content-type: application/json' -d "$body" "$DISCORD_WEBHOOK" >/dev/null
