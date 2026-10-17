@@ -37,7 +37,7 @@
 
  const slice=k=>{const src=k==='dom'?domRows:rows;return ranges[k]?src.slice(-ranges[k]):src;};
  function base(shown,extra){
-  const narrow=($('chart-dd')?.clientWidth||1000)<600;
+  const narrow=(document.querySelector('.btc-chart')?.clientWidth||1000)<600;
   return {animation:false,tooltip:{trigger:'axis',confine:true},legend:{top:0,textStyle:{color:DIM}},
    grid:{left:narrow?48:65,right:narrow?52:70,top:40,bottom:60},
    dataZoom:[{type:'inside'},{type:'slider',height:18,bottom:8,textStyle:{color:DIM}}],
@@ -75,7 +75,7 @@
  }
  function renderAll(){
   if(!rows.length)return;
-  domRows=C.dominance(domSeed?.rows,rows);cards();['dd','z','mc','dom'].forEach(draw);
+  domRows=C.dominance(domSeed?.rows,rows);cards();['dd','z','mc','dom'].filter(k=>$('chart-'+k)).forEach(draw);
   document.querySelectorAll('[data-chart]').forEach(b=>b.setAttribute('aria-pressed',String(ranges[b.dataset.chart]===+b.dataset.range)));
  }
 
@@ -94,7 +94,7 @@
   $('refresh').disabled=true;const notes=[];
   try{
    seed??=await json('btc-data/btc.json');
-   if(!domSeed)try{domSeed=await json('btc-data/dominance.json');}catch(e){notes.push(['市值占比历史读取失败：'+e.message,'Dominance history failed: '+e.message]);}
+   if(!domSeed&&$('chart-dom'))try{domSeed=await json('btc-data/dominance.json');}catch(e){notes.push(['市值占比历史读取失败：'+e.message,'Dominance history failed: '+e.message]);}
    let extra=[];
    try{const c=JSON.parse(localStorage.getItem(KEY)||'null');if(c&&c.seedHash===seed.sourceSHA256&&Array.isArray(c.rows))extra=c.rows;}catch{notes.push(['本机缓存不可用','Local cache unavailable']);}
    let raw=C.merge(seed.rows,extra);rows=C.derive(raw);renderAll();
@@ -119,9 +119,9 @@
 
  function download(){
   if(!rows.length)return;
-  const cols=['date','price','mcap','mvrv','realized','ath','dd','z'];
-  const blob=new Blob([cols.join(',')+'\n'+rows.map(r=>cols.map(k=>r[k]??'NA').join(',')).join('\n')],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='btc-data-'+rows.at(-1).date+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  const isDom=!!$('chart-dom'),src=isDom?domRows:rows,cols=isDom?['date','dom','total','price','mcap']:['date','price','mcap','mvrv','realized','ath','dd','z'];
+  const blob=new Blob([cols.join(',')+'\n'+src.map(r=>cols.map(k=>r[k]??'NA').join(',')).join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(isDom?'btc-dominance-':'btc-data-')+src.at(-1).date+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
  }
 
  function languageChanged(){

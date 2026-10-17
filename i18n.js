@@ -16,6 +16,10 @@ const I18N_DICT = {
     'list.refresh': '数据更新', 'list.colCoin': '币种', 'list.colPrice': '价格', 'list.colMcap': '流通市值', 'list.colPe': '流通 PE', 'list.colFull': '解锁 PE',
     'list.colRank': '近 1 年分位', 'list.colBand': 'P20 / P50 / P80', 'list.colDca': '定投建议', 'list.colAnnual': '年化回馈额', 'list.colDate': '数据日 UTC',
     'nav.btc': 'BTC 数据',
+    'nav.btcDd': '历史高点回撤',
+    'nav.btcZ': 'MVRV Z-Score',
+    'nav.btcMc': '市值与已实现市值',
+    'nav.btcDom': '市值占比',
     'nav.hype': 'Hype监控',
     'nav.battle': '多空战况',
     // ---- 战场页 ----
@@ -212,6 +216,10 @@ const I18N_DICT = {
     'list.refresh': 'Update data', 'list.colCoin': 'Asset', 'list.colPrice': 'Price', 'list.colMcap': 'Circ. market cap', 'list.colPe': 'Circulating PE', 'list.colFull': 'Diluted PE',
     'list.colRank': '1Y percentile', 'list.colBand': 'P20 / P50 / P80', 'list.colDca': 'DCA suggestion', 'list.colAnnual': 'Annualized return to holders', 'list.colDate': 'As of UTC',
     'nav.btc': 'BTC Data',
+    'nav.btcDd': 'Drawdown from ATH',
+    'nav.btcZ': 'MVRV Z-Score',
+    'nav.btcMc': 'Market cap & realized cap',
+    'nav.btcDom': 'BTC dominance',
     'nav.hype': 'Hype Monitor',
     'nav.battle': 'Long/Short Battle',
     // ---- Battlefield ----

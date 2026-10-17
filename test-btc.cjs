@@ -60,16 +60,25 @@ for(let i=1;i<ds.rows.length;i++)assert.ok(ds.rows[i][0]>ds.rows[i-1][0],'递增
 assert.ok(ds.rows.every(r=>r[1]>0&&r[1]<100&&r[2]>0));
 const low=ds.rows.reduce((a,b)=>b[1]<a[1]?b:a);assert.ok(low[0].startsWith('2018-01')&&low[1]<35,'2018-01 低点');
 
-// 导航：BTC 数据在 PE 监控后、Hype监控前，8+1 个页面
-for(const pg of ['btc.html','dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','aave-pe.html','pe-list.html','battlefield/index.html']){
+// 导航：BTC 数据下拉在 PE 监控后、Hype监控前，含 4 个子页；btc.html 跳转到回撤页
+const sub=['btc-drawdown.html','btc-mvrv.html','btc-mcap.html','btc-dominance.html'];
+for(const pg of [...sub,'dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','aave-pe.html','pe-list.html','battlefield/index.html']){
  const h=fs.readFileSync(pg,'utf8'),pe=h.indexOf('data-i18n="nav.pe"'),btc=h.indexOf('data-i18n="nav.btc"'),hy=h.indexOf('data-i18n="nav.hype"');
  assert.ok(pe>0&&pe<btc&&btc<hy,pg+' 导航顺序');
- assert.match(h,/<a href="(\.\.\/)?btc\.html"( class="active" aria-current="page")? data-i18n="nav\.btc">BTC 数据<\/a>/,pg);
+ const pre=pg.startsWith('battlefield')?'../':'';
+ let at=btc;for(const s of sub){const i=h.indexOf('href="'+pre+s+'"',at);assert.ok(i>at&&i<hy,pg+' 菜单含 '+s);at=i;}
+ assert.equal((h.match(/data-i18n="nav\.btc"/g)||[]).length,1,pg);
+ if(sub.includes(pg)){
+  assert.equal((h.match(/class="btc-chart"/g)||[]).length,1,pg+' 单图');
+  assert.match(h,new RegExp('<a href="'+pg+'" class="active" aria-current="page"'),pg+' 当前项高亮');
+  assert.match(h,/details class="nav-pe nav-btc active"/,pg);
+ }
 }
+assert.match(fs.readFileSync('btc.html','utf8'),/location\.replace\('btc-drawdown\.html'/);
 
 // 词条：页面用到的 key 中英都有
 const ctx={document:{addEventListener(){}},window:{}};vm.createContext(ctx);
 vm.runInContext(fs.readFileSync('i18n.js','utf8')+'\n'+fs.readFileSync('btc-i18n.js','utf8')+'\nthis.D=I18N_DICT;',ctx);
-const keys=[...fs.readFileSync('btc.html','utf8').matchAll(/data-(?:i18n|btc-aria)="([^"]+)"/g)].map(x=>x[1]);
+const keys=[...sub.map(p=>fs.readFileSync(p,'utf8')).join('').matchAll(/data-(?:i18n|btc-aria)="([^"]+)"/g)].map(x=>x[1]);
 for(const k of keys)for(const l of ['zh','en'])assert.ok(ctx.D[l][k],l+' 缺词条 '+k);
 console.log('PASS btc: drawdown, expanding Z, fixed history, merge, seed sanity, nav order, i18n ('+keys.length+' keys)');
