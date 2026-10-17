@@ -73,6 +73,10 @@ function quantile(vals,q){const v=vals.filter(x=>x!=null&&Number.isFinite(x)).so
 function band(series,key,days=0){const w=(days?series.slice(-days):series).filter(r=>r[key]!=null&&Number.isFinite(r[key])),vals=w.map(r=>r[key]);
  return {p20:quantile(vals,.2),p50:quantile(vals,.5),p80:quantile(vals,.8),n:vals.length,from:w[0]?.date,to:w.at(-1)?.date};}
 
-const api={DAY,date,time,yesterday,parse,merge,derive,zone,dominance,quantile,band,Z_WARMUP};
+// 全历史分位：历史上严格低于当前值的天数占比（0–100），与 PE 总览同一定义（PE 用近1年，这里用全部）。
+function rank(series,key){const vals=series.map(r=>r[key]).filter(x=>x!=null&&Number.isFinite(x)),cur=[...series].reverse().find(r=>r[key]!=null&&Number.isFinite(r[key]));
+ if(!cur||vals.length<2)return null;return {date:cur.date,value:cur[key],rank:100*vals.filter(v=>v<cur[key]).length/vals.length,n:vals.length};}
+
+const api={DAY,date,time,yesterday,parse,merge,derive,zone,dominance,quantile,band,rank,Z_WARMUP};
 if(typeof module!=='undefined')module.exports=api;else root.BTCCore=api;
 })(globalThis);

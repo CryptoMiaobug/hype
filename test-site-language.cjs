@@ -1,6 +1,6 @@
 // Shared initialization contract for every published entry; no browser dependency.
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
-const pages=['dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','aave-pe.html','battlefield/index.html','pe-list.html','btc-drawdown.html','btc-mvrv.html','btc-mcap.html','btc-dominance.html'];
+const pages=['dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','aave-pe.html','battlefield/index.html','pe-list.html','btc-overview.html','btc-drawdown.html','btc-mvrv.html','btc-mcap.html','btc-dominance.html'];
 function boot(page,language,store={},denied=false){
  const html=fs.readFileSync(page,'utf8'),events={},buttons=['zh','en'].map(lang=>({dataset:{lang},classList:{toggle(){}}}));
  let sw=html.includes('id="langSwitch"')?node():null;

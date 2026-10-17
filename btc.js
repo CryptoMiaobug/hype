@@ -84,9 +84,30 @@
   }
   charts[k].setOption(opt,{notMerge:true});
  }
+ // 总览表：每行一个指标，分位为全历史；定投建议只看 MVRV Z-Score 分位（PE 页 9 档）。
+ const OV=[
+  {k:'z',page:'btc-mvrv.html',name:['MVRV Z-Score','MVRV Z-Score'],src:()=>rows,val:v=>fmt(v,2),dca:true},
+  {k:'mvrv',page:'btc-mvrv.html',name:['MVRV','MVRV'],src:()=>rows,val:v=>fmt(v,3)},
+  {k:'dd',page:'btc-drawdown.html',name:['历史高点回撤','Drawdown from ATH'],src:()=>rows,val:v=>pct(v)},
+  {k:'dom',page:'btc-dominance.html',name:['市值占比','BTC dominance'],src:()=>domRows,val:v=>fmt(v,2)+'%'},
+  {k:'mc',page:'btc-mcap.html',name:['市值 / 已实现市值','Market cap / realized cap']}];
+ function overview(){
+  const tb=$('btc-list');if(!tb)return;const D=window.DCACore,last=rows.at(-1);
+  tb.innerHTML=OV.map(o=>{
+   const link=`<a class="pl-coin" href="${o.page}"><b>${bi(...o.name)}</b></a>`;
+   if(o.k==='mc')return `<tr data-href="${o.page}"><td class="pl-sticky">${link}</td><td class="num"><b>${usd(last.mcap)}</b><small>${bi('已实现 ','Realized ')}${usd(last.realized)}</small></td><td class="pe-muted">—</td><td class="pe-muted">—</td><td class="num pe-muted">—</td><td class="pe-muted">${bi('金额长期上行，不算分位','Grows over time; no percentile')}</td><td class="num">${last.date}</td></tr>`;
+   const s=o.src(),r=C.rank(s,o.k),b=C.band(s,o.k);
+   if(!r)return `<tr data-href="${o.page}"><td class="pl-sticky">${link}</td><td colspan="6" class="pe-muted">${bi('加载中…','Loading…')}</td></tr>`;
+   const t=D?D.TIERS[D.tierIndex(r.rank)]:null,pos=Math.max(0,Math.min(100,r.rank));
+   const meter=`<div class="pl-rank"><span>${Math.round(r.rank)}%</span>${D?`<div class="dca-meter" style="background:${D.gradient()}" role="img" aria-label="${bi('全历史分位','All-time percentile')} ${Math.round(r.rank)}%"><i style="left:${pos}%"></i></div>`:''}</div>`;
+   const dca=o.dca&&t?`<span class="pl-dca"><b>${t.ratio}%</b><span class="dca-badge">${bi(t.action[0],t.action[1])}</span></span>`:'<span class="pe-muted">—</span>';
+   const read=o.k==='z'?zoneText(r.value):o.k==='dd'?(r.value>-0.05?bi('接近历史高点','Near ATH'):bi('距高点 ','Below ATH by ')+pct(-r.value)):o.k==='dom'?(r.value>b.p80?bi('高于 P80','Above P80'):r.value<b.p20?bi('低于 P20','Below P20'):bi('P20–P80 之间','Between P20 and P80')):o.k==='mvrv'?(r.value<1?bi('低于持币成本','Below cost basis'):bi('高于持币成本 ','Above cost basis by ')+fmt((r.value-1)*100,0)+'%'):'';
+   return `<tr data-href="${o.page}"${o.dca&&t?` style="--tier:${t.color};--ink:${t.ink}"`:''}><td class="pl-sticky">${link}</td><td class="num"><b>${o.val(r.value)}</b></td><td>${meter}</td><td>${dca}</td><td class="num pl-band">${o.val(b.p20)} / ${o.val(b.p50)} / ${o.val(b.p80)}<small>${bi('样本 ','Sample ')}${b.from} – ${b.to}</small></td><td>${read}</td><td class="num">${r.date}</td></tr>`;
+  }).join('');
+ }
  function renderAll(){
   if(!rows.length)return;
-  domRows=C.dominance(domSeed?.rows,rows);cards();['dd','z','mc','dom'].filter(k=>$('chart-'+k)).forEach(draw);
+  domRows=C.dominance(domSeed?.rows,rows);cards();overview();['dd','z','mc','dom'].filter(k=>$('chart-'+k)).forEach(draw);
   document.querySelectorAll('[data-chart]').forEach(b=>b.setAttribute('aria-pressed',String(ranges[b.dataset.chart]===+b.dataset.range)));
  }
 
@@ -105,7 +126,7 @@
   $('refresh').disabled=true;const notes=[];
   try{
    seed??=await json('btc-data/btc.json');
-   if(!domSeed&&$('chart-dom'))try{domSeed=await json('btc-data/dominance.json');}catch(e){notes.push(['市值占比历史读取失败：'+e.message,'Dominance history failed: '+e.message]);}
+   if(!domSeed&&($('chart-dom')||$('btc-list')))try{domSeed=await json('btc-data/dominance.json');}catch(e){notes.push(['市值占比历史读取失败：'+e.message,'Dominance history failed: '+e.message]);}
    let extra=[];
    try{const c=JSON.parse(localStorage.getItem(KEY)||'null');if(c&&c.seedHash===seed.sourceSHA256&&Array.isArray(c.rows))extra=c.rows;}catch{notes.push(['本机缓存不可用','Local cache unavailable']);}
    let raw=C.merge(seed.rows,extra);rows=C.derive(raw);renderAll();
@@ -140,7 +161,8 @@
   $('status').textContent=bi(...status);renderAll();
  }
  function init(){
-  $('refresh').onclick=refresh;$('download').onclick=download;
+  $('refresh').onclick=refresh;if($('download'))$('download').onclick=download;
+  $('btc-list')?.addEventListener('click',e=>{if(e.target.closest('a'))return;const tr=e.target.closest('tr[data-href]');if(tr)location.href=tr.dataset.href;});
   document.querySelectorAll('[data-chart]').forEach(b=>b.onclick=()=>{ranges[b.dataset.chart]=+b.dataset.range;draw(b.dataset.chart);renderAll();});
   window.addEventListener('resize',()=>Object.values(charts).forEach(c=>c.resize()));
   const prev=window.onI18nChange;window.onI18nChange=(...a)=>{prev?.(...a);languageChanged();};

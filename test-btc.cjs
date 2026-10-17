@@ -67,9 +67,16 @@ const bb=C.band(bs,'v',365);assert.equal(bb.n,364);assert.equal(bb.from,'2020-02
 const ba=C.band(bs,'v');assert.equal(ba.n,399);assert.equal(ba.from,'2020-01-01');
 assert.equal(C.band(sd,'z').from,sd[C.Z_WARMUP].date,'样本起点 = 第一个有效 Z');
 const zb=C.band(sd,'z');assert.ok(zb.p20<zb.p50&&zb.p50<zb.p80&&zb.n===sd.length-C.Z_WARMUP);
+// 全历史分位：严格低于当前值的占比
+const rk=C.rank([{date:'a',v:1},{date:'b',v:3},{date:'c',v:null},{date:'d',v:2}],'v');
+assert.equal(rk.date,'d');assert.equal(rk.value,2);assert.ok(Math.abs(rk.rank-100/3)<1e-9);assert.equal(rk.n,3);
+assert.equal(C.rank([{date:'a',v:null}],'v'),null);
+const zr=C.rank(sd,'z');assert.ok(zr.rank>=0&&zr.rank<=100&&zr.n===sd.length-C.Z_WARMUP);
+const ov=fs.readFileSync('btc-overview.html','utf8');
+assert.ok(ov.includes('id="btc-list"')&&ov.includes('dca-core.js')&&ov.includes('btc.js'),'总览页依赖');
 
 // 导航：BTC 数据下拉在 PE 监控后、Hype监控前，含 4 个子页；btc.html 跳转到回撤页
-const sub=['btc-mvrv.html','btc-drawdown.html','btc-dominance.html','btc-mcap.html'];
+const sub=['btc-overview.html','btc-mvrv.html','btc-drawdown.html','btc-dominance.html','btc-mcap.html'];
 for(const pg of [...sub,'dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','aave-pe.html','pe-list.html','battlefield/index.html']){
  const h=fs.readFileSync(pg,'utf8'),pe=h.indexOf('data-i18n="nav.pe"'),btc=h.indexOf('data-i18n="nav.btc"'),hy=h.indexOf('data-i18n="nav.hype"');
  assert.ok(pe>0&&pe<btc&&btc<hy,pg+' 导航顺序');
@@ -77,12 +84,12 @@ for(const pg of [...sub,'dashboard.html','valuation.html','hype-pe.html','uni-pe
  let at=btc;for(const s of sub){const i=h.indexOf('href="'+pre+s+'"',at);assert.ok(i>at&&i<hy,pg+' 菜单含 '+s);at=i;}
  assert.equal((h.match(/data-i18n="nav\.btc"/g)||[]).length,1,pg);
  if(sub.includes(pg)){
-  assert.equal((h.match(/class="btc-chart"/g)||[]).length,1,pg+' 单图');
+  assert.equal((h.match(/class="btc-chart"/g)||[]).length,pg==='btc-overview.html'?0:1,pg+' 单图');
   assert.match(h,new RegExp('<a href="'+pg+'" class="active" aria-current="page"'),pg+' 当前项高亮');
   assert.match(h,/details class="nav-pe nav-btc active"/,pg);
  }
 }
-assert.match(fs.readFileSync('btc.html','utf8'),/location\.replace\('btc-mvrv\.html'/);
+assert.match(fs.readFileSync('btc.html','utf8'),/location\.replace\('btc-overview\.html'/);
 
 // 词条：页面用到的 key 中英都有
 const ctx={document:{addEventListener(){}},window:{}};vm.createContext(ctx);
