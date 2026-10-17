@@ -56,6 +56,18 @@ function zone(z){
  return z<0?'under':z<3?'neutral':z<7?'warm':'hot';
 }
 
-const api={DAY,date,time,yesterday,parse,merge,derive,zone,Z_WARMUP};
+// 市值占比序列：按天铺满 [首日, 末日]，缺的日子为 null（不插值）；按日期接上 BTC 价格、市值。
+function dominance(domRows,derived){
+ if(!Array.isArray(domRows)||!domRows.length)return [];
+ const byDay=new Map(domRows.filter(r=>Array.isArray(r)&&r[1]>0&&r[1]<100&&r[2]>0).map(r=>[r[0],r]));
+ const btc=new Map((derived||[]).map(r=>[r.date,r])),out=[];
+ for(let t=time(domRows[0][0]);t<=time(domRows.at(-1)[0]);t+=DAY){
+  const d=date(t),r=byDay.get(d),b=btc.get(d);
+  out.push({date:d,dom:r?r[1]:null,total:r?r[2]:null,price:b?.price??null,mcap:b?.mcap??null});
+ }
+ return out;
+}
+
+const api={DAY,date,time,yesterday,parse,merge,derive,zone,dominance,Z_WARMUP};
 if(typeof module!=='undefined')module.exports=api;else root.BTCCore=api;
 })(globalThis);

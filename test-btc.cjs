@@ -48,6 +48,18 @@ assert.ok(last.z>-2&&last.z<12,'最新 Z 合理');
 const y2017=sd.find(r=>r.date==='2017-12-16');assert.ok(y2017.z>7,'2017 顶部在过热区');
 const y2018=sd.find(r=>r.date==='2018-12-15');assert.ok(y2018.z<0,'2018 底部在低估区');
 
+// 市值占比：按天铺满，缺日留 null，接上 BTC 价格
+const dom=C.dominance([['2020-01-01',60,1000],['2020-01-03',61,1100],['2020-01-04',150,1]],[{date:'2020-01-01',price:7,mcap:600},{date:'2020-01-03',price:8,mcap:671}]);
+assert.deepEqual(dom.map(r=>r.date),['2020-01-01','2020-01-02','2020-01-03','2020-01-04']);
+assert.equal(dom[1].dom,null);assert.equal(dom[2].price,8);assert.equal(dom[3].dom,null,'无效值不画');
+assert.deepEqual(C.dominance([],[]),[]);assert.deepEqual(C.dominance(undefined,[]),[]);
+const ds=JSON.parse(fs.readFileSync('btc-data/dominance.json','utf8'));
+assert.equal(ds.cols.join(),'date,btcDominance,totalMarketCap');
+assert.ok(ds.archiveLast>='2026-10-16'&&ds.rows[0][0]<='2013-05-01');
+for(let i=1;i<ds.rows.length;i++)assert.ok(ds.rows[i][0]>ds.rows[i-1][0],'递增 '+ds.rows[i][0]);
+assert.ok(ds.rows.every(r=>r[1]>0&&r[1]<100&&r[2]>0));
+const low=ds.rows.reduce((a,b)=>b[1]<a[1]?b:a);assert.ok(low[0].startsWith('2018-01')&&low[1]<35,'2018-01 低点');
+
 // 导航：BTC 数据在 PE 监控后、Hype监控前，8+1 个页面
 for(const pg of ['btc.html','dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','aave-pe.html','pe-list.html','battlefield/index.html']){
  const h=fs.readFileSync(pg,'utf8'),pe=h.indexOf('data-i18n="nav.pe"'),btc=h.indexOf('data-i18n="nav.btc"'),hy=h.indexOf('data-i18n="nav.hype"');

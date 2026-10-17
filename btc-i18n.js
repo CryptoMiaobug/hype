@@ -1,6 +1,10 @@
 // BTC 数据页词条，复用全站 I18n（语言记忆、切换按钮）。
 Object.entries({
  zh:{
+  'btc.domTitle':'BTC 市值占比',
+  'btc.domNote':'占比 = BTC 市值 ÷ 全市场加密资产总市值。虚线左侧为 CoinMarketCap 历史，右侧为 CoinGecko 每日记录；两家统计币种不同，接口处可能有约 0.5 个百分点的台阶。',
+  'btc.rawDom':'市值占比 JSON',
+  'btc.aria.dom':'BTC 市值占比面积图，叠加 BTC 价格与市值对数折线',
   'btc.visitNote':'GoatCounter 站点汇总（与首页相同） · 今日按 UTC',
   'btc.title':'BTC 数据',
   'btc.subtitle':'历史高点回撤 · MVRV Z-Score · 市值 · UTC 日线，历史值固定 · 卡片价格为实时行情',
@@ -18,13 +22,17 @@ Object.entries({
   'btc.m1':'日线数据来自 Coin Metrics 社区版（PriceUSD、CapMrktCurUSD、CapMVRVCur），从 2010-07-18 起。页面内置截至归档日的固化数据，打开时从 Coin Metrics 补到 UTC 昨天，增量存在本机浏览器，不回写服务器。',
   'btc.m2':'历史值固定：回撤只对比截至当日的最高价，Z-Score 的标准差只用截至当日的市值，所以新数据不会改写过去的点。CoinGlass 等站点用全历史标准差，早期数值会和本页不同，近几年接近。前 365 天样本太少，不输出 Z-Score。',
   'btc.m3':'已实现市值由 MVRV 反推，不是逐笔 UTXO 计算，和 Glassnode 等付费数据可能有小幅差异。顶部价格、市值和市值占比来自 CoinGecko 实时接口，回撤卡片用实时价对比历史最高日价。',
-  'btc.m4':'市值占比没有免费的历史序列，只显示当前值。仅供研究，不是投资建议。',
+  'btc.m4':'市值占比：2013-04-29 至 2026-10-16 为 CoinMarketCap 一次性固化的历史（原始数据有 5 段 1–3 天的空缺，图上留空不插值）；之后每天 00:07 UTC 由 GitHub Actions 记录 CoinGecko 的数值。漏记的日子无法从免费数据补回，会留空。卡片上的占比为 CoinGecko 实时值。仅供研究，不是投资建议。',
   'btc.sources':'来源：',
   'btc.aria.dd':'BTC 历史高点回撤面积图与对数价格线，共用 UTC 日期',
   'btc.aria.z':'BTC MVRV Z-Score 折线与对数价格线，含 0 和 7 参考线',
   'btc.aria.mc':'BTC 市值与已实现市值对数折线图'
  },
  en:{
+  'btc.domTitle':'BTC dominance',
+  'btc.domNote':'Dominance = BTC market cap ÷ total crypto market cap. Left of the dashed line is CoinMarketCap history, right of it CoinGecko daily records; the two cover different coins, so expect a step of about 0.5 pp at the switch.',
+  'btc.rawDom':'Dominance JSON',
+  'btc.aria.dom':'BTC dominance area chart with log-scale BTC price and market cap lines',
   'btc.visitNote':'GoatCounter site totals (same as homepage) · today in UTC',
   'btc.title':'BTC Data',
   'btc.subtitle':'Drawdown from ATH · MVRV Z-Score · Market cap · UTC daily, history fixed · Card prices are live',
@@ -42,7 +50,7 @@ Object.entries({
   'btc.m1':'Daily data comes from the Coin Metrics Community API (PriceUSD, CapMrktCurUSD, CapMVRVCur) since 2010-07-18. The page ships a bundled archive and tops it up from Coin Metrics to UTC yesterday. Increments stay in this browser and are never written back to the server.',
   'btc.m2':'History is fixed: drawdown compares only against the high up to that day, and the Z-Score std. dev. uses only market caps up to that day, so new data never rewrites past points. CoinGlass and similar sites use the full-history std. dev., so early values differ; recent years are close. No Z-Score for the first 365 days (too few samples).',
   'btc.m3':'Realized cap is derived from MVRV, not computed per UTXO, and may differ slightly from paid sources such as Glassnode. Live price, market cap and dominance on the cards come from CoinGecko; the drawdown card compares the live price to the highest daily price.',
-  'btc.m4':'There is no free history for dominance, so only the current value is shown. Research only, not investment advice.',
+  'btc.m4':'Dominance: 2013-04-29 to 2026-10-16 is a one-time CoinMarketCap archive (the raw data has 5 gaps of 1–3 days, left blank, not interpolated); later days are recorded daily at 00:07 UTC from CoinGecko by GitHub Actions. Missed days cannot be backfilled from free data and stay blank. The card shows the live CoinGecko value. Research only, not investment advice.',
   'btc.sources':'Sources: ',
   'btc.aria.dd':'BTC drawdown from ATH (area) and log price line on shared UTC dates',
   'btc.aria.z':'BTC MVRV Z-Score line and log price line with reference lines at 0 and 7',

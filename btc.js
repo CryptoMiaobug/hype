@@ -7,8 +7,8 @@
  const fmt=(n,d=2)=>n==null||!Number.isFinite(n)?'NA':n.toLocaleString('en-US',{maximumFractionDigits:d});
  const usd=n=>n==null?'NA':n>=1e12?'$'+fmt(n/1e12,2)+'T':n>=1e9?'$'+fmt(n/1e9,2)+'B':n>=1e6?'$'+fmt(n/1e6,2)+'M':'$'+fmt(n,n<1?4:0);
  const pct=n=>n==null?'NA':fmt(n*100,2)+'%';
- const ranges={dd:0,z:0,mc:0},charts={};
- let seed,rows=[],live=null,status=['加载中…','Loading…'];
+ const ranges={dd:0,z:0,mc:0,dom:0},charts={};
+ let seed,domSeed,domRows=[],rows=[],live=null,status=['加载中…','Loading…'];
 
  async function json(url,ms=25000){
   const r=await fetch(url,{signal:AbortSignal.timeout(ms),credentials:'omit'});
@@ -35,7 +35,7 @@
   $('asof').textContent=bi('日线截至 ','Daily data through ')+last.date+' UTC · '+bi('固化档案截至 ','Archive through ')+seed.last;
  }
 
- const slice=k=>ranges[k]?rows.slice(-ranges[k]):rows;
+ const slice=k=>{const src=k==='dom'?domRows:rows;return ranges[k]?src.slice(-ranges[k]):src;};
  function base(shown,extra){
   const narrow=($('chart-dd')?.clientWidth||1000)<600;
   return {animation:false,tooltip:{trigger:'axis',confine:true},legend:{top:0,textStyle:{color:DIM}},
@@ -60,6 +60,12 @@
    opt=base(shown,{yAxis:[{type:'value',name:'Z',axisLabel:{color:DIM},splitLine:{lineStyle:{color:GRID}}},logAxis(pName,'right')],
     series:[line(zName,shown.map(r=>r.z),'#50d2c1',0,{markLine:{silent:true,symbol:'none',label:{color:DIM,formatter:'{c}'},data:[{yAxis:0,lineStyle:{color:'#4ADE80',type:'dashed'}},{yAxis:7,lineStyle:{color:'#F87171',type:'dashed'}}]}}),line(pName,shown.map(r=>r.price),'#FBBF24',1,{lineStyle:{color:'#FBBF24',width:1,opacity:.6}})]});
    opt.tooltip.formatter=p=>{const r=shown[p[0].dataIndex];return r.date+' UTC<br>Z '+fmt(r.z,2)+(r.z==null?'':' · '+zoneText(r.z))+'<br>MVRV '+fmt(r.mvrv,3)+'<br>'+bi('价格 ','Price ')+'$'+fmt(r.price,2);};
+  }else if(k==='dom'){
+   const dn=bi('BTC 市值占比','BTC dominance'),mn=bi('BTC 市值','BTC market cap'),cut=domSeed?.archiveLast;
+   const mark=cut&&shown.some(r=>r.date>cut)?{silent:true,symbol:'none',lineStyle:{color:DIM,type:'dashed'},label:{color:DIM,formatter:bi('此后 CoinGecko','CoinGecko after')},data:[{xAxis:cut}]}:undefined;
+   opt=base(shown,{yAxis:[{type:'value',name:'%',min:0,max:100,axisLabel:{color:DIM,formatter:'{value}%'},splitLine:{lineStyle:{color:GRID}}},logAxis('USD','right')],
+    series:[line(dn,shown.map(r=>r.dom),'#60A5FA',0,{areaStyle:{color:'rgba(96,165,250,.28)'},markLine:mark}),line(pName,shown.map(r=>r.price),'#FBBF24',1,{lineStyle:{color:'#FBBF24',width:1}}),line(mn,shown.map(r=>r.mcap),'#50d2c1',1,{lineStyle:{color:'#50d2c1',width:1}})]});
+   opt.tooltip.formatter=p=>{const r=shown[p[0].dataIndex];return r.date+' UTC<br>'+dn+' '+(r.dom==null?'NA':fmt(r.dom,2)+'%')+'<br>'+bi('全市场市值 ','Total market cap ')+usd(r.total)+'<br>'+bi('价格 ','Price ')+(r.price==null?'NA':'$'+fmt(r.price,2))+'<br>'+mn+' '+usd(r.mcap)+'<br><span style="opacity:.7">'+(cut&&r.date>cut?'CoinGecko':'CoinMarketCap')+'</span>';};
   }else{
    const m=bi('市值','Market cap'),rc=bi('已实现市值','Realized cap');
    opt=base(shown,{yAxis:[logAxis('USD','left')],series:[line(m,shown.map(r=>r.mcap),'#38BDF8'),line(rc,shown.map(r=>r.realized),'#C084FC')]});
@@ -69,7 +75,7 @@
  }
  function renderAll(){
   if(!rows.length)return;
-  cards();['dd','z','mc'].forEach(draw);
+  domRows=C.dominance(domSeed?.rows,rows);cards();['dd','z','mc','dom'].forEach(draw);
   document.querySelectorAll('[data-chart]').forEach(b=>b.setAttribute('aria-pressed',String(ranges[b.dataset.chart]===+b.dataset.range)));
  }
 
@@ -88,6 +94,7 @@
   $('refresh').disabled=true;const notes=[];
   try{
    seed??=await json('btc-data/btc.json');
+   if(!domSeed)try{domSeed=await json('btc-data/dominance.json');}catch(e){notes.push(['市值占比历史读取失败：'+e.message,'Dominance history failed: '+e.message]);}
    let extra=[];
    try{const c=JSON.parse(localStorage.getItem(KEY)||'null');if(c&&c.seedHash===seed.sourceSHA256&&Array.isArray(c.rows))extra=c.rows;}catch{notes.push(['本机缓存不可用','Local cache unavailable']);}
    let raw=C.merge(seed.rows,extra);rows=C.derive(raw);renderAll();
