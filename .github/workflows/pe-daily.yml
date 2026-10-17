@@ -27,7 +27,8 @@ jobs:
       - name: Append new days
         id: append
         # Partial success still commits; a non-zero exit is re-raised after the commit so GitHub e-mails.
-        run: node .github/scripts/append_pe.cjs || echo "failed=1" >> "$GITHUB_OUTPUT"
+        run: node .github/scripts/append_pe.cjs | tee /tmp/append.log; [ "${PIPESTATUS[0]}" = 0 ] || echo "failed=1" >> "$GITHUB_OUTPUT"
+        shell: bash {0}
       - name: Commit if changed
         run: |
           if git diff --quiet -- pe-data; then
@@ -50,6 +51,9 @@ jobs:
         run: |
           body=$(python3 -c 'import json,os;print(json.dumps({"content":"🔥 value.miao77.xyz 已自动录入："+os.environ["BURN"]+"（已在 BSC 链上核对）"}))')
           curl -sf -H 'content-type: application/json' -d "$body" "$DISCORD_WEBHOOK" >/dev/null
+      - name: Daily summary to Discord
+        if: success() && env.DISCORD_WEBHOOK != ''
+        run: python3 .github/scripts/notify.py pe /tmp/append.log
       - name: Report failures
         if: steps.append.outputs.failed == '1'
         run: echo "::error::Some PE files were not updated; see the Append step log" && exit 1

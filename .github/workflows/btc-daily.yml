@@ -22,7 +22,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Append new days
-        run: python3 .github/scripts/append_btc.py
+        run: python3 .github/scripts/append_btc.py | tee /tmp/append.log
+        shell: bash -o pipefail {0}
       - name: Commit if changed
         run: |
           if git diff --quiet -- btc-data/btc.json; then
@@ -35,6 +36,9 @@ jobs:
           git commit -m "BTC data: append through $last"
           git pull --rebase
           git push
+      - name: Daily summary to Discord
+        if: success() && env.DISCORD_WEBHOOK != ''
+        run: python3 .github/scripts/notify.py btc /tmp/append.log
       - name: Notify Discord on failure
         if: failure() && env.DISCORD_WEBHOOK != ''
         run: |

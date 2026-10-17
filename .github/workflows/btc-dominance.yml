@@ -22,7 +22,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Append yesterday
-        run: python3 .github/scripts/append_dominance.py
+        run: python3 .github/scripts/append_dominance.py | tee /tmp/append.log
+        shell: bash -o pipefail {0}
       - name: Commit if changed
         run: |
           if git diff --quiet -- btc-data/dominance.json; then
@@ -34,6 +35,9 @@ jobs:
           git commit -m "BTC dominance: append $(date -u -d yesterday +%F)"
           git pull --rebase
           git push
+      - name: Daily summary to Discord
+        if: success() && env.DISCORD_WEBHOOK != ''
+        run: python3 .github/scripts/notify.py dominance /tmp/append.log
       - name: Notify Discord on failure
         if: failure() && env.DISCORD_WEBHOOK != ''
         run: |
