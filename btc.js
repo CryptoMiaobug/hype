@@ -69,7 +69,7 @@
   }else if(k==='z'){
    const zName='MVRV Z-Score',zb=C.band(rows,'z');
    opt=base(shown,{yAxis:[{type:'value',name:'Z',axisLabel:{color:DIM},splitLine:{lineStyle:{color:GRID}}},logAxis(pName,'right')],
-    series:[line(zName,shown.map(r=>r.z),'#50d2c1',0,{markLine:{silent:true,symbol:'none',label:{color:DIM,formatter:'{c}'},data:[{yAxis:0,lineStyle:{color:'#4ADE80',type:'dashed'}},{yAxis:7,lineStyle:{color:'#F87171',type:'dashed'}}]}}),line(pName,shown.map(r=>r.price),'#FBBF24',1,{lineStyle:{color:'#FBBF24',width:1,opacity:.6}}),...bandSeries(zb,shown,'Z','')]});
+    series:[line(zName,shown.map(r=>r.z),'#50d2c1',0,{markLine:{silent:true,symbol:'none',lineStyle:{color:'#9CA3AF',type:[2,4],width:1.2,opacity:.9},label:{position:'insideStartTop',color:'#C7D2CF',fontSize:11},data:[{yAxis:0,label:{formatter:bi('0 · 低估线','0 · undervalued line')}},{yAxis:7,label:{formatter:bi('7 · 过热线','7 · overheated line')}}]}}),line(pName,shown.map(r=>r.price),'#FBBF24',1,{lineStyle:{color:'#FBBF24',width:1,opacity:.6}}),...bandSeries(zb,shown,'Z','')]});
    opt.tooltip.formatter=p=>{const r=shown[p[0].dataIndex];return r.date+' UTC<br>Z '+fmt(r.z,2)+(r.z==null?'':' · '+zoneText(r.z))+'<br>MVRV '+fmt(r.mvrv,3)+'<br>'+bi('价格 ','Price ')+'$'+fmt(r.price,2)+bandText(zb,'');};
   }else if(k==='dom'){
    const db=C.band(domRows,'dom'),dn=bi('BTC 市值占比','BTC dominance'),mn=bi('BTC 市值','BTC market cap'),cut=domSeed?.archiveLast;
