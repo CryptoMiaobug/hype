@@ -1,0 +1,35 @@
+# Daily append for btc-data/btc.json (Coin Metrics price / mcap / MVRV, T-1, append-only).
+name: btc-daily
+
+on:
+  schedule:
+    - cron: "57 0 * * *"   # 00:57 UTC = 08:57 Beijing; records through UTC yesterday
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-append      # shared with other data jobs so pushes never race
+  cancel-in-progress: false
+
+jobs:
+  append:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Append new days
+        run: python3 .github/scripts/append_btc.py
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- btc-data/btc.json; then
+            echo "no change"; exit 0
+          fi
+          last=$(python3 -c "import json;print(json.load(open('btc-data/btc.json'))['last'])")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add btc-data/btc.json
+          git commit -m "BTC data: append through $last"
+          git pull --rebase
+          git push
