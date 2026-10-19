@@ -47,10 +47,10 @@ function summarize({spot,states,fills,funding,ledger,account,start,capital}){
   flow:flow.total,base,pnl,roi:base?pnl/base:0,lev:equity?notional/equity:0,positions:pos};
 }
 
-// 收益曲线：portfolio 各区间的净值点合并去重，只保留起点之后，扣掉每个时点前的累计净转入。
+// 收益曲线：portfolio 的 day/week/month/allTime（全账户净值）合并去重；perp* 系列只含合约保证金部分，不能用，只保留起点之后，扣掉每个时点前的累计净转入。
 function curve(portfolio,{start,capital,ledger,account,now,equity}){
  const m=new Map();
- for(const [,v] of portfolio||[])for(const [t,val] of v?.accountValueHistory||[])if(t>=start)m.set(t,num(val));
+ for(const [k,v] of portfolio||[])if(!k.startsWith('perp'))for(const [t,val] of v?.accountValueHistory||[])if(t>=start)m.set(t,num(val));
  if(now&&equity!=null)m.set(now,equity);
  const flows=netFlow(ledger,account,start).items;
  const pts=[[start,0]];

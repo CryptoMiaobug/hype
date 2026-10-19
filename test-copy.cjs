@@ -37,8 +37,8 @@ assert.ok(Math.abs(s.pnl-52)<1e-9);assert.ok(Math.abs(s.roi-52/5098)<1e-12);
 assert.equal(s.trades,2);assert.ok(Math.abs(s.fees-2.2)<1e-12);assert.equal(s.closed,-10);assert.ok(Math.abs(s.funding-0.15)<1e-12);
 assert.equal(s.upnl,-60);assert.equal(s.notional,5940);assert.equal(s.volume,4000+810);
 
-// 曲线：起点 0 → 合并去重（day/week 同一时点）→ 扣除时点前净转入 → 末尾实时点
-const pf=[['day',{accountValueHistory:[[1050,'5000'],[1250,'5120']]}],['week',{accountValueHistory:[[800,'1'],[1250,'5120']]}]];
+// 曲线：只用全账户净值（perp* 只含合约保证金，忽略）；起点 0 → 合并去重 → 扣除时点前净转入 → 末尾实时点
+const pf=[['day',{accountValueHistory:[[1050,'5000'],[1250,'5120']]}],['week',{accountValueHistory:[[800,'1'],[1250,'5120']]}],['perpDay',{accountValueHistory:[[1250,'2000'],[1300,'2100']]}]];
 const cv=C.curve(pf,{start:START,capital:5000,ledger,account:ME,now:2000,equity:5150});
 assert.deepEqual(cv,[[1000,0],[1050,0],[1250,120-69],[2000,150-98]]);
 
@@ -55,10 +55,10 @@ for(const k of new Set([...html.matchAll(/data-i18n="(ct\.[^"]+)"/g),...js.match
 const shared=fs.readFileSync('i18n.js','utf8');assert.ok(shared.includes("'nav.copy': '反向交易'")&&shared.includes("'nav.copy': 'Reverse Trading'"));
 
 // 不可信数据（Trasia 昵称）必须经 esc 输出
-assert.match(js,/esc\(m\.nickname\)/);assert.match(js,/esc\(b\.title/);assert.ok(!/\$\{m\.nickname\}/.test(js));
+assert.ok(!/batches|nickname/.test(js),'不展示跟踪名单');assert.ok(!html.includes('ct.batches'));
 
 // 名单数据：账户、起点、两批、地址格式
 const r=JSON.parse(fs.readFileSync('copy-data/roster.json','utf8'));
 assert.match(r.account,/^0x[0-9a-f]{40}$/);assert.ok(r.start.time>0&&r.start.capital>0);
-for(const b of r.batches){assert.ok(b.ratio>0&&b.members.length);for(const m of b.members)assert.match(m.address,/^0x[0-9a-f]{40}$/);}
+assert.ok(!('batches' in r),'公开数据不含名单');
 console.log('PASS copy: net flow, positions, summary, curve, fills, i18n, escaping, roster');

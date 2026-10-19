@@ -1,4 +1,4 @@
-/* 反向交易页：浏览器直连 Hyperliquid info 接口，名单与收益起点来自 copy-data/roster.json。 */
+/* 反向交易页：浏览器直连 Hyperliquid info 接口，收益起点来自 copy-data/roster.json。 */
 'use strict';
 (()=>{
  const C=window.CopyCore,$=id=>document.getElementById(id);
@@ -95,19 +95,8 @@
   $('more').hidden=tr.length<=shown;
  }
 
- function batches(){
-  $('batches').innerHTML=roster.batches.map(b=>{
-   const ratio=b.ratio===1?'1 : 1':b.ratio<1&&Number.isInteger(1/b.ratio)?'1 / '+(1/b.ratio):String(b.ratio);
-   const period=b.start&&b.end?day(b.start)+' – '+day(b.end):'';
-   const members=b.members.map(m=>`<tr><td class="pl-sticky">${esc(m.nickname)}</td><td>${esc(m.team||'—')}</td><td><a href="${EXPLORER}/address/${esc(m.address)}" target="_blank" rel="noopener" title="${esc(m.address)}"><code>${esc(short(m.address))}</code></a></td></tr>`).join('');
-   return `<div class="ct-batch"><div class="ct-batch-head"><div><b>${esc(b.title||b.id||'')}</b>${b.community?` <span class="pe-muted">· ${esc(b.community)}</span>`:''}
-    <div class="pe-muted">${esc(t('ct.ratio'))} <b class="ct-ratio">${esc(ratio)}</b> · ${b.members.length} ${esc(t('ct.people'))}${b.capital?' · '+esc(t('ct.capital'))+' $'+esc(b.capital):''}${period?' · '+esc(t('ct.period'))+' '+esc(period):''}</div></div>
-    ${b.url?`<a class="ct-link" href="${esc(b.url)}" target="_blank" rel="noopener">${esc(t('ct.event'))} ↗</a>`:''}</div>
-    <details><summary>${esc(bi('展开名单','Show traders'))}（${b.members.length}）</summary><div class="pl-scroll"><table class="pl-table ct-members"><thead><tr><th class="pl-sticky">${esc(t('ct.colNick'))}</th><th>${esc(t('ct.colTeam'))}</th><th>${esc(t('ct.colAddr'))}</th></tr></thead><tbody>${members}</tbody></table></div></details></div>`;
-  }).join('');
- }
 
- function render(){if(!data)return;cards();drawCurve();posTable();tradeTable();batches();}
+ function render(){if(!data)return;cards();drawCurve();posTable();tradeTable();}
 
  function languageChanged(){$('status').textContent=bi(...status);$('chart').setAttribute('aria-label',t('ct.curveAria'));render();}
  function schedule(){clearInterval(timer);timer=setInterval(()=>{if(!document.hidden)load();},REFRESH_MS);}
