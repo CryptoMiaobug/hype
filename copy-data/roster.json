@@ -1,0 +1,287 @@
+{
+ "updatedAt": "2026-10-19T17:15:03+00:00",
+ "account": "0xe3dc829c1b53c3cf36b60b1c5aad033153ac2dec",
+ "direction": -1,
+ "start": {
+  "time": 1792425240000,
+  "capital": 5000.003648
+ },
+ "batches": [
+  {
+   "id": "event-65ecc581",
+   "url": "https://trasia-trading-competition.vercel.app/events/event-65ecc581",
+   "ratio": 1.0,
+   "members": [
+    {
+     "nickname": "东东弗斯 thank you jeff",
+     "address": "0x8bfa039bc8318654af83b9506d16034e8b6f7681",
+     "team": "daaaa战队"
+    },
+    {
+     "nickname": "moon",
+     "address": "0xbd7b8a9d3f04625f48b7b13f22d2c33539fb2b15",
+     "team": "恐龙博士战队"
+    },
+    {
+     "nickname": "DF",
+     "address": "0x33a6fab7da79384e13718c02faa78dce368de36f",
+     "team": "猪脚饭战队"
+    },
+    {
+     "nickname": "web3八方",
+     "address": "0xd0ee5d434dac6318bc7aa73fb89fcc9f5a1ab8c3",
+     "team": "八方战队"
+    },
+    {
+     "nickname": "马来西亚小韭菜（正版）",
+     "address": "0xc4dc88106d004c7899be0cddf6f39185aa317709",
+     "team": "猪脚饭战队"
+    },
+    {
+     "nickname": "nb",
+     "address": "0xa8e3045ed8cac6aa835c4d64966ea235879d9600",
+     "team": "猪脚饭战队"
+    },
+    {
+     "nickname": "张小牙",
+     "address": "0x8fea51dadda7e94f58af1749b1ba6dfec69c7145",
+     "team": "八方战队"
+    },
+    {
+     "nickname": "黑色马里奥",
+     "address": "0x639365c5b47ef7589bd8cb8850b1cfa8b5fd77a0",
+     "team": "八方战队"
+    },
+    {
+     "nickname": "6eared",
+     "address": "0x02fc5313cf52321fea03b372c5108a345dcbaaa8",
+     "team": "猪脚饭战队"
+    },
+    {
+     "nickname": "🐰",
+     "address": "0xce7476ea60f45985c2ca46141976cb67f46d05be",
+     "team": "八方战队"
+    },
+    {
+     "nickname": "Mulight",
+     "address": "0x4be0aae14e316edbf7086b573704beed9f7df4b5",
+     "team": "恐龙博士战队"
+    },
+    {
+     "nickname": "老韭菜南亥",
+     "address": "0x4ba696edcc5be725a42c9fcf9b31a1cd22b31827",
+     "team": "八方战队"
+    },
+    {
+     "nickname": "鼠标",
+     "address": "0xa6ede589e7af032a62f238d93d6fe78a6807fdd6",
+     "team": "daaaa战队"
+    },
+    {
+     "nickname": "Hu杨杨",
+     "address": "0x08c7081bd4bc467f0eb25e4e09f7a2cffada8a3a",
+     "team": "八方战队"
+    },
+    {
+     "nickname": "jinyu7",
+     "address": "0x644ca08d1e289dccab0b668de8ca2249d9a118d8",
+     "team": "猪脚饭战队"
+    },
+    {
+     "nickname": "Taxas",
+     "address": "0x7bdb76b27728830301d31da11ded6f3c36df0925",
+     "team": "daaaa战队"
+    },
+    {
+     "nickname": "fffhulir17",
+     "address": "0x8283552f88e9f880f27bca3789face7a3f561ee0",
+     "team": "恐龙博士战队"
+    },
+    {
+     "nickname": "BiTianTian",
+     "address": "0xd1c491a6eb6f1463da487b137f02cd91dfba0259",
+     "team": "daaaa战队"
+    },
+    {
+     "nickname": "农夫山泉",
+     "address": "0xd2ca3cd9512bac4c7c3748995015c92eb07b8a9e",
+     "team": "猪脚饭战队"
+    },
+    {
+     "nickname": "Skiff cc",
+     "address": "0xd5d3c9e02e45285e0c8472618ca46643f9a5c456",
+     "team": "八方战队"
+    },
+    {
+     "nickname": "梭哈",
+     "address": "0xf515408162ff8ea87f11ae33a0b8de728a9de1ac",
+     "team": "daaaa战队"
+    },
+    {
+     "nickname": "powerpei",
+     "address": "0xa06646c320750669fb373346700afca0bb024840",
+     "team": "八方战队"
+    },
+    {
+     "nickname": "Ron",
+     "address": "0x07f1e074b7cf86558d44dfee6b0d758f1271e277",
+     "team": "八方战队"
+    },
+    {
+     "nickname": "king",
+     "address": "0xdfc4eebf11d7431bc0a8c00c1d2cb78b401003d0",
+     "team": "daaaa战队"
+    },
+    {
+     "nickname": "逍遥",
+     "address": "0x1371fbd4fe3c533dbe0920b8b32b1f7a13f916ba",
+     "team": "daaaa战队"
+    },
+    {
+     "nickname": "猪脚饭",
+     "address": "0xa35a9fab1ef987f7b78e56962b430b6a74ade5e0",
+     "team": "猪脚饭战队"
+    },
+    {
+     "nickname": "meepo",
+     "address": "0xdd8e6d13fe4242c93557486cb62d29dd4dd7c10c",
+     "team": "恐龙博士战队"
+    },
+    {
+     "nickname": "东方既白",
+     "address": "0x3d97a53e1ee20a7419dd4922d6fb5f00f304dc28",
+     "team": "恐龙博士战队"
+    },
+    {
+     "nickname": "HH",
+     "address": "0xff2ab462cf9dcc2b5dfd47262cc01993f17a782e",
+     "team": "daaaa战队"
+    },
+    {
+     "nickname": "大洋",
+     "address": "0x7aa78b81ff0b67c1405a7d317cb3e558cf2797d2",
+     "team": "八方战队"
+    },
+    {
+     "nickname": "奇葩丑",
+     "address": "0xa2c96e1e4ce69786179051151bf3094dd1ce4fc1",
+     "team": "猪脚饭战队"
+    },
+    {
+     "nickname": "恐龙博士",
+     "address": "0x5c898cc792ca7ac176467f63212fa2a853326c25",
+     "team": "恐龙博士战队"
+    },
+    {
+     "nickname": "希望",
+     "address": "0x6e277e024c0ea1fbb9e8a2b8271415e301b4fdd4",
+     "team": "猪脚饭战队"
+    },
+    {
+     "nickname": "梽越",
+     "address": "0xa6f05c30d67c51a20c0af5d0086b1716ccfcd013",
+     "team": "恐龙博士战队"
+    },
+    {
+     "nickname": "daaaa",
+     "address": "0x4a8f5811e7e62bc6ed037c7ecb163c552134075b",
+     "team": "daaaa战队"
+    },
+    {
+     "nickname": "沐光",
+     "address": "0x29030c4d4ac86ac9e79199f25cdcc9368f1d93d1",
+     "team": "恐龙博士战队"
+    },
+    {
+     "nickname": "沙鹰",
+     "address": "0x71db7b0d49ab43fe679a1eca8056d970ca923771",
+     "team": "daaaa战队"
+    },
+    {
+     "nickname": "我加克",
+     "address": "0x5e00a0ebc7a52af9c8975c8a1c394b8d70f9dada",
+     "team": "猪脚饭战队"
+    },
+    {
+     "nickname": "pp l",
+     "address": "0x6fce5bde9cc2a16f68c9c12ed10e3e482275b759",
+     "team": "恐龙博士战队"
+    },
+    {
+     "nickname": "广场",
+     "address": "0x83c7548e6843967dd4e4c708627aa74bee619c9d",
+     "team": "恐龙博士战队"
+    }
+   ],
+   "title": "8888 威震八方大乱斗！",
+   "community": "八方社区",
+   "start": 1792400400000,
+   "end": 1792764000000,
+   "capital": 100,
+   "status": "live"
+  },
+  {
+   "id": "event-13f2130f",
+   "url": "https://trasia-trading-competition.vercel.app/events/event-13f2130f",
+   "ratio": 0.125,
+   "members": [
+    {
+     "nickname": "戈多",
+     "address": "0x0c7b2fdf6de8ff66bb2ad349bd194817310c0a52",
+     "team": null
+    },
+    {
+     "nickname": "大老师本人",
+     "address": "0xe27d6e834237d5c6087475afd809cfeab71aee4b",
+     "team": null
+    },
+    {
+     "nickname": "bingo泷",
+     "address": "0xc5b2b0bdbfdc6d9d603f7ec27b279d9e39598c75",
+     "team": null
+    },
+    {
+     "nickname": "Bad Cat",
+     "address": "0xf61d0f90bcca8de732063d1a738853d471a84725",
+     "team": null
+    },
+    {
+     "nickname": "lonky",
+     "address": "0x9dafa00278a23a27a601d24921180bc4f81861d9",
+     "team": null
+    },
+    {
+     "nickname": "脆香米",
+     "address": "0x28ead3152b7577db6fe3d7789f6b1075db4831d6",
+     "team": null
+    },
+    {
+     "nickname": "slowly",
+     "address": "0xfdad42d10b13405fe60388bc38d972b4bb21b925",
+     "team": null
+    },
+    {
+     "nickname": "老付",
+     "address": "0x20f8cf151adb10ff85113ab644871a049b2e54bf",
+     "team": null
+    },
+    {
+     "nickname": "永远敏捷交易（xuantun）",
+     "address": "0x4f2488cf40241abab56bab364e0450194f0de856",
+     "team": null
+    },
+    {
+     "nickname": "shortcuts",
+     "address": "0x055b48a14adf14782084c0bfff1bc59c06ffffa3",
+     "team": null
+    }
+   ],
+   "title": "大老师社区明星 PK 赛",
+   "community": "大老师社区",
+   "start": 1792396800000,
+   "end": 1792828800000,
+   "capital": 800,
+   "status": "live"
+  }
+ ]
+}

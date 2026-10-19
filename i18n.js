@@ -21,6 +21,7 @@ const I18N_DICT = {
     'nav.btcZ': 'MVRV Z-Score',
     'nav.btcMc': '市值与已实现市值',
     'nav.btcDom': '市值占比',
+    'nav.copy': '反向交易',
     'nav.hype': 'Hype监控',
     'nav.battle': '多空战况',
     // ---- 战场页 ----
@@ -222,6 +223,7 @@ const I18N_DICT = {
     'nav.btcZ': 'MVRV Z-Score',
     'nav.btcMc': 'Market cap & realized cap',
     'nav.btcDom': 'BTC dominance',
+    'nav.copy': 'Reverse Trading',
     'nav.hype': 'Hype Monitor',
     'nav.battle': 'Long/Short Battle',
     // ---- Battlefield ----
