@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Daily Discord summary for the data jobs (btc-dominance / btc-daily / pe-daily).
 
-Usage: python3 notify.py <dominance|btc|pe> <append-log-file>
+Usage: python3 notify.py <dominance|btc|pe|copy> <append-log-file>
 Reads the committed data files for the latest values and the append step log for what changed.
 Posts to $DISCORD_WEBHOOK; prints the message instead when DISCORD_WEBHOOK is unset (local test).
 """
@@ -97,9 +97,23 @@ def pe(log):
     return "\n".join(out)
 
 
+def copy(log):
+    path = os.path.join(ROOT, "copy-data", "daily.json")
+    if not os.path.exists(path):
+        return "🔄 反向交易日线：尚无完整交易日"
+    d = load("copy-data/daily.json")
+    r = d["rows"][-1]
+    base = d["start"]["capital"] + r["cumFlow"]
+    added = [l.split("appended ", 1)[1].split(" |")[0] for l in log if l.startswith("appended")]
+    state = "✅ 新增 " + "、".join(added) if added else "无新数据（最新 " + r["d"] + "）"
+    warn = "".join("\n⚠️ " + l for l in log if l.startswith("warn"))
+    return ("🔄 反向交易日线：%s\n%s 净值 $%.2f · 当日 %+.2f · 累计 %+.2f（%+.2f%%） · 手续费 $%.2f · %d 笔%s\n%scopy-trade.html"
+            % (state, r["d"], r["equity"], r["pnl"], r["cum"], r["cum"] / base * 100 if base else 0, r["fees"], r["fills"], warn, SITE))
+
+
 def main():
     kind, logf = sys.argv[1], sys.argv[2]
-    msg = {"dominance": dominance, "btc": btc, "pe": pe}[kind](log_lines(logf))
+    msg = {"dominance": dominance, "btc": btc, "pe": pe, "copy": copy}[kind](log_lines(logf))
     hook = os.environ.get("DISCORD_WEBHOOK")
     if not hook:
         print(msg)

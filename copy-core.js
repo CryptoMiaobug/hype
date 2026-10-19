@@ -61,12 +61,35 @@ function curve(portfolio,{start,capital,ledger,account,now,equity}){
  return pts;
 }
 
+// 北京时间日界：某日 'YYYY-MM-DD' 结束时刻（次日 00:00 +08）
+const dayEnd=d=>Date.parse(d+'T00:00:00+08:00')+86400000;
+
+// 日线固化（copy-data/daily.json）+ 实时：曲线主体用每日收盘累计收益，最后一个收盘之后接 HL 采样点和实时点。
+function withDaily(daily,pts){
+ const rows=daily?.rows||[];if(!rows.length)return pts;
+ const cut=dayEnd(rows.at(-1).d);
+ return [pts[0],...rows.map(r=>[dayEnd(r.d),r.cum]),...pts.slice(1).filter(([t])=>t>cut)];
+}
+
+// 日收益表：已固化的日子 + 今日（进行中，按实时数据算）。收益率 = 当日收益 ÷（前日净值 + 当日净转入）。
+function dailyTable(daily,{equity,fills,funding,ledger,account,capital,now}){
+ const rows=(daily?.rows||[]).map((r,i,a)=>{const prev=i?a[i-1].equity:capital;return {...r,roi:prev+r.flow?r.pnl/(prev+r.flow):0,live:false};});
+ const last=rows.at(-1),from=last?dayEnd(last.d):null;
+ if(from!=null&&now>=from){
+  const f=(fills||[]).filter(x=>x.time>=from),fu=(funding||[]).filter(x=>x.time>=from),flow=netFlow(ledger,account,from).total,pnl=equity-last.equity-flow;
+  const d=new Date(now+8*3600000).toISOString().slice(0,10);
+  rows.push({d,equity,pnl,roi:last.equity+flow?pnl/(last.equity+flow):0,flow,closed:f.reduce((s,x)=>s+num(x.closedPnl),0),fees:f.reduce((s,x)=>s+num(x.fee),0),
+   funding:fu.reduce((s,x)=>s+num(x.delta?.usdc),0),fills:f.length,volume:f.reduce((s,x)=>s+num(x.px)*num(x.sz),0),cum:last.cum+pnl,live:true});
+ }
+ return rows.reverse();
+}
+
 // 成交展示：按时间倒序；方向文字直接用 HL 的 dir（Open Long / Close Short ...）。
 function trades(fills,start){
  return (fills||[]).filter(x=>x.time>=start).map(x=>({time:x.time,coin:x.coin,side:x.side==='B'?'buy':'sell',dir:x.dir,
   px:num(x.px),sz:num(x.sz),value:num(x.px)*num(x.sz),fee:num(x.fee),closed:num(x.closedPnl),hash:x.hash})).sort((a,b)=>b.time-a.time);
 }
 
-const api={netFlow,positions,summarize,curve,trades};
+const api={netFlow,positions,summarize,curve,trades,dayEnd,withDaily,dailyTable};
 if(typeof module!=='undefined')module.exports=api;else root.CopyCore=api;
 })(globalThis);
