@@ -3,7 +3,7 @@
 (()=>{
  const C=window.CopyCore,$=id=>document.getElementById(id);
  const bi=(zh,en)=>window.I18n?.lang==='en'?en:zh,t=k=>window.I18n?.t(k)??k;
- const API='https://api.hyperliquid.xyz/info',EXPLORER='https://app.hyperliquid.xyz/explorer';
+ const API='https://api.hyperliquid.xyz/info',WATCH='https://trasia.xyz/perps?watch=';
  const DIM='#8fb5ac',GRID='#183c34',REFRESH_MS=30000,PAGE=50;
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
  const fmt=(n,d=2)=>n==null||!Number.isFinite(n)?'NA':n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -66,7 +66,7 @@
   ];
   $('cards').innerHTML=list.map(([k,v,sub,c])=>`<div class="stat-card"><div class="label">${esc(k)}</div><div class="value ${c}">${esc(v)}</div><div class="sub">${esc(sub)}</div></div>`).join('');
   const a=roster.account;
-  $('acct').innerHTML=`${esc(t('ct.account'))}：<a href="${EXPLORER}/address/${esc(a)}" target="_blank" rel="noopener"><code>${esc(a)}</code></a> · ${esc(t('ct.since'))} ${esc(day(roster.start.time))}`;
+  $('acct').innerHTML=`${esc(t('ct.account'))}：<a href="${WATCH}${encodeURIComponent(a)}" target="_blank" rel="noopener"><code>${esc(a)}</code></a> · ${esc(t('ct.since'))} ${esc(day(roster.start.time))}`;
  }
 
  function drawCurve(){
