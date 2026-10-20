@@ -98,8 +98,8 @@
    <td class="num ${cls(p.upnl)}">${esc(signed(p.upnl))}<small>${esc(pct(p.roe))}</small></td><td class="num">${esc(p.lev==null?'NA':p.lev+'x')}<small>${esc(p.levType==='isolated'?bi('逐仓','Isolated'):p.levType==='cross'?bi('全仓','Cross'):'')}</small></td>
    <td class="num">${esc(p.liq==null?'—':px(p.liq))}<small>${esc(p.liqDist==null?'':fmt(p.liqDist*100,1)+'%')}</small></td></tr>`).join('')
    :`<tr><td colspan="10" class="pe-muted">${esc(t('ct.noPos'))}</td></tr>`;
-  const m=ps.reduce((s,p)=>s+p.margin,0);
-  $('posSum').textContent=ps.length?bi(`持仓金额 ${usd(m)}`,`Position margin ${usd(m)}`):'';
+  const v=ps.reduce((s,p)=>s+p.value,0);
+  $('posSum').textContent=ps.length?bi(`总持仓 ${usd(v,0)}`,`Total position ${usd(v,0)}`):'';
  }
 
  function tradeTable(){
