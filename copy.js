@@ -44,7 +44,7 @@
    ]);
    const now=Date.now(),sum=C.summarize({spot,states,fills,funding,ledger,account:user,start,capital:roster.start.capital});
    const capital=roster.start.capital;
-   data={sum,trades:C.trades(fills,start),at:now,rates:C.takerRates((fills||[]).filter(x=>x.time>=start)),
+   data={sum,trades:C.trades(fills,start),at:now,
     curve:C.withDaily(daily,C.curve(portfolio,{start,capital,ledger,account:user,now,equity:sum.equity})),
     days:C.dailyTable(daily,{equity:sum.equity,fills,funding,ledger,account:user,capital,now})};
    render();
@@ -98,9 +98,8 @@
    <td class="num ${cls(p.upnl)}">${esc(signed(p.upnl))}<small>${esc(pct(p.roe))}</small></td><td class="num">${esc(p.lev==null?'NA':p.lev+'x')}<small>${esc(p.levType==='isolated'?bi('逐仓','Isolated'):p.levType==='cross'?bi('全仓','Cross'):'')}</small></td>
    <td class="num">${esc(p.liq==null?'—':px(p.liq))}<small>${esc(p.liqDist==null?'':fmt(p.liqDist*100,1)+'%')}</small></td></tr>`).join('')
    :`<tr><td colspan="10" class="pe-muted">${esc(t('ct.noPos'))}</td></tr>`;
-  const rc=C.reopenCost(ps,data.rates),tot=k=>ps.reduce((s,p)=>s+p[k],0);
-  $('posSum').textContent=ps.length?bi(`名义 ${usd(tot('value'),0)} · 保证金 ${usd(tot('margin'))} · 重开手续费 ≈${usd(rc.total)}`,
-   `Notional ${usd(tot('value'),0)} · Margin ${usd(tot('margin'))} · Reopen fees ≈${usd(rc.total)}`):'';
+  const m=ps.reduce((s,p)=>s+p.margin,0);
+  $('posSum').textContent=ps.length?bi(`持仓金额 ${usd(m)}`,`Position margin ${usd(m)}`):'';
  }
 
  function tradeTable(){
