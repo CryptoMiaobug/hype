@@ -1,9 +1,9 @@
 {
- "updatedAt": "2026-10-19T17:29:44+00:00",
- "account": "0xe3dc829c1b53c3cf36b60b1c5aad033153ac2dec",
+ "updatedAt": "2026-10-20T11:38:32+00:00",
+ "account": "0x5d9ac14a4b277b97806ab20f319796d37a9010d5",
  "direction": -1,
  "start": {
-  "time": 1792425240000,
-  "capital": 5000.003648
+  "time": 1792496200000,
+  "capital": 5000.0
  }
 }
