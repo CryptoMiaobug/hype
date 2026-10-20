@@ -99,8 +99,8 @@
    <td class="num">${esc(p.liq==null?'—':px(p.liq))}<small>${esc(p.liqDist==null?'':fmt(p.liqDist*100,1)+'%')}</small></td></tr>`).join('')
    :`<tr><td colspan="10" class="pe-muted">${esc(t('ct.noPos'))}</td></tr>`;
   const rc=C.reopenCost(ps,data.rates),tot=k=>ps.reduce((s,p)=>s+p[k],0);
-  $('posSum').textContent=ps.length?bi(`合计：名义价值 ${usd(tot('value'),0)} · 持仓金额 ${usd(tot('margin'))} · 全部平仓再重新开仓预估手续费 ${usd(rc.total)}（按各 dex 实际吃单费率 × 2，不含滑点）`,
-   `Total: notional ${usd(tot('value'),0)} · position margin ${usd(tot('margin'))} · est. fees to close all and reopen ${usd(rc.total)} (actual taker rate per dex × 2, excl. slippage)`):'';
+  $('posSum').textContent=ps.length?bi(`名义 ${usd(tot('value'),0)} · 保证金 ${usd(tot('margin'))} · 重开手续费 ≈${usd(rc.total)}`,
+   `Notional ${usd(tot('value'),0)} · Margin ${usd(tot('margin'))} · Reopen fees ≈${usd(rc.total)}`):'';
  }
 
  function tradeTable(){
