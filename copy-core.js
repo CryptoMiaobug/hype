@@ -96,6 +96,20 @@ function totals(days,sum){
  return {volume:days.reduce((s,r)=>s+num(r.volume),0),fills:days.reduce((s,r)=>s+num(r.fills),0)};
 }
 
-const api={netFlow,positions,summarize,curve,trades,dayEnd,withDaily,dailyTable,totals};
+// 全平再重开的预估手续费：每个仓位 名义 × 吃单费率 × 2（平一次、开一次，按当前标记价、不含滑点）。
+// 吃单费率按 dex 取本账户起点后吃单成交的实际费率（HIP-3 部署者折扣、账户档位都已体现）；某 dex 没有吃单成交时用主盘基础费率 0.045%。
+const BASE_TAKER=0.00045;
+const dexOf=coin=>String(coin).includes(':')?String(coin).split(':')[0]:'';
+function takerRates(fills){
+ const acc={};
+ for(const x of fills||[]){if(!x.crossed)continue;const d=dexOf(x.coin),v=num(x.px)*num(x.sz);if(!v)continue;(acc[d]??={v:0,f:0});acc[d].v+=v;acc[d].f+=num(x.fee);}
+ return Object.fromEntries(Object.entries(acc).map(([d,a])=>[d,a.f/a.v]));
+}
+function reopenCost(positions,rates){
+ let total=0;const items=(positions||[]).map(p=>{const rate=rates?.[dexOf(p.coin)]??BASE_TAKER,fee=p.value*rate*2;total+=fee;return {coin:p.coin,rate,fee};});
+ return {total,items};
+}
+
+const api={netFlow,positions,summarize,curve,trades,dayEnd,withDaily,dailyTable,totals,takerRates,reopenCost,BASE_TAKER};
 if(typeof module!=='undefined')module.exports=api;else root.CopyCore=api;
 })(globalThis);

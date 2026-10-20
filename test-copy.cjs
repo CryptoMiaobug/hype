@@ -59,6 +59,12 @@ assert.deepEqual(C.dailyTable({rows:[]},{equity:1,now:2}),[]);
 assert.deepEqual(C.totals(dt,{volume:1,trades:1}),{volume:27000+900+200,fills:55+3+1},'累计交易量按日线 + 今日');
 assert.deepEqual(C.totals([],{volume:4810,trades:2}),{volume:4810,fills:2},'无日线回退 fills');
 
+// 全平重开手续费：按 dex 实际吃单费率，挂单不计；没有吃单成交的 dex 用主盘基础费率
+const rt=C.takerRates([{coin:'BTC',px:'100',sz:'1',fee:'0.045',crossed:true},{coin:'BTC',px:'100',sz:'1',fee:'0.015',crossed:false},{coin:'xyz:GOLD',px:'50',sz:'2',fee:'0.01',crossed:true}]);
+assert.ok(Math.abs(rt['']-0.00045)<1e-12);assert.ok(Math.abs(rt.xyz-0.0001)<1e-12);assert.equal(rt.io,undefined);
+const rc=C.reopenCost([{coin:'BTC',value:1000},{coin:'xyz:GOLD',value:500},{coin:'io:ANTH',value:200}],rt);
+assert.ok(Math.abs(rc.total-(1000*0.00045*2+500*0.0001*2+200*C.BASE_TAKER*2))<1e-9);
+
 // 成交：只要起点后，倒序
 const tr=C.trades(fills,START);
 assert.deepEqual(tr.map(x=>x.time),[1200,1100]);assert.equal(tr[0].side,'buy');assert.equal(tr[1].value,4000);
