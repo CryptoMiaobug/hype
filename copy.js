@@ -54,12 +54,13 @@
  }
 
  function cards(){
-  const s=data.sum,list=[
+  const s=data.sum,tot=C.totals(data.days,s),list=[
    [t('ct.cEquity'),usd(s.equity),bi('可用 ','Available ')+usd(s.available)+' · '+bi('保证金 ','Margin ')+usd(s.margin),''],
    [t('ct.cPnl'),signed(s.pnl),bi('起始 ','Start ')+usd(roster.start.capital)+(s.flow?' · '+bi('净转入 ','Net in ')+signed(s.flow):''),cls(s.pnl)],
    [t('ct.cRoi'),pct(s.roi),t('ct.since')+' '+day(roster.start.time),cls(s.roi)],
    [t('ct.cUpnl'),signed(s.upnl),s.positions.length+bi(' 个持仓',' positions'),cls(s.upnl)],
    [t('ct.cClosed'),signed(s.closed),s.trades+bi(' 笔成交 · 成交额 ',' fills · volume ')+usd(s.volume,0),cls(s.closed)],
+   [t('ct.cVolume'),usd(tot.volume,0),tot.fills+bi(' 笔成交',' fills')+(s.equity?' · '+bi('换手 ','Turnover ')+fmt(tot.volume/s.equity,1)+'x':''),''],
    [t('ct.cFees'),usd(-s.fees),s.volume?bi('平均 ','Avg ')+fmt(s.fees/s.volume*100,3)+'%':'','down'],
    [t('ct.cFunding'),signed(s.funding,3),bi('正数为收入','Positive = income'),cls(s.funding)],
    [t('ct.cNotional'),usd(s.notional,0),bi('名义 / 净值 ','Notional / equity ')+fmt(s.lev,2)+'x','']

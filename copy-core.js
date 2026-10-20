@@ -90,6 +90,12 @@ function trades(fills,start){
   px:num(x.px),sz:num(x.sz),value:num(x.px)*num(x.sz),fee:num(x.fee),closed:num(x.closedPnl),hash:x.hash})).sort((a,b)=>b.time-a.time);
 }
 
-const api={netFlow,positions,summarize,curve,trades,dayEnd,withDaily,dailyTable};
+// 累计成交额/成交数：有日线时用日线逐日累加（含今日进行中行），不受 userFillsByTime 单次 2000 条上限影响；还没有日线时用起点后的 fills。
+function totals(days,sum){
+ if(!days?.length)return {volume:sum.volume,fills:sum.trades};
+ return {volume:days.reduce((s,r)=>s+num(r.volume),0),fills:days.reduce((s,r)=>s+num(r.fills),0)};
+}
+
+const api={netFlow,positions,summarize,curve,trades,dayEnd,withDaily,dailyTable,totals};
 if(typeof module!=='undefined')module.exports=api;else root.CopyCore=api;
 })(globalThis);

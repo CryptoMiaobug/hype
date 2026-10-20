@@ -56,6 +56,8 @@ assert.deepEqual(dt.map(r=>[r.d,r.live]),[['2026-10-22',true],['2026-10-21',fals
 assert.equal(dt[0].pnl,5145-5130-5);assert.equal(dt[0].cum,40);assert.equal(dt[0].fills,1);assert.equal(dt[0].fees,0.5);assert.equal(dt[0].volume,200);
 assert.ok(Math.abs(dt[1].roi-10/(5020+100))<1e-12);assert.ok(Math.abs(dt[2].roi-20/5000)<1e-12);
 assert.deepEqual(C.dailyTable({rows:[]},{equity:1,now:2}),[]);
+assert.deepEqual(C.totals(dt,{volume:1,trades:1}),{volume:27000+900+200,fills:55+3+1},'累计交易量按日线 + 今日');
+assert.deepEqual(C.totals([],{volume:4810,trades:2}),{volume:4810,fills:2},'无日线回退 fills');
 
 // 成交：只要起点后，倒序
 const tr=C.trades(fills,START);
