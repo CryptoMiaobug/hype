@@ -2,7 +2,7 @@
 Object.entries({
  zh:{
   'ct.title':'反向交易',
-  'ct.subtitle':'自动反向跟单：对方开多我开空，按比例合并成净仓位。全部数据由浏览器直接读取 Hyperliquid 链上公开接口。',
+  'ct.subtitle':'对方开多我开空，开空我开多。<br>智能开单，趋势交易，非简单复制。<br>目前跟踪地址：<br><a href="https://trasia-trading-competition.vercel.app/events/event-65ecc581" target="_blank" rel="noopener">8888 威震八方大乱斗！</a><br><a href="https://trasia-trading-competition.vercel.app/events/event-13f2130f" target="_blank" rel="noopener">大老师社区明星 PK 赛</a>',
   'ct.refresh':'数据更新','ct.auto':'每 30 秒自动刷新',
   'ct.account':'交易账户','ct.since':'收益起点',
   'ct.cEquity':'账户净值','ct.cPnl':'净收益','ct.cRoi':'收益率','ct.cUpnl':'未实现盈亏','ct.cClosed':'已实现盈亏（未扣费）','ct.cVolume':'累计交易量','ct.cFees':'累计手续费','ct.cFunding':'资金费','ct.cNotional':'持仓名义价值',
@@ -17,7 +17,7 @@ Object.entries({
  },
  en:{
   'ct.title':'Reverse Copy Trading',
-  'ct.subtitle':'Automatically takes the opposite side of tracked traders: they go long, we go short, netted per coin. All data is read by your browser directly from Hyperliquid public APIs.',
+  'ct.subtitle':'They go long, we go short; they go short, we go long.<br>Smart order sizing and trend trading, not simple copying.<br>Currently tracking:<br><a href="https://trasia-trading-competition.vercel.app/events/event-65ecc581" target="_blank" rel="noopener">8888 威震八方大乱斗！</a><br><a href="https://trasia-trading-competition.vercel.app/events/event-13f2130f" target="_blank" rel="noopener">大老师社区明星 PK 赛</a>',
   'ct.refresh':'Update data','ct.auto':'Auto-refresh every 30 s',
   'ct.account':'Trading account','ct.since':'P&L since',
   'ct.cEquity':'Account equity','ct.cPnl':'Net P&L','ct.cRoi':'Return','ct.cUpnl':'Unrealized P&L','ct.cClosed':'Realized P&L (before fees)','ct.cVolume':'Total volume','ct.cFees':'Fees paid','ct.cFunding':'Funding','ct.cNotional':'Position notional',

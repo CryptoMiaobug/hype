@@ -56,8 +56,8 @@
  function cards(){
   const s=data.sum,tot=C.totals(data.days,s),list=[
    [t('ct.cEquity'),usd(s.equity),bi('可用 ','Available ')+usd(s.available)+' · '+bi('保证金 ','Margin ')+usd(s.margin),''],
-   [t('ct.cPnl'),signed(s.pnl),bi('起始 ','Start ')+usd(roster.start.capital)+(s.flow?' · '+bi('净转入 ','Net in ')+signed(s.flow):''),cls(s.pnl)],
-   [t('ct.cRoi'),pct(s.roi),t('ct.since')+' '+day(roster.start.time),cls(s.roi)],
+   [t('ct.cPnl'),signed(s.pnl),s.flow?bi('净转入 ','Net in ')+signed(s.flow):'',cls(s.pnl)],
+   [t('ct.cRoi'),pct(s.roi),'',cls(s.roi)],
    [t('ct.cUpnl'),signed(s.upnl),s.positions.length+bi(' 个持仓',' positions'),cls(s.upnl)],
    [t('ct.cClosed'),signed(s.closed),s.trades+bi(' 笔成交 · 成交额 ',' fills · volume ')+usd(s.volume,0),cls(s.closed)],
    [t('ct.cVolume'),usd(tot.volume,0),tot.fills+bi(' 笔成交',' fills')+(s.equity?' · '+bi('换手 ','Turnover ')+fmt(tot.volume/s.equity,1)+'x':''),''],
@@ -67,7 +67,7 @@
   ];
   $('cards').innerHTML=list.map(([k,v,sub,c])=>`<div class="stat-card"><div class="label">${esc(k)}</div><div class="value ${c}">${esc(v)}</div><div class="sub">${esc(sub)}</div></div>`).join('');
   const a=roster.account;
-  $('acct').innerHTML=`${esc(t('ct.account'))}：<a href="${WATCH}${encodeURIComponent(a)}" target="_blank" rel="noopener"><code>${esc(a)}</code></a> · ${esc(t('ct.since'))} ${esc(day(roster.start.time))}`;
+  $('acct').innerHTML=`${esc(t('ct.account'))}：<a href="${WATCH}${encodeURIComponent(a)}" target="_blank" rel="noopener"><code>${esc(a)}</code></a>`;
  }
 
  function drawCurve(){
