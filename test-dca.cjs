@@ -11,6 +11,9 @@ for(const [cur,key,ratio] of [[0.5,'t300',300],[10,'t300',300],[10.5,'t200',200]
 // Window = last 365 rows; nulls skipped; latest valid value used.
 {const r=D.evaluate(rows([...Array(400).fill(1000),...Array.from({length:100},(_,i)=>i+1),null]),'pe');assert.equal(r.pe,100);assert.equal(r.n,364);}
 assert.equal(D.evaluate(rows([null,null]),'pe'),null);
+// win=0 uses every row; explicit 365 equals the default.
+{const v=[...Array(400).fill(1000),...Array.from({length:100},(_,i)=>i+1)];const r=D.evaluate(rows(v),'pe',0);assert.equal(r.n,500);assert.equal(r.rank,99*100/500);
+ assert.deepEqual(D.evaluate(rows(v),'pe',365),D.evaluate(rows(v),'pe'));}
 // Tier table: 9 tiers, ratios descending, ranges match tierIndex, gradient has one stop pair per tier.
 assert.deepEqual(D.TIERS.map(t=>t.ratio),[300,200,150,125,100,75,50,25,0]);
 for(const [rank,i] of [[0,0],[9.99,0],[10,1],[39.9,3],[40,4],[79.99,7],[80,8],[100,8]])assert.equal(D.tierIndex(rank),i,String(rank));
@@ -39,3 +42,12 @@ for(const p of ['dashboard.html','valuation.html','hype-pe.html','uni-pe.html','
   assert.match(nodes.dca.innerHTML,/DCA 定投建议/);assert.match(nodes.dca.innerHTML,/\d+%/);console.log('PASS pe.js panel',asset);
  }
 })().catch(e=>{console.error(e);process.exit(1)});
+// Coin-page toggle: panel carries both buttons; clicking one stores the shared choice and re-renders with that window.
+{const assert=require('node:assert/strict'),fs=require('node:fs'),D=require('./dca-core.js'),zh=(a)=>a;
+ const s=JSON.parse(fs.readFileSync('pe-data/bnb.json')).rows,h1=D.panel(s,'pe',zh,365),h0=D.panel(s,'pe',zh,0);
+ assert.equal((h1.match(/data-dca-win=/g)||[]).length,2);assert.match(h1,/data-dca-win="365" class="active" aria-pressed="true"/);assert.match(h0,/data-dca-win="0" class="active" aria-pressed="true"/);
+ assert.match(h1,/近1年分位 65%/);assert.match(h0,/全部分位 42%/);assert.match(h0,/样本 2025-01-23 –/);assert.match(h0,/100%/);
+ const store={m:{},getItem(k){return this.m[k]??null},setItem(k,v){this.m[k]=v}};let got;const el={addEventListener(_,f){this.f=f}};
+ D.bindToggle(el,w=>got=w,store);el.f({target:{closest:()=>({dataset:{dcaWin:'0'}})}});assert.equal(got,0);assert.equal(D.getWin(store),0);
+ el.f({target:{closest:()=>({dataset:{dcaWin:'365'}})}});assert.equal(got,365);assert.equal(D.getWin(store),365);assert.equal(D.getWin({getItem(){throw Error()}}),365);
+ console.log('PASS coin-page window toggle');}

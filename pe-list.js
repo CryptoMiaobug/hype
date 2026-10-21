@@ -3,12 +3,12 @@
    Data = bundled archive + increments cached in this browser (shared with the coin pages) + a live fill for missing days,
    computed with the same cores as the coin pages, so numbers match them. */
 Object.assign(I18N_DICT.zh, {
-  'list.colPayout': '回馈率', 'list.payoutPaused': '回馈暂停', 'list.title': 'PE 监控总览', 'list.subtitle': '各币种 PE、近 1 年分位与定投建议 · 点击币种查看详情 · 非会计利润 PE · 非实时行情',
-  'list.note': 'PE = 流通市值 ÷ 年化回馈额（HYPE：持币人收入；UNI：协议销毁价值代理；BNB：季度 Auto-Burn + Gas 销毁；AAVE：DAO 协议收入，非实际回购）。分位 = 近 365 日有效流通 PE 中低于当前值的天数占比；定投建议 = 平时定投金额 × 建议比例（每 10 个分位一档：0–10 分位 300%，10–20 分位 200%，20–30 分位 150%，30–40 分位 125%，40–50 分位 100%，50–60 分位 75%，60–70 分位 50%，70–80 分位 25%，80 分位以上 0%）。价格为 D+1 00:00 UTC 近似收盘。回馈率 = 实际回馈持币人金额 ÷ 协议收入（DefiLlama dailyHoldersRevenue ÷ dailyRevenue），显示近 30 日，小字为近 1 年；近 30 日低于 10% 标「回馈暂停」。BNB 的回馈主体是季度 Auto-Burn，按公式从存量销毁，与收入无关，回馈率显示「不适用」{auto}。仅供研究，不是投资建议。',
+  'list.win1y': '近1年分位', 'list.winAll': '全部分位', 'list.colPayout': '回馈率', 'list.payoutPaused': '回馈暂停', 'list.title': 'PE 监控总览', 'list.subtitle': '各币种 PE、分位（近 1 年 / 全部可切换）与定投建议 · 点击币种查看详情 · 非会计利润 PE · 非实时行情',
+  'list.note': 'PE = 流通市值 ÷ 年化回馈额（HYPE：持币人收入；UNI：协议销毁价值代理；BNB：季度 Auto-Burn + Gas 销毁；AAVE：DAO 协议收入，非实际回购）。分位 = 所选区间（近 1 年 = 近 365 日；全部 = 本站已存的全部日期，各币起点不同）内有效流通 PE 中低于当前值的天数占比，P20/P50/P80 与区间同口径；定投建议 = 平时定投金额 × 建议比例（每 10 个分位一档：0–10 分位 300%，10–20 分位 200%，20–30 分位 150%，30–40 分位 125%，40–50 分位 100%，50–60 分位 75%，60–70 分位 50%，70–80 分位 25%，80 分位以上 0%）。价格为 D+1 00:00 UTC 近似收盘。回馈率 = 实际回馈持币人金额 ÷ 协议收入（DefiLlama dailyHoldersRevenue ÷ dailyRevenue），显示近 30 日，小字为近 1 年；近 30 日低于 10% 标「回馈暂停」。BNB 的回馈主体是季度 Auto-Burn，按公式从存量销毁，与收入无关，回馈率显示「不适用」{auto}。仅供研究，不是投资建议。',
 });
 Object.assign(I18N_DICT.en, {
-  'list.colPayout': 'Payout ratio', 'list.payoutPaused': 'Payout paused', 'list.title': 'PE Monitor Overview', 'list.subtitle': 'PE, 1-year percentile and DCA suggestion per asset · tap an asset for details · not accounting-profit PE · not real-time',
-  'list.note': 'PE = circulating market cap ÷ annualized value returned to holders (HYPE: holders revenue; UNI: protocol burn-value proxy; BNB: quarterly Auto-Burn + gas burn; AAVE: DAO protocol revenue, not executed buybacks). Percentile = share of valid days in the last 365 with circulating PE below the current value. DCA suggestion = your usual DCA amount × the ratio (one tier per 10 percentile points: P0–P10 300%, P10–P20 200%, P20–P30 150%, P30–P40 125%, P40–P50 100%, P50–P60 75%, P60–P70 50%, P70–P80 25%, above P80 0%). Prices are approximate closes at D+1 00:00 UTC. Payout ratio = value actually returned to holders ÷ protocol revenue (DefiLlama dailyHoldersRevenue ÷ dailyRevenue), last 30 days with the 1-year figure below; under 10% over 30 days is flagged “payout paused”. For BNB the payout is dominated by the quarterly Auto-Burn, which is formula-driven from existing supply and unrelated to revenue, so the ratio shows N/A{auto}. Research only, not investment advice.',
+  'list.win1y': '1Y percentile', 'list.winAll': 'All-time percentile', 'list.colPayout': 'Payout ratio', 'list.payoutPaused': 'Payout paused', 'list.title': 'PE Monitor Overview', 'list.subtitle': 'PE, percentile (1Y / all-time switchable) and DCA suggestion per asset · tap an asset for details · not accounting-profit PE · not real-time',
+  'list.note': 'PE = circulating market cap ÷ annualized value returned to holders (HYPE: holders revenue; UNI: protocol burn-value proxy; BNB: quarterly Auto-Burn + gas burn; AAVE: DAO protocol revenue, not executed buybacks). Percentile = share of valid days in the selected window (1Y = last 365 days; All = all days stored on this site, start date differs by asset) with circulating PE below the current value; P20/P50/P80 use the same window. DCA suggestion = your usual DCA amount × the ratio (one tier per 10 percentile points: P0–P10 300%, P10–P20 200%, P20–P30 150%, P30–P40 125%, P40–P50 100%, P50–P60 75%, P60–P70 50%, P70–P80 25%, above P80 0%). Prices are approximate closes at D+1 00:00 UTC. Payout ratio = value actually returned to holders ÷ protocol revenue (DefiLlama dailyHoldersRevenue ÷ dailyRevenue), last 30 days with the 1-year figure below; under 10% over 30 days is flagged “payout paused”. For BNB the payout is dominated by the quarterly Auto-Burn, which is formula-driven from existing supply and unrelated to revenue, so the ratio shows N/A{auto}. Research only, not investment advice.',
 });
 (async () => {
   const D = DCACore, $ = id => document.getElementById(id);
@@ -29,7 +29,9 @@ Object.assign(I18N_DICT.en, {
     { id: 'aave', name: 'AAVE', full: 'Aave', page: 'aave-pe.html', field: 'circ', core: () => window.PECore, mergeSeedMarket: true,
       llama: 'https://api.llama.fi/summary/fees/aave?dataType=dailyRevenue', llamaId: 'parent#aave', gecko: 'aave', basis: ['DAO 协议收入', 'DAO protocol revenue'] },
   ];
-  const data = {};
+  const data = {}, rowsBy = {};
+  // Percentile window: 365 = last 1 year, 0 = all bundled history. Remembered per browser.
+  let win = D.getWin(localStorage);
   let payout = null; // { seed } from PayoutCore.load; null until loaded / on failure
 
   async function json(url) {
@@ -68,13 +70,13 @@ Object.assign(I18N_DICT.en, {
   }
 
   function summarize(a, rows) {
-    const ev = D.evaluate(rows, a.field);
+    const ev = D.evaluate(rows, a.field, win);
     if (!ev) return null;
     const i = rows.findIndex(r => r.date === ev.date), r = rows[i], ago = rows[i - 30];
-    const year = rows.slice(-365).map(x => x[a.field]).filter(Number.isFinite);
+    const year = (win ? rows.slice(-win) : rows).map(x => x[a.field]).filter(Number.isFinite);
     return { ...ev, row: r, price: r.price, mcap: r.mcap, annual: r.annual, full: a.field === 'circ' ? r.full : null,
       price30: chg(r.price, ago?.price), pe30: chg(ev.pe, ago?.[a.field]), min: Math.min(...year), max: Math.max(...year),
-      stale: ev.date < a.core().yesterday() };
+      from: (win ? rows.slice(-win) : rows).find(x => Number.isFinite(x[a.field]))?.date, stale: ev.date < a.core().yesterday() };
   }
 
   function row(a) {
@@ -85,7 +87,7 @@ Object.assign(I18N_DICT.en, {
     const t = s.tier, pos = Math.max(0, Math.min(100, s.rank));
     return `<tr data-href="${a.page}" style="--tier:${t.color};--ink:${t.ink}">
       <td class="pl-sticky">${name}</td>
-      <td><div class="pl-rank"><span>${Math.round(s.rank)}%</span><div class="dca-meter" style="background:${D.gradient()}" role="img" aria-label="${bi('近1年分位', '1Y percentile')} ${Math.round(s.rank)}%"><i style="left:${pos}%"></i></div></div></td>
+      <td><div class="pl-rank"><span>${Math.round(s.rank)}%</span><div class="dca-meter" style="background:${D.gradient()}" role="img" aria-label="${rankLabel()} ${Math.round(s.rank)}%"><i style="left:${pos}%"></i></div></div><small>${bi('自 ', 'since ')}${s.from}</small></td>
       <td><span class="pl-dca"><b>${t.ratio}%</b><span class="dca-badge">${bi(t.action[0], t.action[1])}</span></span></td>
       <td class="num">${price(s.price)}<small>${bi('30日 ', '30d ')}${signed(s.price30)}</small></td>
       <td class="num">${usd(s.mcap)}</td>
@@ -124,7 +126,16 @@ Object.assign(I18N_DICT.en, {
     el.textContent = dict['list.note'].replace('{auto}', auto);
   }
 
+  const rankLabel = () => win ? bi('近1年分位', '1Y percentile') : bi('全部分位', 'All-time percentile');
+  // Toggle buttons + rank column header follow the current window.
+  function renderWindow() {
+    const th = document.querySelector?.('[data-i18n="list.colRank"]');
+    if (th) th.textContent = rankLabel();
+    document.querySelector?.('.pl-win')?.setAttribute('aria-label', bi('分位区间', 'Percentile window'));
+    document.querySelectorAll?.('[data-win]').forEach(b => { const on = +b.dataset.win === win; b.classList.toggle('active', on); b.setAttribute('aria-pressed', on); });
+  }
   function render() {
+    renderWindow();
     $('pe-list').innerHTML = ASSETS.map(row).join('');
     renderNote();
   }
@@ -151,7 +162,7 @@ Object.assign(I18N_DICT.en, {
     await Promise.all([payoutJob, ...ASSETS.map(async a => {
       try {
         seeds[a.id] ??= await json('pe-data/' + a.id + '.json');
-        const rows = await rowsFor(a, seeds[a.id], notes);
+        const rows = rowsBy[a.id] = await rowsFor(a, seeds[a.id], notes);
         data[a.id] = summarize(a, rows) ?? { error: bi('有效 PE 不足', 'not enough valid PE') };
       } catch (e) { data[a.id] = { error: e.message }; }
       render();
@@ -164,5 +175,11 @@ Object.assign(I18N_DICT.en, {
     busy = false; if (btn) btn.disabled = false;
   }
   if (btn) btn.onclick = load;
+  // Switching the window only recomputes from rows already loaded; no refetch.
+  document.querySelectorAll?.('[data-win]').forEach(b => b.onclick = () => {
+    win = D.setWin(+b.dataset.win, localStorage);
+    for (const a of ASSETS) if (rowsBy[a.id]) data[a.id] = summarize(a, rowsBy[a.id]) ?? { error: bi('有效 PE 不足', 'not enough valid PE') };
+    render();
+  });
   await load();
 })();

@@ -51,3 +51,21 @@ const PO=require('./payout-core.js'),D=require('./dca-core.js'),PC=require('./pe
  assert.match(idx,/location\.replace\('pe-list\.html'/);assert.match(idx,/url=pe-list\.html/);assert.ok(!idx.includes('app.js'));
  for(const p of ['dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','aave-pe.html','pe-list.html','battlefield/index.html']){const h=fs.readFileSync(p,'utf8');assert.match(h,/href="\/?dashboard\.html"[^>]*data-i18n="nav\.dashboard"/,p);assert.ok(!/href="\/?index\.html"/.test(h),p);if(p!=='battlefield/index.html')assert.match(h,/<a class="logo" href="pe-list\.html">/,p+' logo link');}
  console.log('PASS index.html -> pe-list.html; dashboard.html nav');}
+// Percentile window toggle: 1Y <-> all bundled history, header + stored choice follow; switching back restores 1Y numbers.
+(async()=>{const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),D=require('./dca-core.js'),PO=require('./payout-core.js'),PC=require('./pe-core.js'),BC=require('./bnb-core.js');
+ const nodes={},make=()=>({innerHTML:'',textContent:'',addEventListener(k,f){this['on'+k]=f}}),store={},th={textContent:''};
+ const btns=[365,0].map(w=>({dataset:{win:String(w)},on:false,classList:{toggle(c,on){btns.find(b=>b.dataset.win===String(w)).on=on}},setAttribute(){}}));
+ const ctx={I18N_DICT:{zh:{},en:{}},DCACore:D,PayoutCore:PO,PECore:{...PC,yesterday:()=>'2026-10-08'},BNBCore:{...BC,yesterday:()=>'2026-10-08'},
+  document:{getElementById:id=>nodes[id]??=make(),querySelector:s=>s.includes('colRank')?th:null,querySelectorAll:()=>btns},
+  localStorage:{getItem:k=>store[k]??null,setItem:(k,v)=>{store[k]=v}},AbortSignal:{timeout(){}},location:{href:''},
+  fetch:async u=>{if(u.startsWith('pe-data'))return {ok:true,json:async()=>JSON.parse(fs.readFileSync(u))};throw Error('offline')}};
+ ctx.window={...ctx,I18n:{lang:'zh'}};ctx.window.window=ctx.window;
+ await vm.runInNewContext(fs.readFileSync('pe-list.js','utf8'),Object.assign(ctx,{window:ctx.window}));await new Promise(r=>setTimeout(r,50));
+ const ranks=()=>[...nodes['pe-list'].innerHTML.matchAll(/<div class="pl-rank"><span>(\d+)%/g)].map(m=>+m[1]);
+ const expect=w=>['hype','uni','bnb','aave'].map(a=>Math.round(D.evaluate(JSON.parse(fs.readFileSync('pe-data/'+a+'.json')).rows,a==='bnb'?'pe':'circ',w).rank));
+ assert.deepEqual(ranks(),expect(365));assert.equal(th.textContent,'近1年分位');assert.ok(btns[0].on&&!btns[1].on);
+ btns[1].onclick();assert.deepEqual(ranks(),expect(0));assert.equal(th.textContent,'全部分位');assert.equal(store['pe-list-window'],'all');assert.ok(btns[1].on);
+ assert.match(nodes['pe-list'].innerHTML,/<small>自 \d{4}-\d{2}-\d{2}<\/small>/);
+ btns[0].onclick();assert.deepEqual(ranks(),expect(365));assert.equal(store['pe-list-window'],'1y');
+ console.log('PASS percentile window toggle',expect(365).join(','),'->',expect(0).join(','));
+})().catch(e=>{console.error(e);process.exit(1)});

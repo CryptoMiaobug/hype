@@ -7,7 +7,9 @@ const close = (a, b) => Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(b));
 
 test('seed starts at burn #30 and uses verified burns from #27', () => {
   assert.equal(S.first, '2025-01-23');
-  assert.deepEqual(S.burns.map(b => b.n), [27, 28, 29, 30, 31, 32, 33, 34, 35, 36]);
+  // New quarterly burns are appended by the daily job: check #27 start and consecutive numbering instead of a fixed list.
+  assert.ok(S.burns.length >= 10);
+  assert.deepEqual(S.burns.map(b => b.n), S.burns.map((_, i) => 27 + i));
   assert.deepEqual(S.rows[0].burnsUsed, [27, 28, 29, 30]);
 });
 test('burn amounts are on-chain values (Pioneer excluded, #29 make-up included)', () => {

@@ -8,7 +8,7 @@
   // Linear-interpolated percentile (numpy 'linear'), same as the HYPE/UNI pages.
   const pct = (vals, q) => { const v = vals.filter(Number.isFinite).sort((a, b) => a - b); if (!v.length) return null; const i = (v.length - 1) * q, lo = Math.floor(i), hi = Math.ceil(i); return v[lo] + (v[hi] - v[lo]) * (i - lo); };
   const KEY = 'hypevalue-pe-v1-bnb';
-  let seed, rows = [], rev = {}, range = 365, chart, statusText = '加载中…';
+  let seed, rows = [], rev = {}, range = 365, chart, statusText = '加载中…', win = window.DCACore ? DCACore.getWin(localStorage) : 365;
   const shownLines = { pe: true, price: true, p20: true, p50: true, p80: true };
 
   const status = s => { statusText = s; $('status').textContent = t(s); };
@@ -17,7 +17,7 @@
     if (!r.ok) throw Error('HTTP ' + r.status + (r.status === 429 ? '（限流，请稍后手动重试）' : ''));
     return r.json();
   }
-  const names = () => ({ pe: t('流通 PE'), price: t('价格 USD'), p20: t('近1年流通 PE 20分位'), p50: t('近1年流通 PE 50分位（中位数）'), p80: t('近1年流通 PE 80分位') });
+  const names = () => ({ pe: t('流通 PE'), price: t('价格 USD'), p20: t(win ? '近1年流通 PE 20分位' : '全部流通 PE 20分位'), p50: t(win ? '近1年流通 PE 50分位（中位数）' : '全部流通 PE 50分位（中位数）'), p80: t(win ? '近1年流通 PE 80分位' : '全部流通 PE 80分位') });
 
   function render() {
     const target = rows.at(-1), ok = [...rows].reverse().find(r => r.pe != null), latest = ok ?? target;
@@ -47,7 +47,7 @@
       for (const v of [r.date, fmt(r.price, 2), fmt(r.pe), usd(r.quarterly), usd(rev[r.date]), usd(r.gas), r.mcapSource === 'backcast' ? t('倒推') : r.mcapSource ?? 'NA', src]) { const td = document.createElement('td'); td.textContent = v; tr.append(td); }
       return tr;
     }));
-    if (window.DCACore && $('dca')) $('dca').innerHTML = DCACore.panel(rows, 'pe', (zh, e) => en() ? e : zh);
+    if (window.DCACore && $('dca')) $('dca').innerHTML = DCACore.panel(rows, 'pe', (zh, e) => en() ? e : zh, win);
     drawChart(shown);
   }
 
@@ -57,11 +57,11 @@
       chart = echarts.init($('chart'));
       chart.on?.('legendselectchanged', e => { for (const [k, n] of Object.entries(names())) if (Object.hasOwn(e.selected || {}, n)) shownLines[k] = !!e.selected[n]; });
     }
-    const year = rows.slice(-365).map(r => r.pe).filter(v => v != null), p20 = pct(year, 0.2), p50 = pct(year, 0.5), p80 = pct(year, 0.8);
+    const year = (win ? rows.slice(-win) : rows).map(r => r.pe).filter(v => v != null), p20 = pct(year, 0.2), p50 = pct(year, 0.5), p80 = pct(year, 0.8);
     const dates = shown.map(r => r.date), n = names();
     const colors = { pe: '#F0B90B', price: '#C084FC', gas: '#50d2c1', p20: '#4ADE80', p50: '#A5B4FC', p80: '#F87171' };
     const axis = { type: 'category', data: dates, axisLabel: { color: '#8fb5ac' }, boundaryGap: true };
-    const burnLines = seed.burns.filter(b => dates.includes(b.date)).map(b => ({ xAxis: b.date, label: { formatter: '#' + b.n, color: '#8fb5ac' } }));
+    const burnLines = seed.burns.filter(b => dates.includes(b.date)).map(b => ({ xAxis: b.date, label: { formatter: '#' + b.n, color: '#8fb5ac', position: 'insideStartTop' } }));
     const series = [
       { name: n.pe, type: 'line', showSymbol: false, connectNulls: false, step: false, xAxisIndex: 0, yAxisIndex: 0, lineStyle: { color: colors.pe, width: 2 }, itemStyle: { color: colors.pe }, data: shown.map(r => r.pe),
         markLine: { silent: true, symbol: 'none', lineStyle: { color: '#4b6b63', type: 'dotted' }, data: burnLines } },
@@ -73,7 +73,7 @@
     for (const k of ['p20', 'p50', 'p80']) {
       const v = bands[k];
       if (v == null) continue;
-      series.push({ name: n[k], type: 'line', showSymbol: false, silent: true, xAxisIndex: 0, yAxisIndex: 0, z: 1, lineStyle: { type: 'dashed', width: 1.5, color: colors[k] }, itemStyle: { color: colors[k] }, data: shown.map(() => v) });
+      series.push({ name: n[k], type: 'line', showSymbol: false, silent: true, xAxisIndex: 0, yAxisIndex: 0, z: 3, lineStyle: { type: 'dashed', width: 2, color: colors[k] }, itemStyle: { color: colors[k] }, data: shown.map(() => v) });
       legend.push(n[k]);
     }
     const byDate = Object.fromEntries(shown.map(r => [r.date, r]));
@@ -150,7 +150,11 @@
   }
 
   $('refresh').onclick = refresh;
-  document.querySelectorAll('[data-range]').forEach(b => b.onclick = () => { range = +b.dataset.range; render(); });
+  if (window.DCACore) DCACore.bindToggle($('dca'), w => { win = w; if (rows.length) render(); }, localStorage);
+  // Range buttons show which range is selected.
+  const markRange = () => document.querySelectorAll('[data-range]').forEach(b => { const on = +b.dataset.range === range; b.classList?.toggle('active', on); b.setAttribute?.('aria-pressed', on); });
+  markRange();
+  document.querySelectorAll('[data-range]').forEach(b => b.onclick = () => { range = +b.dataset.range; markRange(); render(); });
   window.addEventListener('resize', () => chart?.resize());
   $('download').onclick = () => {
     if (!rows.length) return;

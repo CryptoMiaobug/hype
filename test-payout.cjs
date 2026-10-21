@@ -36,7 +36,7 @@ test('parse rejects wrong id, keeps only complete days ≤ end',()=>{assert.thro
   await vm.runInNewContext(fs.readFileSync('pe-list.js','utf8'),Object.assign(ctx,{window:ctx.window}));await new Promise(r=>setTimeout(r,50));
   const h=nodes['pe-list'].innerHTML,rows=h.split('<tr ').slice(1),row=id=>rows.find(r=>r.includes(id+'-pe.html'));
   assert.ok(row('hype').includes('<b>100.0%</b>'),'hype');assert.ok(row('uni').includes('<b>100.0%</b>'),'uni');
-  assert.ok(row('aave').includes('<b>0.0%</b>')&&row('aave').includes('pl-flag'),'aave paused');assert.ok(/1Y |近1年 /.test(row('aave'))&&/20\.\d%/.test(row('aave')),'aave 1y');
+  assert.ok(row('aave').includes('<b>0.0%</b>')&&row('aave').includes('pl-flag'),'aave paused');{const m=row('aave').match(/(?:1Y |近1年 )(\d+\.\d)%/);assert.ok(m&&+m[1]>15&&+m[1]<30,'aave 1y '+m?.[1]);} // 1Y ratio drifts daily; same 15–30% band as the snapshot test
   assert.ok(row('bnb').includes(lang==='en'?'N/A':'不适用')&&!/Auto-Burn 占 |not revenue-funded\)<\/small>/.test(row('bnb'))&&!row('bnb').includes('Gas 100%'),'bnb n/a, no small text');
   {const note=nodes['list-note'].textContent;assert.ok(!note.includes('{auto}'),'note placeholder filled');assert.match(note,lang==='en'?/N\/A, with Auto-Burn currently \d+\.\d% of the annualized value \(not revenue-funded\)\./:/「不适用」，目前 Auto-Burn 占年化回馈额的 \d+\.\d%（非收入来源）。/,'note auto share');}
   for(const id of ['hype','uni','bnb'])assert.ok(!row(id).includes('pl-flag'),id);

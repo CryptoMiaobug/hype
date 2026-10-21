@@ -16,3 +16,6 @@
 
 /* Payout-paused flag (overview payout column + coin-page payout panel). */
 .pl-flag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9px;font-size:11px;font-weight:600;color:#1a1200;background:#FBBF24;vertical-align:2px}
+
+/* Header row: title + percentile window toggle. */
+.dca-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.dca-head h3{margin:0}.dca-head .dca-win{margin-left:0}

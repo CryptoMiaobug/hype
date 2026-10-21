@@ -36,3 +36,8 @@
   .pl-table td,.pl-table th{padding:9px 8px}
   .pl-coin b{font-size:15px}
 }
+
+/* Percentile window toggle sits next to the refresh button. */
+.pe-controls .pl-win{margin-left:0}
+.pl-table td:nth-child(2){min-width:170px}
+.pl-table td:nth-child(3){min-width:175px}
