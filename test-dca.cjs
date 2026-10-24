@@ -82,3 +82,18 @@ assert.ok(!fs.existsSync('dca.html'));
  D.bindToggle(el,w=>got=w,store);el.f({target:{closest:()=>({dataset:{dcaWin:'365'}})}});assert.equal(got,365);assert.equal(D.getWin(store),365);
  el.f({target:{closest:()=>({dataset:{dcaWin:'0'}})}});assert.equal(got,0);assert.equal(D.getWin(store),0);assert.equal(D.getWin({getItem(){throw Error()}}),0);
  console.log('PASS coin-page window toggle');}
+// pe.js stat cards: amounts >= 1M abbreviated (M/B), no long full figures.
+(async()=>{
+ for(const asset of ['hype','uni','aave']){
+  const seed=JSON.parse(fs.readFileSync('pe-data/'+asset+'.json')),nodes={},make=()=>({children:[],textContent:'',innerHTML:'',append(x){this.children.push(x)},replaceChildren(...x){this.children=x}});
+  const document={body:{dataset:{asset}},getElementById:id=>nodes[id]??=make(),querySelectorAll:()=>[],createElement:make};
+  const ctx={PECore:{...PC,yesterday:()=>seed.last},DCACore:D,document,localStorage:{getItem:()=>null,setItem(){}},fetch:async u=>{if(u.startsWith('pe-data'))return {ok:true,json:async()=>seed};throw Error('offline')},AbortSignal:{timeout(){}},Blob,URL,setTimeout,console};
+  ctx.window={addEventListener(){},DCACore:D};
+  await vm.runInNewContext(fs.readFileSync('pe.js','utf8'),ctx);
+  const vals=[...nodes.cards.innerHTML.matchAll(/class="value">([^<]*)</g)].map(m=>m[1]);
+  assert.equal(vals.length,6,asset);
+  for(const v of vals)assert.ok(!/\d{1,3}(,\d{3}){2,}/.test(v),asset+' long figure '+v);
+  assert.match(vals[3],/^\$\d+(\.\d+)?[MB]$/,asset+' r30 '+vals[3]);assert.match(vals[4],/^\$\d+(\.\d+)?[MB]$/,asset+' annual '+vals[4]);assert.match(vals[5],/^\d+(\.\d+)?[MB]$/,asset+' supply '+vals[5]);
+  console.log('PASS cards',asset,vals.join(' | '));
+ }
+})().catch(e=>{console.error(e);process.exit(1)});

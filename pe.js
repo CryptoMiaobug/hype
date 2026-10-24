@@ -5,6 +5,8 @@
  function status(text){statusText=text;$('status').textContent=t(text);}
  const C=PECore,asset=document.body.dataset.asset,id={hype:'hyperliquid',uni:'uniswap',aave:'aave'}[asset];
  const $=id=>document.getElementById(id),fmt=(n,d=2)=>n==null?'NA':n.toLocaleString('en-US',{maximumFractionDigits:d});
+ // Card amounts: ≥1M shown as M/B (full figures stay in the daily table and CSV).
+ const big=n=>n==null?'NA':Math.abs(n)>=1e9?fmt(n/1e9,2)+'B':Math.abs(n)>=1e6?fmt(n/1e6,2)+'M':fmt(n),usd=n=>n==null?'NA':'$'+big(n);
  // Linear-interpolated percentile over valid values (numpy 'linear' convention).
  const pct=(vals,q)=>{const v=vals.filter(x=>x!=null&&Number.isFinite(x)).sort((a,b)=>a-b);if(!v.length)return null;const i=(v.length-1)*q,lo=Math.floor(i),hi=Math.ceil(i);return v[lo]+(v[hi]-v[lo])*(i-lo);};
  const B=window.PEChains,chainKey='hypevalue-uni-chains-v1';
@@ -21,7 +23,7 @@
  function render(){
   const target=rows.at(-1),complete=[...rows].reverse().find(r=>r.circ!=null),latest=complete??target;
   $('asof').textContent=t('目标完整 UTC 日：')+C.yesterday()+t(' · 表中截至：')+target.date+t(' · 卡片有效估值日：')+(complete?.date??t('无'));
-  $('cards').innerHTML=[[t('流通 PE'),fmt(latest.circ)+' x'],[t('解锁 PE'),fmt(latest.full)+' x'],[t('近似收盘价格'),'$'+fmt(latest.price,4)],[t('30日')+(asset==='hype'?t('持币人收入'):asset==='aave'?t('协议收入'):t('销毁价值')),'$'+fmt(latest.r30)],[t('年化分母'),'$'+fmt(latest.annual)],[t('情景总供应'),fmt(latest.supply,2)]].map(([k,v])=>`<div class="stat-card"><div class="label">${t(k)}</div><div class="value">${v}</div><div class="sub">${latest.date} UTC${latest.date!==target.date?t(' · 最近有效，非目标日'):''}</div></div>`).join('');
+  $('cards').innerHTML=[[t('流通 PE'),fmt(latest.circ)+' x'],[t('解锁 PE'),fmt(latest.full)+' x'],[t('近似收盘价格'),'$'+fmt(latest.price,4)],[t('30日')+(asset==='hype'?t('持币人收入'):asset==='aave'?t('协议收入'):t('销毁价值')),usd(latest.r30)],[t('年化分母'),usd(latest.annual)],[t('情景总供应'),big(latest.supply)]].map(([k,v])=>`<div class="stat-card"><div class="label">${t(k)}</div><div class="value">${v}</div><div class="sub">${latest.date} UTC${latest.date!==target.date?t(' · 最近有效，非目标日'):''}</div></div>`).join('');
   if(window.DCACore&&$('dca'))$('dca').innerHTML=DCACore.panel(rows,'circ',bi,win);
   const shown=range?rows.slice(-range):rows;
   $('tbody').replaceChildren(...[...shown].reverse().map(r=>{const tr=document.createElement('tr');for(const v of [r.date,fmt(r.price,4),fmt(r.circ),fmt(r.full),fmt(dailyRevenue[r.date]),fmt(r.r30),r.source==='bundled'?t('固化历史'):r.status==='ok'?t('浏览器增量'):t(r.status)]){const td=document.createElement('td');td.textContent=v;tr.append(td);}return tr;}));
