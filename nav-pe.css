@@ -31,6 +31,15 @@
 
 @media (max-width: 640px) { .nav-pe > summary { padding: 5px 10px; font-size: 12px; } }
 
+/* Top bar never overflows: items wrap whenever they don't fit (e.g. 700–800 px on coin pages). */
+.topbar { flex-wrap: wrap; row-gap: 8px; }
+/* Narrow screens: top nav wraps onto its own full-width row under logo + language switch (every main-site page loads this file). */
+@media (max-width: 800px) {
+  .topbar { flex-wrap: wrap; gap: 8px; }
+  .topbar .lang-switch { flex-shrink: 0; margin-right: 0; }
+  .topbar .topnav { order: 2; flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px 12px; margin-left: 0; min-width: 0; }
+}
+
 /* Battlefield top bar: dark-blue/gold palette, menu must be clickable over the HUD. */
 #top-bar .nav-pe > summary { padding: 4px 10px; font-size: 12px; color: #7f8ea3; }
 #top-bar .nav-pe > summary:hover { background: #f0c04a1f; color: #e2ebf5; }

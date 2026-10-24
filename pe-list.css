@@ -41,3 +41,18 @@
 .pe-controls .pl-win{margin-left:0}
 .pl-table td:nth-child(2){min-width:170px}
 .pl-table td:nth-child(3){min-width:175px}
+
+/* Fit the 11 columns at 1280 px: stack action + badge, narrower percentile column, wrapping sub-labels. */
+.pl-table{min-width:0;width:100%}
+.pl-table td:nth-child(2){min-width:0}.pl-table td:nth-child(3){min-width:0}
+.pl-rank{min-width:120px}
+.pl-dca{flex-direction:column;align-items:flex-start;gap:4px}
+.pl-dca b{font-size:16px}
+.pl-table th{white-space:normal}
+.pl-table th[data-i18n="list.colAnnual"],.pl-table th[data-i18n="list.colBand"]{max-width:110px}
+.pl-table td small{white-space:normal;max-width:150px;margin-left:auto}
+.pl-table td.num small{text-align:right}
+.pl-table td,.pl-table th{padding-left:10px;padding-right:10px}
+/* Below the width where the table still needs sideways scrolling, keep the right-edge fade as a scroll cue. */
+.pl-scroll{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent)}
+.pl-scroll.fits{-webkit-mask-image:none;mask-image:none}

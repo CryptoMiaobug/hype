@@ -23,3 +23,13 @@ for(const p of ['dashboard.html','valuation.html','hype-pe.html','uni-pe.html','
   assert.equal(nav.includes('class="active" aria-current="page" data-i18n="nav.copy"'),p==='copy-trade.html',p+' 仅反向交易页高亮');
 }
 console.log('PASS nav-pe: click opens dropdown only, no redirect');
+// Top bar must not overflow on narrow screens: every page with .topnav loads nav-pe.css, which carries the wrap rules.
+{const css=fs.readFileSync('nav-pe.css','utf8');
+ assert.ok(/\.topbar\s*\{\s*flex-wrap:\s*wrap/.test(css),'topbar wraps at all widths');
+ assert.ok(/@media \(max-width: 800px\)[\s\S]*\.topbar \.topnav \{[^}]*flex-basis: 100%[^}]*flex-wrap: wrap/.test(css),'nav gets its own wrapping row <=800px');
+ for(const p of fs.readdirSync('.').filter(f=>f.endsWith('.html'))){const h=fs.readFileSync(p,'utf8');if(h.includes('class="topnav"'))assert.ok(h.includes('nav-pe.css'),p+' loads nav-pe.css');}
+ console.log('PASS topbar wrap on all pages');}
+// PE overview: table fits at 1280 (no fixed min-width), fade cue only when it still scrolls.
+{const css=fs.readFileSync('pe-list.css','utf8'),js=fs.readFileSync('pe-list.js','utf8');
+ assert.ok(/\.pl-table\{min-width:0;width:100%\}/.test(css));assert.ok(css.includes('.pl-scroll.fits{-webkit-mask-image:none;mask-image:none}'));
+ assert.ok(js.includes("classList.toggle('fits'"));console.log('PASS overview fit + scroll cue');}

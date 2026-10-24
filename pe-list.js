@@ -138,7 +138,14 @@ Object.assign(I18N_DICT.en, {
     renderWindow();
     $('pe-list').innerHTML = ASSETS.map(row).join('');
     renderNote();
+    fitCue();
   }
+  // Right-edge fade only when the table really scrolls sideways.
+  function fitCue() {
+    const box = document.querySelector?.('.pl-scroll');
+    if (box?.classList) box.classList.toggle('fits', box.scrollWidth <= box.clientWidth + 1);
+  }
+  window.addEventListener?.('resize', fitCue);
 
   // Whole row is clickable; the coin name stays a real link for keyboard and screen-reader users.
   $('pe-list').addEventListener('click', e => {
