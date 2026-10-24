@@ -27,7 +27,6 @@ const TIERS = [
 ];
 // Buffer state: just came down from the sell zone into P70–P80 and has not yet been below P70 -> neither buy nor sell.
 const HOLD = tier('hold', 'hold', 0, '#9CA3AF', ['缓冲（刚从卖出区回落）', 'Buffer (just left sell zone)'], ['暂停', 'Pause']);
-const FLOOR = 30; // keep at least 30% of the initial position (text rule; the site does not know holdings)
 // Rank 0-100 -> tier index (lower bound inclusive).
 const tierIndex = rank => { const i = TIERS.findIndex(t => rank < t.hi); return i < 0 ? TIERS.length - 1 : i; };
 // Meter background: segment per tier at its percentile bounds.
@@ -84,7 +83,7 @@ function btcEvaluate(rows) {
 // Action text: "买 150%" / "卖 5%" / "暂停".
 const actionText = (t, bi) => t.side === 'buy' ? bi('买 ', 'Buy ') + t.ratio + '%' : t.side === 'sell' ? bi('卖 ', 'Sell ') + t.ratio + '%' : bi('暂停', 'Pause');
 const detailText = (t, bi) => t.side === 'buy' ? bi('本周买入 = 平时每周买入额 × ', 'This week = your usual weekly buy × ') + t.ratio + '%'
-  : t.side === 'sell' ? bi('本周卖出 = 初始仓位的 ', 'This week sell ') + t.ratio + bi('%（卖到剩 ' + FLOOR + '% 底仓即停）', '% of the initial position (stop at a ' + FLOOR + '% core)')
+  : t.side === 'sell' ? bi('本周卖出 = 初始仓位的 ', 'This week sell ') + t.ratio + bi('%（按初始仓位，卖完为止）', '% of the initial position (until sold out)')
   : bi('本周不买也不卖', 'No buy and no sell this week');
 const ruleText = (x, bi) => `${bi(x.range[0], x.range[1])} · ${x.side === 'buy' ? bi('买 ', 'buy ') + x.ratio + '%' : x.side === 'sell' ? bi('卖初始仓位 ', 'sell ') + x.ratio + bi('%', '% of initial') : bi('不买不卖', 'no trade')} · ${bi(x.action[0], x.action[1])}`;
 
@@ -110,7 +109,7 @@ function bindToggle(el, onChange, store = root.localStorage) {
 }
 
 // Shared footnote for both panels.
-const commonRules = bi => bi('每周固定一天看一次（例如周六），按当天档位操作。卖出比例按初始仓位计，卖到剩 ' + FLOOR + '% 底仓即停；网站不知道你的持仓，底仓需自己核对。', 'Check once a week on a fixed day (e.g. Saturday) and act on that day\'s tier. Sell ratios are of the initial position; stop selling at a ' + FLOOR + '% core. The site does not know your holdings, so track the core yourself.');
+const commonRules = bi => bi('每周固定一天看一次（例如周六），按当天档位操作。卖出比例按初始仓位计（每周卖同样份额，不是按剩余仓位），不设底仓，卖完为止；想长期持有的部分请单独放，不计入初始仓位。', 'Check once a week on a fixed day (e.g. Saturday) and act on that day\'s tier. Sell ratios are of the initial position (the same slice each week, not a share of what is left); no core is kept, sell until done. Keep any long-term holding separate from the initial position.');
 
 function panel(rows, field, bi, win = 0) {
   const r = evaluate(rows, field, win);
@@ -153,7 +152,7 @@ function btcPanel(rows, bi) {
   </div>`;
 }
 
-const api = { pct, TIERS, HOLD, FLOOR, tierIndex, gradient, evaluate, panel, getWin, setWin, windowRows, winLabel, toggle, bindToggle, WIN_KEY,
+const api = { pct, TIERS, HOLD, tierIndex, gradient, evaluate, panel, getWin, setWin, windowRows, winLabel, toggle, bindToggle, WIN_KEY,
   BTC_TIERS, btcTierIndex, btcPos, btcGradient, btcEvaluate, btcPanel, actionText };
 if (typeof module !== 'undefined') module.exports = api; else root.DCACore = api;
 })(globalThis);

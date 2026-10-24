@@ -45,7 +45,7 @@ assert.equal(D.actionText(D.TIERS[0],zh),'买 300%');assert.equal(D.actionText(D
 
 // --- Panels: % only (no $), one highlighted rule, both languages.
 {const h=D.panel(rows([...base].reverse().concat(50.5)),'pe',zh);assert.match(h,/买 75%/);assert.match(h,/每周买卖建议/);assert.equal((h.match(/<li /g)||[]).length,13);assert.ok(!h.includes('$'));assert.equal((h.match(/class="on"/g)||[]).length,1);
- assert.match(h,/30% 底仓/);
+ assert.match(h,/不设底仓/);assert.ok(!/底仓即停/.test(h));
  const e=D.panel(rows([...base].reverse().concat(50.5)),'pe',en);assert.ok(!/[\u4e00-\u9fff]/.test(e),e.match(/[^<>]*[\u4e00-\u9fff][^<>]*/)?.[0]);assert.match(D.panel([],'pe',zh),/有效 PE 不足/);
  const s=D.panel(rows([...base].reverse().concat(95.5)),'pe',zh);assert.match(s,/卖 8%/);assert.match(s,/初始仓位/);
  const b=D.panel(rows([...Array.from({length:100},(_,i)=>i),95,75]),'pe',zh);assert.match(b,/dca-ratio">暂停/);assert.equal((b.match(/class="on"/g)||[]).length,1);}
