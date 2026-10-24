@@ -15,7 +15,7 @@ const PO=require('./payout-core.js'),D=require('./dca-core.js'),PC=require('./pe
   for(const [n,p] of [['HYPE','hype-pe.html'],['UNI','uni-pe.html'],['BNB','bnb-pe.html'],['AAVE','aave-pe.html']])assert.ok(h.includes(`href="${p}"><b>${n}</b>`),n);
   assert.ok(!h.includes('读取失败')&&!h.includes('Load failed'),h.slice(0,400));
   // numbers equal the shared evaluate() on bundled rows (offline)
-  for(const [a,f] of [['hype','circ'],['uni','circ'],['bnb','pe'],['aave','circ']]){const r=D.evaluate(JSON.parse(fs.readFileSync('pe-data/'+a+'.json')).rows,f);assert.ok(h.includes(r.pe.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' x'),a);assert.ok(h.includes(`<b>${r.tier.ratio}%</b>`),a);}
+  for(const [a,f] of [['hype','circ'],['uni','circ'],['bnb','pe'],['aave','circ']]){const r=D.evaluate(JSON.parse(fs.readFileSync('pe-data/'+a+'.json')).rows,f);assert.ok(h.includes(r.pe.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' x'),a);assert.ok(h.includes(`<b>${D.actionText(r.tier,lang==="en"?(z,e)=>e:z=>z)}</b>`),a);}
   assert.ok(Object.keys(dict.zh).includes('list.title')&&Object.keys(dict.en).includes('list.note'));
   if(lang==='en')assert.ok(!/[\u4e00-\u9fff]/.test(h),h.match(/[^<>]*[\u4e00-\u9fff][^<>]*/)?.[0]);
   // row click navigates; link click is left to the browser
@@ -63,9 +63,10 @@ const PO=require('./payout-core.js'),D=require('./dca-core.js'),PC=require('./pe
  await vm.runInNewContext(fs.readFileSync('pe-list.js','utf8'),Object.assign(ctx,{window:ctx.window}));await new Promise(r=>setTimeout(r,50));
  const ranks=()=>[...nodes['pe-list'].innerHTML.matchAll(/<div class="pl-rank"><span>(\d+)%/g)].map(m=>+m[1]);
  const expect=w=>['hype','uni','bnb','aave'].map(a=>Math.round(D.evaluate(JSON.parse(fs.readFileSync('pe-data/'+a+'.json')).rows,a==='bnb'?'pe':'circ',w).rank));
- assert.deepEqual(ranks(),expect(365));assert.equal(th.textContent,'近1年分位');assert.ok(btns[0].on&&!btns[1].on);
- btns[1].onclick();assert.deepEqual(ranks(),expect(0));assert.equal(th.textContent,'全部分位');assert.equal(store['pe-list-window'],'all');assert.ok(btns[1].on);
+ // Default (nothing stored) = all-time.
+ assert.deepEqual(ranks(),expect(0));assert.equal(th.textContent,'全部分位');assert.ok(btns[1].on&&!btns[0].on);
+ btns[0].onclick();assert.deepEqual(ranks(),expect(365));assert.equal(th.textContent,'近1年分位');assert.equal(store['pe-list-window'],'1y');assert.ok(btns[0].on);
  assert.match(nodes['pe-list'].innerHTML,/<small>自 \d{4}-\d{2}-\d{2}<\/small>/);
- btns[0].onclick();assert.deepEqual(ranks(),expect(365));assert.equal(store['pe-list-window'],'1y');
- console.log('PASS percentile window toggle',expect(365).join(','),'->',expect(0).join(','));
+ btns[1].onclick();assert.deepEqual(ranks(),expect(0));assert.equal(store['pe-list-window'],'all');
+ console.log('PASS percentile window toggle',expect(0).join(','),'->',expect(365).join(','));
 })().catch(e=>{console.error(e);process.exit(1)});

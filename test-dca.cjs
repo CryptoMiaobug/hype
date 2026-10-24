@@ -1,36 +1,67 @@
-// DCA suggestion: tier logic + in-page panel on HYPE/UNI/BNB PE pages.
+// Weekly buy/sell plan: altcoin PE tiers (12 + buffer), BTC Z tiers (12), panels, pages.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const D=require('./dca-core.js'),PC=require('./pe-core.js'),BC=require('./bnb-core.js');
 const rows=vals=>vals.map((v,i)=>({date:'d'+String(i).padStart(3,'0'),pe:v}));
 const zh=(z)=>z,en=(z,e)=>e;
-// Tier on rank (share below current): one tier per 10 points, lower bound inclusive; >=80 is one tier (0%).
-const base=Array.from({length:99},(_,i)=>i+1); // 1..99 plus current = 100 values
-// rank = (#base values < cur)/100: cur 0.5 -> 0, 10.5 -> 10, 20 -> 19, 50.5 -> 50, 80 -> 79, 80.5 -> 80.
-for(const [cur,key,ratio] of [[0.5,'t300',300],[10,'t300',300],[10.5,'t200',200],[20,'t200',200],[20.5,'t150',150],[30.5,'t125',125],[40.5,'t100',100],[50,'t100',100],[50.5,'t75',75],[60.5,'t50',50],[70.5,'t25',25],[80,'t25',25],[80.5,'t0',0],[1000,'t0',0]]){
- const r=D.evaluate(rows([...base,cur]),'pe');assert.equal(r.tier.key,key,cur+' rank '+r.rank);assert.equal(r.tier.ratio,ratio);}
-// Window = last 365 rows; nulls skipped; latest valid value used.
-{const r=D.evaluate(rows([...Array(400).fill(1000),...Array.from({length:100},(_,i)=>i+1),null]),'pe');assert.equal(r.pe,100);assert.equal(r.n,364);}
+
+// --- Altcoin tiers on percentile rank (share strictly below current), lower bound inclusive.
+assert.deepEqual(D.TIERS.map(t=>t.side+t.ratio),['buy300','buy200','buy150','buy125','buy100','buy75','buy50','buy25','sell2','sell3','sell5','sell8']);
+for(const [rank,key] of [[0,'t300'],[9.99,'t300'],[10,'t200'],[39.9,'t125'],[40,'t100'],[69.9,'t50'],[70,'t25'],[79.99,'t25'],[80,'s2'],[84.9,'s2'],[85,'s3'],[90,'s5'],[95,'s8'],[100,'s8']])
+ assert.equal(D.TIERS[D.tierIndex(rank)].key,key,String(rank));
+// Real evaluate(): base = 1..99, cur appended last -> rank = #below/100.
+const base=Array.from({length:99},(_,i)=>i+1);
+for(const [cur,key] of [[0.5,'t300'],[10.5,'t200'],[50.5,'t75'],[70.5,'t25'],[80.5,'s2'],[85.5,'s3'],[90.5,'s5'],[95.5,'s8'],[1000,'s8']]){
+ const r=D.evaluate(rows([...base].reverse().concat(cur)),"pe");assert.equal(r.tier.key,key,cur+" rank "+r.rank);assert.equal(r.buffer,false);}
+// Default window = all rows; 365 = trailing year.
+{const v=[...Array(400).fill(1000),...Array.from({length:100},(_,i)=>i+1)];
+ assert.equal(D.evaluate(rows(v),'pe').n,500);assert.equal(D.evaluate(rows(v),'pe',365).n,365);assert.deepEqual(D.evaluate(rows(v),'pe'),D.evaluate(rows(v),'pe',0));}
 assert.equal(D.evaluate(rows([null,null]),'pe'),null);
-// win=0 uses every row; explicit 365 equals the default.
-{const v=[...Array(400).fill(1000),...Array.from({length:100},(_,i)=>i+1)];const r=D.evaluate(rows(v),'pe',0);assert.equal(r.n,500);assert.equal(r.rank,99*100/500);
- assert.deepEqual(D.evaluate(rows(v),'pe',365),D.evaluate(rows(v),'pe'));}
-// Tier table: 9 tiers, ratios descending, ranges match tierIndex, gradient has one stop pair per tier.
-assert.deepEqual(D.TIERS.map(t=>t.ratio),[300,200,150,125,100,75,50,25,0]);
-for(const [rank,i] of [[0,0],[9.99,0],[10,1],[39.9,3],[40,4],[79.99,7],[80,8],[100,8]])assert.equal(D.tierIndex(rank),i,String(rank));
-{const g=D.gradient();for(const t of D.TIERS)assert.ok(g.includes(t.color),t.key);assert.ok(g.includes('#DC2626 80% 100%'));}
-// Badge contrast (WCAG ratio >= 4.5 for badge text on tier colour).
+// Buffer: P70–P80 after P80+ (no dip below P70 since) -> pause; after a dip below P70 -> back to buy 25%.
+{const hist=Array.from({length:100},(_,i)=>i);           // 0..99
+ const viaHigh=D.evaluate(rows([...hist,95,75]),'pe');     // came down from ~P93
+ assert.ok(viaHigh.rank>=70&&viaHigh.rank<80,String(viaHigh.rank));assert.equal(viaHigh.buffer,true);assert.equal(viaHigh.tier.key,'hold');assert.equal(viaHigh.base.key,'t25');
+ const viaLow=D.evaluate(rows([...hist,95,50,75]),'pe');   // dipped below P70 in between
+ assert.equal(viaLow.buffer,false);assert.equal(viaLow.tier.key,'t25');
+ const fromBelow=D.evaluate(rows([...hist,75]),'pe');      // walked back: 99 (P80+) is reached before any <P70? no: 99 is last of hist
+ assert.equal(fromBelow.buffer,true,'99 right before is P80+');
+ const clean=D.evaluate(rows([...hist,60,75]),'pe');assert.equal(clean.buffer,false);}
+// Gradient: each tier segment at its bounds.
+{const g=D.gradient();for(const t of D.TIERS)assert.ok(g.includes(`${t.color} ${t.lo}% ${t.hi}%`),t.key);}
+
+// --- BTC tiers on Z value.
+assert.deepEqual(D.BTC_TIERS.map(t=>t.side+t.ratio),['buy300','buy200','buy150','buy100','buy50','buy25','hold0','sell0.5','sell1','sell2','sell5','sell10']);
+for(const [z,key] of [[-1,'z300'],[-0.01,'z300'],[0,'z200'],[0.94,'z150'],[1,'z100'],[1.5,'z50'],[1.74,'z50'],[1.75,'z25'],[2,'zhold'],[2.49,'zhold'],[2.5,'zs05'],[3,'zs1'],[4.99,'zs2'],[5,'zs5'],[7,'zs10'],[12,'zs10']])
+ assert.equal(D.BTC_TIERS[D.btcTierIndex(z)].key,key,String(z));
+{const p=[-5,-1,0,2,2.5,7,8,20].map(D.btcPos);assert.equal(p[0],0);assert.equal(p[1],0);assert.ok(p.every((v,i)=>i===0||v>=p[i-1]));assert.equal(p.at(-1),100);}
+assert.equal(D.btcEvaluate([{date:'a',z:null},{date:'b',z:null}]),null);
+{const r=D.btcEvaluate([{date:'a',z:3,mvrv:2},{date:'b',z:null,mvrv:1}]);assert.equal(r.date,'a');assert.equal(r.tier.key,'zs1');}
+
+// Badge contrast (WCAG >= 4.5) for every tier including hold.
 {const L=h=>{const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=0.03928?v/12.92:((v+0.055)/1.055)**2.4);return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];};
- for(const t of D.TIERS){const a=L(t.color),b=L(t.ink),r=(Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);assert.ok(r>=4.5,t.key+' '+r.toFixed(2));}}
+ for(const t of [...D.TIERS,D.HOLD,...D.BTC_TIERS]){const a=L(t.color),b=L(t.ink),r=(Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);assert.ok(r>=4.5,t.key+' '+r.toFixed(2));}}
 {const v=[5,1,3,2,4];assert.equal(D.pct(v,0.5),3);assert.equal(D.pct(v,0.2),1.8);}
-// Panel: shows % only (no $ amounts), current tier highlighted, both languages.
-{const h=D.panel(rows([...base,50.5]),'pe',zh);assert.match(h,/75%/);assert.match(h,/小幅减少/);assert.equal((h.match(/<li /g)||[]).length,9);assert.equal((h.match(/<span style="left:/g)||[]).length,11);assert.ok(!h.includes('$'));assert.equal((h.match(/class="on"/g)||[]).length,1);
- const e=D.panel(rows([...base,50.5]),'pe',en);assert.ok(!/[\u4e00-\u9fff]/.test(e),e);assert.match(D.panel([],'pe',zh),/有效 PE 不足/);}
-// Real archives.
-for(const [a,f] of [['hype','circ'],['uni','circ'],['bnb','pe']]){const s=JSON.parse(fs.readFileSync('pe-data/'+a+'.json'));const r=D.evaluate(s.rows,f);assert.ok(r.p20<=r.p50&&r.p50<=r.p80);console.log('PASS',a,r.date,r.pe.toFixed(2),'rank',r.rank.toFixed(0)+'%',r.tier.ratio+'%');}
-// Pages: each PE page has the panel slot and loads dca-core; no standalone page or nav entry remains.
-for(const p of ['hype-pe.html','uni-pe.html','bnb-pe.html']){const s=fs.readFileSync(p,'utf8');assert.ok(s.includes('id="dca"')&&s.includes('dca-core.js'),p);}
+// Action text.
+assert.equal(D.actionText(D.TIERS[0],zh),'买 300%');assert.equal(D.actionText(D.TIERS[10],en),'Sell 5%');assert.equal(D.actionText(D.HOLD,zh),'暂停');
+
+// --- Panels: % only (no $), one highlighted rule, both languages.
+{const h=D.panel(rows([...base].reverse().concat(50.5)),'pe',zh);assert.match(h,/买 75%/);assert.match(h,/每周买卖建议/);assert.equal((h.match(/<li /g)||[]).length,13);assert.ok(!h.includes('$'));assert.equal((h.match(/class="on"/g)||[]).length,1);
+ assert.match(h,/30% 底仓/);
+ const e=D.panel(rows([...base].reverse().concat(50.5)),'pe',en);assert.ok(!/[\u4e00-\u9fff]/.test(e),e.match(/[^<>]*[\u4e00-\u9fff][^<>]*/)?.[0]);assert.match(D.panel([],'pe',zh),/有效 PE 不足/);
+ const s=D.panel(rows([...base].reverse().concat(95.5)),'pe',zh);assert.match(s,/卖 8%/);assert.match(s,/初始仓位/);
+ const b=D.panel(rows([...Array.from({length:100},(_,i)=>i),95,75]),'pe',zh);assert.match(b,/dca-ratio">暂停/);assert.equal((b.match(/class="on"/g)||[]).length,1);}
+{const BT=require('./btc-core.js'),seed=JSON.parse(fs.readFileSync('btc-data/btc.json')),d=BT.derive(seed.rows);
+ const r=D.btcEvaluate(d);console.log('PASS btc',r.date,'Z',r.z.toFixed(2),D.actionText(r.tier,zh));
+ const h=D.btcPanel(d,zh);assert.equal((h.match(/<li /g)||[]).length,12);assert.equal((h.match(/class="on"/g)||[]).length,1);assert.ok(!h.includes('$'));assert.match(h,/MVRV Z-Score/);
+ const e=D.btcPanel(d,en);assert.ok(!/[\u4e00-\u9fff]/.test(e),e.match(/[^<>]*[\u4e00-\u9fff][^<>]*/)?.[0]);
+ assert.match(D.btcPanel([],zh),/暂无 Z 值/);}
+
+// Real archives (all-time default).
+for(const [a,f] of [['hype','circ'],['uni','circ'],['bnb','pe'],['aave','circ']]){const s=JSON.parse(fs.readFileSync('pe-data/'+a+'.json'));const r=D.evaluate(s.rows,f);assert.ok(r.p20<=r.p50&&r.p50<=r.p80);console.log('PASS',a,r.date,r.pe.toFixed(2),'rank',r.rank.toFixed(0)+'%',D.actionText(r.tier,zh),r.buffer?'(buffer)':'');}
+// Pages: each PE page has the panel slot and loads dca-core; BTC MVRV page has its panel slot.
+for(const p of ['hype-pe.html','uni-pe.html','bnb-pe.html','aave-pe.html']){const s=fs.readFileSync(p,'utf8');assert.ok(s.includes('id="dca"')&&s.includes('dca-core.js'),p);}
+{const s=fs.readFileSync('btc-mvrv.html','utf8');assert.ok(s.includes('id="btc-dca"')&&s.includes('dca-core.js')&&s.includes('dca.css'),'btc-mvrv');
+ assert.ok(s.indexOf('dca-core.js')<s.indexOf('btc.js'),'dca-core before btc.js');}
 assert.ok(!fs.existsSync('dca.html'));
-for(const p of ['dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','battlefield/index.html'])assert.ok(!fs.readFileSync(p,'utf8').includes('dca.html'),p);
 // pe.js renders the panel into #dca (offline, bundled archive).
 (async()=>{
  for(const asset of ['hype','uni']){
@@ -39,15 +70,15 @@ for(const p of ['dashboard.html','valuation.html','hype-pe.html','uni-pe.html','
   const ctx={PECore:{...PC,yesterday:()=>seed.last},DCACore:D,document,localStorage:{getItem:()=>null,setItem(){}},fetch:async u=>{if(u.startsWith('pe-data'))return {ok:true,json:async()=>seed};throw Error('offline')},AbortSignal:{timeout(){}},Blob,URL,setTimeout,console};
   ctx.window={addEventListener(){},DCACore:D};
   await vm.runInNewContext(fs.readFileSync('pe.js','utf8'),ctx);
-  assert.match(nodes.dca.innerHTML,/DCA 定投建议/);assert.match(nodes.dca.innerHTML,/\d+%/);console.log('PASS pe.js panel',asset);
+  assert.match(nodes.dca.innerHTML,/每周买卖建议/);assert.match(nodes.dca.innerHTML,/data-dca-win="0" class="active"/);console.log('PASS pe.js panel',asset);
  }
 })().catch(e=>{console.error(e);process.exit(1)});
-// Coin-page toggle: panel carries both buttons; clicking one stores the shared choice and re-renders with that window.
-{const assert=require('node:assert/strict'),fs=require('node:fs'),D=require('./dca-core.js'),zh=(a)=>a;
- const s=JSON.parse(fs.readFileSync('pe-data/bnb.json')).rows,h1=D.panel(s,'pe',zh,365),h0=D.panel(s,'pe',zh,0);
+// Coin-page toggle: default all-time; clicking stores the shared choice.
+{const s=JSON.parse(fs.readFileSync('pe-data/bnb.json')).rows,h1=D.panel(s,'pe',zh,365),h0=D.panel(s,'pe',zh);
  assert.equal((h1.match(/data-dca-win=/g)||[]).length,2);assert.match(h1,/data-dca-win="365" class="active" aria-pressed="true"/);assert.match(h0,/data-dca-win="0" class="active" aria-pressed="true"/);
- assert.match(h1,/近1年分位 65%/);assert.match(h0,/全部分位 42%/);assert.match(h0,/样本 2025-01-23 –/);assert.match(h0,/100%/);
+ assert.match(h1,/近1年分位 65%/);assert.match(h0,/全部分位 42%/);assert.match(h0,/样本 2025-01-23 –/);assert.match(h0,/买 100%/);
  const store={m:{},getItem(k){return this.m[k]??null},setItem(k,v){this.m[k]=v}};let got;const el={addEventListener(_,f){this.f=f}};
- D.bindToggle(el,w=>got=w,store);el.f({target:{closest:()=>({dataset:{dcaWin:'0'}})}});assert.equal(got,0);assert.equal(D.getWin(store),0);
- el.f({target:{closest:()=>({dataset:{dcaWin:'365'}})}});assert.equal(got,365);assert.equal(D.getWin(store),365);assert.equal(D.getWin({getItem(){throw Error()}}),365);
+ assert.equal(D.getWin(store),0,'default all-time');
+ D.bindToggle(el,w=>got=w,store);el.f({target:{closest:()=>({dataset:{dcaWin:'365'}})}});assert.equal(got,365);assert.equal(D.getWin(store),365);
+ el.f({target:{closest:()=>({dataset:{dcaWin:'0'}})}});assert.equal(got,0);assert.equal(D.getWin(store),0);assert.equal(D.getWin({getItem(){throw Error()}}),0);
  console.log('PASS coin-page window toggle');}

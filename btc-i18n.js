@@ -2,9 +2,9 @@
 Object.entries({
  zh:{
   'btc.ovTitle':'BTC 数据总览',
-  'btc.ovSubtitle':'各指标当前值、全历史分位与定投建议 · 点击指标查看详情 · 日线为 UTC 完整日',
-  'btc.colMetric':'指标','btc.colValue':'当前值','btc.colRank':'全历史分位','btc.colDca':'定投建议','btc.colBand':'P20 / P50 / P80','btc.colRead':'读法','btc.colDate':'数据日 UTC',
-  'btc.ovNote':'分位 = 全部历史中严格低于当前值的天数占比（Z-Score 自 2011-07、占比自 2013-04、其余自 2010-07）。定投建议只按 MVRV Z-Score 的全历史分位，套用 PE 总览同一 9 档比例：0–10 分位 300%，10–20 分位 200%，20–30 分位 150%，30–40 分位 125%，40–50 分位 100%，50–60 分位 75%，60–70 分位 50%，70–80 分位 25%，80 分位以上 0%；建议本期定投 = 平时定投金额 × 比例。回撤的分位越高表示越接近历史高点。市值与已实现市值长期上行，不计算分位。仅供研究，不是投资建议。',
+  'btc.ovSubtitle':'各指标当前值、全历史分位与每周买卖建议 · 点击指标查看详情 · 日线为 UTC 完整日',
+  'btc.colMetric':'指标','btc.colValue':'当前值','btc.colRank':'全历史分位','btc.colDca':'本周操作','btc.colBand':'P20 / P50 / P80','btc.colRead':'读法','btc.colDate':'数据日 UTC',
+  'btc.ovNote':'分位 = 全部历史中严格低于当前值的天数占比（Z-Score 自 2011-07、占比自 2013-04、其余自 2010-07）。本周操作只按 MVRV Z-Score 的值（不是分位），每周看一次：Z<0 买 300%，0–0.5 买 200%，0.5–1 买 150%，1–1.5 买 100%，1.5–1.75 买 50%，1.75–2 买 25%，2–2.5 不买不卖，2.5–3 卖初始仓位 0.5%，3–4 卖 1%，4–5 卖 2%，5–7 卖 5%，≥7 卖 10%；买入 = 平时每周买入额 × 比例，卖到剩 30% 底仓即停，详见 MVRV 页。回撤的分位越高表示越接近历史高点。市值与已实现市值长期上行，不计算分位。仅供研究，不是投资建议。',
   'btc.domTitle':'BTC 市值占比',
   'btc.domNote':'占比 = BTC 市值 ÷ 全市场加密资产总市值。虚线左侧为 CoinMarketCap 历史，右侧为 CoinGecko 每日记录；两家统计币种不同，接口处可能有约 0.5 个百分点的台阶。彩色虚线为 2013 年以来全部占比的 20 / 50（中位数）/ 80 分位，不随图表范围变化。',
   'btc.rawDom':'市值占比 JSON',
@@ -34,9 +34,9 @@ Object.entries({
  },
  en:{
   'btc.ovTitle':'BTC Data Overview',
-  'btc.ovSubtitle':'Current value, all-time percentile and DCA suggestion per metric · tap a metric for details · daily data on complete UTC days',
-  'btc.colMetric':'Metric','btc.colValue':'Current','btc.colRank':'All-time percentile','btc.colDca':'DCA suggestion','btc.colBand':'P20 / P50 / P80','btc.colRead':'Reading','btc.colDate':'As of UTC',
-  'btc.ovNote':'Percentile = share of all history strictly below the current value (Z-Score since 2011-07, dominance since 2013-04, others since 2010-07). The DCA suggestion uses only the all-time percentile of MVRV Z-Score with the same 9 tiers as the PE overview: P0–P10 300%, P10–P20 200%, P20–P30 150%, P30–P40 125%, P40–P50 100%, P50–P60 75%, P60–P70 50%, P70–P80 25%, P80+ 0%; this period = your usual DCA amount × ratio. A higher drawdown percentile means closer to the all-time high. Market cap and realized cap grow over time, so no percentile is computed. Research only, not investment advice.',
+  'btc.ovSubtitle':'Current value, all-time percentile and weekly buy / sell per metric · tap a metric for details · daily data on complete UTC days',
+  'btc.colMetric':'Metric','btc.colValue':'Current','btc.colRank':'All-time percentile','btc.colDca':'This week','btc.colBand':'P20 / P50 / P80','btc.colRead':'Reading','btc.colDate':'As of UTC',
+  'btc.ovNote':'Percentile = share of all history strictly below the current value (Z-Score since 2011-07, dominance since 2013-04, others since 2010-07). “This week” uses only the MVRV Z-Score value (not its percentile), checked once a week: Z<0 buy 300%, 0–0.5 buy 200%, 0.5–1 buy 150%, 1–1.5 buy 100%, 1.5–1.75 buy 50%, 1.75–2 buy 25%, 2–2.5 no trade, 2.5–3 sell 0.5% of the initial position, 3–4 sell 1%, 4–5 sell 2%, 5–7 sell 5%, ≥7 sell 10%; buy = your usual weekly buy × ratio, stop selling at a 30% core; see the MVRV page. A higher drawdown percentile means closer to the all-time high. Market cap and realized cap grow over time, so no percentile is computed. Research only, not investment advice.',
   'btc.domTitle':'BTC dominance',
   'btc.domNote':'Dominance = BTC market cap ÷ total crypto market cap. Left of the dashed line is CoinMarketCap history, right of it CoinGecko daily records; the two cover different coins, so expect a step of about 0.5 pp at the switch. Colored dashed lines are the all-time P20 / P50 (median) / P80 of dominance since 2013, regardless of chart range.',
   'btc.rawDom':'Dominance JSON',
