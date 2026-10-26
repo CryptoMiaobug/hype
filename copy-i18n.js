@@ -2,7 +2,7 @@
 Object.entries({
  zh:{
   'ct.title':'反向交易',
-  'ct.subtitle':'对方开多我开空，开空我开多。<br>智能开单，趋势交易，非简单复制。<br><strong>测试验证结束，等待新一轮比赛开启。</strong><br>已测试比赛：<br><a href="https://trasia-trading-competition.vercel.app/events/event-65ecc581" target="_blank" rel="noopener">8888 威震八方大乱斗！</a><br><a href="https://trasia-trading-competition.vercel.app/events/event-13f2130f" target="_blank" rel="noopener">大老师社区明星 PK 赛</a>',
+  'ct.subtitle':'对方开多我开空，对方开空我开多。<br>AI智能趋势反向跟单，非简单复制。<br><strong>实盘进行中（10/26 起）：</strong><br><a href="https://trasia-trading-competition.vercel.app/events/event-572d791c" target="_blank" rel="noopener">Trader42 大乱斗！</a><br><a href="https://trasia-trading-competition.vercel.app/events/event-34fcd07a" target="_blank" rel="noopener">糖人街大乱斗 !!</a><br><a href="https://trasia-trading-competition.vercel.app/events/event-0f2d391c" target="_blank" rel="noopener">女仆战队大乱斗</a><br><a href="https://trasia-trading-competition.vercel.app/events/event-75878bb5" target="_blank" rel="noopener">Emerald 大乱斗</a><br><a href="https://trasia-trading-competition.vercel.app/events/event-a2538799" target="_blank" rel="noopener">Reboot 卷毛大乱斗！</a>',
   'ct.refresh':'数据更新','ct.auto':'每 30 秒自动刷新',
   'ct.account':'交易账户','ct.since':'收益起点',
   'ct.cEquity':'账户净值','ct.cPnl':'净收益','ct.cRoi':'收益率','ct.cUpnl':'未实现盈亏','ct.cClosed':'已实现盈亏（未扣费）','ct.cVolume':'累计交易量','ct.cFees':'累计手续费','ct.cFunding':'资金费','ct.cNotional':'持仓名义价值',
@@ -17,7 +17,7 @@ Object.entries({
  },
  en:{
   'ct.title':'Reverse Copy Trading',
-  'ct.subtitle':'They go long, we go short; they go short, we go long.<br>Smart order sizing and trend trading, not simple copying.<br><strong>Testing complete. Waiting for the next competition to start.</strong><br>Tested competitions:<br><a href="https://trasia-trading-competition.vercel.app/events/event-65ecc581" target="_blank" rel="noopener">8888 威震八方大乱斗！</a><br><a href="https://trasia-trading-competition.vercel.app/events/event-13f2130f" target="_blank" rel="noopener">大老师社区明星 PK 赛</a>',
+  'ct.subtitle':'They go long, we go short; they go short, we go long.<br>AI-driven trend-based reverse copy trading, not simple copying.<br><strong>Live since Oct 26:</strong><br><a href="https://trasia-trading-competition.vercel.app/events/event-572d791c" target="_blank" rel="noopener">Trader42 大乱斗！</a><br><a href="https://trasia-trading-competition.vercel.app/events/event-34fcd07a" target="_blank" rel="noopener">糖人街大乱斗 !!</a><br><a href="https://trasia-trading-competition.vercel.app/events/event-0f2d391c" target="_blank" rel="noopener">女仆战队大乱斗</a><br><a href="https://trasia-trading-competition.vercel.app/events/event-75878bb5" target="_blank" rel="noopener">Emerald 大乱斗</a><br><a href="https://trasia-trading-competition.vercel.app/events/event-a2538799" target="_blank" rel="noopener">Reboot 卷毛大乱斗！</a>',
   'ct.refresh':'Update data','ct.auto':'Auto-refresh every 30 s',
   'ct.account':'Trading account','ct.since':'P&L since',
   'ct.cEquity':'Account equity','ct.cPnl':'Net P&L','ct.cRoi':'Return','ct.cUpnl':'Unrealized P&L','ct.cClosed':'Realized P&L (before fees)','ct.cVolume':'Total volume','ct.cFees':'Fees paid','ct.cFunding':'Funding','ct.cNotional':'Position notional',
