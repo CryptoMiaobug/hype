@@ -8,6 +8,9 @@
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
  const fmt=(n,d=2)=>n==null||!Number.isFinite(n)?'NA':n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
  const usd=(n,d=2)=>n==null||!Number.isFinite(n)?'NA':(n<0?'-$':'$')+fmt(Math.abs(n),d);
+ const cut=(a,d)=>a>=1e6?fmt(a/1e6,2)+'M':a>=1e3?fmt(a/1e3,2)+'K':fmt(a,d);
+ const kusd=(n,d=2)=>n==null||!Number.isFinite(n)?'NA':(n<0?'-$':'$')+cut(Math.abs(n),d);
+ const ksigned=(n,d=2)=>n==null||!Number.isFinite(n)?'NA':(n>0?'+':n<0?'-':'')+'$'+cut(Math.abs(n),d);
  const signed=(n,d=2)=>n==null||!Number.isFinite(n)?'NA':(n>0?'+':n<0?'-':'')+'$'+fmt(Math.abs(n),d);
  const pct=(n,d=2)=>n==null||!Number.isFinite(n)?'NA':(n>0?'+':'')+fmt(n*100,d)+'%';
  const cls=n=>n>0?'up':n<0?'down':'';
@@ -59,11 +62,11 @@
    [t('ct.cPnl'),signed(s.pnl),s.flow?bi('净转入 ','Net in ')+signed(s.flow):'',cls(s.pnl)],
    [t('ct.cRoi'),pct(s.roi),'',cls(s.roi)],
    [t('ct.cUpnl'),signed(s.upnl),s.positions.length+bi(' 个持仓',' positions'),cls(s.upnl)],
-   [t('ct.cClosed'),signed(s.closed),s.trades+bi(' 笔成交 · 成交额 ',' fills · volume ')+usd(s.volume,0),cls(s.closed)],
-   [t('ct.cVolume'),usd(tot.volume,0),tot.fills+bi(' 笔成交',' fills')+(s.equity?' · '+bi('换手 ','Turnover ')+fmt(tot.volume/s.equity,1)+'x':''),''],
+   [t('ct.cClosed'),signed(s.closed),s.trades+bi(' 笔成交 · 成交额 ',' fills · volume ')+kusd(s.volume,0),cls(s.closed)],
+   [t('ct.cVolume'),kusd(tot.volume,0),tot.fills+bi(' 笔成交',' fills')+(s.equity?' · '+bi('换手 ','Turnover ')+fmt(tot.volume/s.equity,1)+'x':''),''],
    [t('ct.cFees'),usd(-s.fees),s.volume?bi('平均 ','Avg ')+fmt(s.fees/s.volume*100,3)+'%':'','down'],
    [t('ct.cFunding'),signed(s.funding,3),bi('正数为收入','Positive = income'),cls(s.funding)],
-   [t('ct.cNotional'),usd(s.notional,0),bi('名义 / 净值 ','Notional / equity ')+fmt(s.lev,2)+'x','']
+   [t('ct.cNotional'),kusd(s.notional,0),bi('名义 / 净值 ','Notional / equity ')+fmt(s.lev,2)+'x','']
   ];
   $('cards').innerHTML=list.map(([k,v,sub,c])=>`<div class="stat-card"><div class="label">${esc(k)}</div><div class="value ${c}">${esc(v)}</div><div class="sub">${esc(sub)}</div></div>`).join('');
   const a=roster.account;
@@ -85,41 +88,42 @@
 
  function dayTable(){
   const ds=data.days;
-  $('days').innerHTML=ds.length?ds.map(r=>`<tr><td class="pl-sticky">${esc(r.d)}${r.live?` <small class="pe-muted">${esc(t('ct.live'))}</small>`:''}</td><td class="num">${esc(usd(r.equity))}</td>
-   <td class="num ${cls(r.pnl)}">${esc(signed(r.pnl))}</td><td class="num ${cls(r.roi)}">${esc(pct(r.roi))}</td><td class="num ${cls(r.cum)}">${esc(signed(r.cum))}</td>
-   <td class="num">${esc(usd(r.fees))}</td><td class="num ${cls(r.funding)}">${esc(signed(r.funding,3))}</td><td class="num">${r.fills}</td><td class="num">${esc(usd(r.volume,0))}</td></tr>`).join('')
+  $('days').innerHTML=ds.length?ds.map(r=>`<tr><td class="pl-sticky">${esc(r.d)}${r.live?` <small class="pe-muted">${esc(t('ct.live'))}</small>`:''}</td><td class="num">${esc(kusd(r.equity))}</td>
+   <td class="num ${cls(r.pnl)}">${esc(ksigned(r.pnl))}</td><td class="num ${cls(r.roi)}">${esc(pct(r.roi))}</td><td class="num ${cls(r.cum)}">${esc(ksigned(r.cum))}</td>
+   <td class="num">${esc(kusd(r.fees))}</td><td class="num ${cls(r.funding)}">${esc(signed(r.funding,3))}</td><td class="num">${r.fills}</td><td class="num">${esc(kusd(r.volume,0))}</td></tr>`).join('')
    :`<tr><td colspan="9" class="pe-muted">${esc(t('ct.noDays'))}</td></tr>`;
  }
 
  function posTable(){
   const ps=data.sum.positions;
   $('pos').innerHTML=ps.length?ps.map(p=>`<tr><td class="pl-sticky"><b>${esc(p.coin)}</b></td><td class="${p.side==='long'?'up':'down'}">${esc(t(p.side==='long'?'ct.long':'ct.short'))}</td>
-   <td class="num">${esc(sz(p.szi))}</td><td class="num">${esc(usd(p.value))}</td><td class="num">${esc(usd(p.margin))}</td><td class="num">${esc(px(p.entry))}</td><td class="num">${esc(px(p.mark))}</td>
+   <td class="num">${esc(sz(p.szi))}</td><td class="num">${esc(kusd(p.value))}</td><td class="num">${esc(kusd(p.margin))}</td><td class="num">${esc(px(p.entry))}</td><td class="num">${esc(px(p.mark))}</td>
    <td class="num ${cls(p.upnl)}">${esc(signed(p.upnl))}<small>${esc(pct(p.roe))}</small></td><td class="num">${esc(p.lev==null?'NA':p.lev+'x')}<small>${esc(p.levType==='isolated'?bi('逐仓','Isolated'):p.levType==='cross'?bi('全仓','Cross'):'')}</small></td>
    <td class="num">${esc(p.liq==null?'—':px(p.liq))}<small>${esc(p.liqDist==null?'':fmt(p.liqDist*100,1)+'%')}</small></td></tr>`).join('')
    :`<tr><td colspan="10" class="pe-muted">${esc(t('ct.noPos'))}</td></tr>`;
   const v=ps.reduce((s,p)=>s+p.value,0);
-  $('posSum').textContent=ps.length?bi(`总持仓 ${usd(v,0)}`,`Total position ${usd(v,0)}`):'';
+  $('posSum').textContent=ps.length?bi(`总持仓 ${kusd(v,0)}`,`Total position ${kusd(v,0)}`):'';
  }
 
  function tradeTable(){
   const tr=data.trades,rows=tr.slice(0,shown);
   $('fills').innerHTML=rows.length?rows.map(f=>`<tr><td class="pl-sticky">${esc(when(f.time))}</td><td><b>${esc(f.coin)}</b></td><td class="${f.side==='buy'?'up':'down'}">${esc(f.dir||(f.side==='buy'?'Buy':'Sell'))}</td>
-   <td class="num">${esc(px(f.px))}</td><td class="num">${esc(sz(f.sz))}</td><td class="num">${esc(usd(f.value))}</td><td class="num">${esc(usd(f.fee,4))}</td>
+   <td class="num">${esc(px(f.px))}</td><td class="num">${esc(sz(f.sz))}</td><td class="num">${esc(kusd(f.value))}</td><td class="num">${esc(usd(f.fee,4))}</td>
    <td class="num ${cls(f.closed)}">${f.closed?esc(signed(f.closed)):'—'}</td></tr>`).join('')
    :`<tr><td colspan="8" class="pe-muted">${esc(t('ct.noTrades'))}</td></tr>`;
   $('more').hidden=tr.length<=shown;
  }
 
 
- function render(){if(!data)return;cards();drawCurve();dayTable();posTable();tradeTable();}
+ function fit(){document.querySelectorAll('.pl-scroll').forEach(b=>{b.style.setProperty('--cw',b.clientWidth+'px');b.classList.toggle('fits',b.scrollWidth<=b.clientWidth+1);});}
+ function render(){if(!data)return;cards();drawCurve();dayTable();posTable();tradeTable();fit();}
 
  function languageChanged(){$('status').textContent=bi(...status);$('chart').setAttribute('aria-label',t('ct.curveAria'));render();}
  function schedule(){clearInterval(timer);timer=setInterval(()=>{if(!document.hidden)load();},REFRESH_MS);}
  function init(){
   $('refresh').onclick=load;$('more').onclick=()=>{shown+=PAGE;tradeTable();};
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)load();});
-  window.addEventListener('resize',()=>chart?.resize());
+  window.addEventListener('resize',()=>{chart?.resize();fit();});
   const prev=window.onI18nChange;window.onI18nChange=(...a)=>{prev?.(...a);languageChanged();};
   languageChanged();load();schedule();
  }
