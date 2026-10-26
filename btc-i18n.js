@@ -20,7 +20,7 @@ Object.entries({
   'btc.zTitle':'MVRV Z-Score',
   'btc.zNote':'Z = (市值 − 已实现市值) ÷ 截至当日市值的标准差。灰色点线为经验参考线：低于 0 为低估区，高于 7 为过热区。彩色虚线为全部历史 Z 的 20 / 50（中位数）/ 80 分位（2011-07 起，前 365 天无 Z），不随图表范围变化。',
   'btc.mcTitle':'BTC 市值与已实现市值',
-  'btc.mcNote':'已实现市值 = 市值 ÷ MVRV，近似全网持币成本。对数坐标。',
+  'btc.mcNote':'已实现市值 = 市值 ÷ MVRV，近似全网持币成本。左轴市值，右轴 BTC 价格，均为对数坐标。',
   'btc.r1':'近1年','btc.r4':'近4年','btc.rAll':'全部',
   'btc.method':'计算口径与数据边界',
   'btc.m1':'日线数据来自 Coin Metrics 社区版（PriceUSD、CapMrktCurUSD、CapMVRVCur），从 2010-07-18 起。页面内置截至归档日的固化数据，打开时从 Coin Metrics 补到 UTC 昨天，增量存在本机浏览器，不回写服务器。',
@@ -30,7 +30,7 @@ Object.entries({
   'btc.sources':'来源：',
   'btc.aria.dd':'BTC 历史高点回撤面积图与对数价格线，共用 UTC 日期',
   'btc.aria.z':'BTC MVRV Z-Score 折线与对数价格线，含 0 和 7 参考线',
-  'btc.aria.mc':'BTC 市值与已实现市值对数折线图'
+  'btc.aria.mc':'BTC 市值、已实现市值与价格对数折线图'
  },
  en:{
   'btc.ovTitle':'BTC Data Overview',
@@ -52,7 +52,7 @@ Object.entries({
   'btc.zTitle':'MVRV Z-Score',
   'btc.zNote':'Z = (market cap − realized cap) ÷ std. dev. of market cap up to that day. Grey dotted lines are rule-of-thumb references: below 0 is undervalued, above 7 is overheated. Colored dashed lines are the all-time P20 / P50 (median) / P80 of Z (from 2011-07; no Z in the first 365 days), regardless of chart range.',
   'btc.mcTitle':'BTC market cap and realized cap',
-  'btc.mcNote':'Realized cap = market cap ÷ MVRV, roughly the aggregate cost basis. Log scale.',
+  'btc.mcNote':'Realized cap = market cap ÷ MVRV, roughly the aggregate cost basis. Caps on the left axis, BTC price on the right; both log scale.',
   'btc.r1':'1Y','btc.r4':'4Y','btc.rAll':'All',
   'btc.method':'Method and data limits',
   'btc.m1':'Daily data comes from the Coin Metrics Community API (PriceUSD, CapMrktCurUSD, CapMVRVCur) since 2010-07-18. The page ships a bundled archive and tops it up from Coin Metrics to UTC yesterday. Increments stay in this browser and are never written back to the server.',
@@ -62,6 +62,6 @@ Object.entries({
   'btc.sources':'Sources: ',
   'btc.aria.dd':'BTC drawdown from ATH (area) and log price line on shared UTC dates',
   'btc.aria.z':'BTC MVRV Z-Score line and log price line with reference lines at 0 and 7',
-  'btc.aria.mc':'BTC market cap and realized cap, log-scale lines'
+  'btc.aria.mc':'BTC market cap, realized cap and price, log-scale lines'
  }
 }).forEach(([lang,entries])=>Object.assign(I18N_DICT[lang],entries));

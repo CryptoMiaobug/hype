@@ -38,12 +38,13 @@
  const slice=k=>{const src=k==='dom'?domRows:rows;return ranges[k]?src.slice(-ranges[k]):src;};
  function base(shown,extra){
   const narrow=(document.querySelector('.btc-chart')?.clientWidth||1000)<600;
-  return {animation:false,tooltip:{trigger:'axis',confine:true},legend:{top:0,textStyle:{color:DIM}},
-   grid:{left:narrow?48:65,right:narrow?52:70,top:40,bottom:60},
+  return {animation:false,tooltip:{trigger:'axis',confine:true},legend:{top:0,type:narrow?'scroll':'plain',textStyle:{color:DIM},pageTextStyle:{color:DIM}},
+   grid:{left:narrow?48:65,right:narrow?52:70,top:narrow?52:40,bottom:60},
    dataZoom:[{type:'inside'},{type:'slider',height:18,bottom:8,textStyle:{color:DIM}}],
    xAxis:{type:'category',data:shown.map(r=>r.date),axisLabel:{color:DIM}},...extra};
  }
- const logAxis=(name,pos)=>({type:'log',name,position:pos,logBase:10,axisLabel:{color:DIM,formatter:v=>usd(v)},splitLine:{show:pos==='left',lineStyle:{color:GRID}}});
+ const axUsd=v=>v>=1e12?'$'+fmt(v/1e12,0)+'T':v>=1e9?'$'+fmt(v/1e9,0)+'B':v>=1e6?'$'+fmt(v/1e6,0)+'M':v>=1e3?'$'+fmt(v/1e3,0)+'K':'$'+(v<1?String(+v.toPrecision(2)):fmt(v,0));
+ const logAxis=(name,pos)=>({type:'log',name,position:pos,logBase:10,max:e=>10**Math.ceil(Math.log10(e.max)),axisLabel:{color:DIM,formatter:v=>axUsd(v)},splitLine:{show:pos==='left',lineStyle:{color:GRID}}});
  const line=(name,data,color,y=0,o={})=>({name,type:'line',showSymbol:false,yAxisIndex:y,data,lineStyle:{color,width:1.4},itemStyle:{color},...o});
 
  // 全历史 P20/P50/P80 虚线（同 PE 页配色），样本为全部有效数据，不随图表范围变化。
@@ -79,8 +80,10 @@
    opt.tooltip.formatter=p=>{const r=shown[p[0].dataIndex];return r.date+' UTC<br>'+dn+' '+(r.dom==null?'NA':fmt(r.dom,2)+'%')+'<br>'+bi('全市场市值 ','Total market cap ')+usd(r.total)+'<br>'+bi('价格 ','Price ')+(r.price==null?'NA':'$'+fmt(r.price,2))+'<br>'+mn+' '+usd(r.mcap)+'<br><span style="opacity:.7">'+(cut&&r.date>cut?'CoinGecko':'CoinMarketCap')+'</span>'+bandText(db,'%');};
   }else{
    const m=bi('市值','Market cap'),rc=bi('已实现市值','Realized cap');
-   opt=base(shown,{yAxis:[logAxis('USD','left')],series:[line(m,shown.map(r=>r.mcap),'#38BDF8'),line(rc,shown.map(r=>r.realized),'#C084FC')]});
-   opt.tooltip.formatter=p=>{const r=shown[p[0].dataIndex];return r.date+' UTC<br>'+m+' '+usd(r.mcap)+'<br>'+rc+' '+usd(r.realized)+'<br>MVRV '+fmt(r.mvrv,3);};
+   // 价格放右侧对数轴（与回撤/Z 页同色），市值和已实现市值在左轴
+   const pAx=logAxis(pName,'right'),PC='#FBBF24';pAx.axisLabel.color=PC;pAx.nameTextStyle={color:PC};
+   opt=base(shown,{yAxis:[logAxis(bi('市值 USD','Market cap USD'),'left'),pAx],series:[line(m,shown.map(r=>r.mcap),'#38BDF8'),line(rc,shown.map(r=>r.realized),'#C084FC'),line(pName,shown.map(r=>r.price),'#FBBF24',1,{lineStyle:{color:'#FBBF24',width:1}})]});
+   opt.tooltip.formatter=p=>{const r=shown[p[0].dataIndex];return r.date+' UTC<br>'+bi('价格 ','Price ')+(r.price==null?'NA':'$'+fmt(r.price,2))+'<br>'+m+' '+usd(r.mcap)+'<br>'+rc+' '+usd(r.realized)+'<br>MVRV '+fmt(r.mvrv,3);};
   }
   charts[k].setOption(opt,{notMerge:true});
  }
