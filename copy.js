@@ -27,6 +27,19 @@
   if(!r.ok)throw Error('HTTP '+r.status+(r.status===429?bi('（限流，稍后再试）',' (rate limited)'):''));
   return r.json();
  }
+ // 按时间往后翻页直到拉完（userFillsByTime 单页 2000 条，userFunding 500 条）；下一页从本页最后时间开始，重叠部分去重
+ const LIMIT={userFillsByTime:2000,userFunding:500};
+ async function paged(body){
+  const out=[],seen=new Set();let t=body.startTime;
+  for(let i=0;i<50;i++){
+   const batch=await info({...body,startTime:t});
+   const fresh=batch.filter(x=>{const k=JSON.stringify(x);if(seen.has(k))return false;seen.add(k);return true;});
+   out.push(...fresh);
+   if(batch.length<LIMIT[body.type]||!fresh.length)break;
+   t=Math.max(...batch.map(x=>x.time));
+  }
+  return out;
+ }
  function setStatus(zh,en){status=[zh,en];$('status').textContent=bi(zh,en);}
 
  async function load(){
@@ -36,12 +49,15 @@
    // 日线文件每天只变一次；读取失败（例如还没有第一天）就只用 HL 采样点
    daily=await fetch('copy-data/daily.json?v='+Math.floor(Date.now()/600000),{credentials:'omit'}).then(r=>r.ok?r.json():null).catch(()=>null);
    const user=roster.account,start=roster.start.time;
+   // 已固化的日子直接用 daily.json，明细只拉最后一个收盘之后（今天）；成交列表额外保证最近 24 小时
+   const rows=daily?.rows||[],from=rows.length?Math.max(start,C.dayEnd(rows.at(-1).d)):start;
+   const fillFrom=Math.max(start,Math.min(from,Date.now()-86400000));
    const dexs=['',...(await info({type:'perpDexs'})).slice(1).map(d=>d?.name).filter(Boolean)];
    const [spot,states,fills,funding,ledger,portfolio]=await Promise.all([
     info({type:'spotClearinghouseState',user}),
     Promise.all(dexs.map(dex=>info({type:'clearinghouseState',user,dex}))),
-    info({type:'userFillsByTime',user,startTime:start,aggregateByTime:true}),
-    info({type:'userFunding',user,startTime:start}),
+    paged({type:'userFillsByTime',user,startTime:fillFrom,aggregateByTime:true}),
+    paged({type:'userFunding',user,startTime:from}),
     info({type:'userNonFundingLedgerUpdates',user,startTime:start}),
     info({type:'portfolio',user})
    ]);
@@ -62,10 +78,10 @@
    [t('ct.cPnl'),signed(s.pnl),s.flow?bi('净转入 ','Net in ')+signed(s.flow):'',cls(s.pnl)],
    [t('ct.cRoi'),pct(s.roi),'',cls(s.roi)],
    [t('ct.cUpnl'),signed(s.upnl),s.positions.length+bi(' 个持仓',' positions'),cls(s.upnl)],
-   [t('ct.cClosed'),signed(s.closed),s.trades+bi(' 笔成交 · 成交额 ',' fills · volume ')+kusd(s.volume,0),cls(s.closed)],
+   [t('ct.cClosed'),signed(tot.closed),tot.fills+bi(' 笔成交 · 成交额 ',' fills · volume ')+kusd(tot.volume,0),cls(tot.closed)],
    [t('ct.cVolume'),kusd(tot.volume,0),tot.fills+bi(' 笔成交',' fills')+(s.equity?' · '+bi('换手 ','Turnover ')+fmt(tot.volume/s.equity,1)+'x':''),''],
-   [t('ct.cFees'),usd(-s.fees),s.volume?bi('平均 ','Avg ')+fmt(s.fees/s.volume*100,3)+'%':'','down'],
-   [t('ct.cFunding'),signed(s.funding,3),bi('正数为收入','Positive = income'),cls(s.funding)],
+   [t('ct.cFees'),usd(-tot.fees),tot.volume?bi('平均 ','Avg ')+fmt(tot.fees/tot.volume*100,3)+'%':'','down'],
+   [t('ct.cFunding'),signed(tot.funding,3),bi('正数为收入','Positive = income'),cls(tot.funding)],
    [t('ct.cNotional'),kusd(s.notional,0),bi('名义 / 净值 ','Notional / equity ')+fmt(s.lev,2)+'x','']
   ];
   $('cards').innerHTML=list.map(([k,v,sub,c])=>`<div class="stat-card"><div class="label">${esc(k)}</div><div class="value ${c}">${esc(v)}</div><div class="sub">${esc(sub)}</div></div>`).join('');

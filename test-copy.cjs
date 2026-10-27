@@ -56,8 +56,10 @@ assert.deepEqual(dt.map(r=>[r.d,r.live]),[['2026-10-22',true],['2026-10-21',fals
 assert.equal(dt[0].pnl,5145-5130-5);assert.equal(dt[0].cum,40);assert.equal(dt[0].fills,1);assert.equal(dt[0].fees,0.5);assert.equal(dt[0].volume,200);
 assert.ok(Math.abs(dt[1].roi-10/(5020+100))<1e-12);assert.ok(Math.abs(dt[2].roi-20/5000)<1e-12);
 assert.deepEqual(C.dailyTable({rows:[]},{equity:1,now:2}),[]);
-assert.deepEqual(C.totals(dt,{volume:1,trades:1}),{volume:27000+900+200,fills:55+3+1},'累计交易量按日线 + 今日');
-assert.deepEqual(C.totals([],{volume:4810,trades:2}),{volume:4810,fills:2},'无日线回退 fills');
+const tt=C.totals(dt,{volume:1,trades:1});
+assert.equal(tt.volume,27000+900+200);assert.equal(tt.fills,55+3+1);assert.ok(Math.abs(tt.fees-(7+2+0.5))<1e-12);
+assert.ok(Math.abs(tt.funding-(0.1+0+0.02))<1e-12);assert.equal(tt.closed,-1,'累计按日线 + 今日');
+assert.deepEqual(C.totals([],{volume:4810,trades:2,closed:-10,fees:2.2,funding:0.15}),{volume:4810,fills:2,closed:-10,fees:2.2,funding:0.15},'无日线回退明细');
 
 // 全平重开手续费：按 dex 实际吃单费率，挂单不计；没有吃单成交的 dex 用主盘基础费率
 const rt=C.takerRates([{coin:'BTC',px:'100',sz:'1',fee:'0.045',crossed:true},{coin:'BTC',px:'100',sz:'1',fee:'0.015',crossed:false},{coin:'xyz:GOLD',px:'50',sz:'2',fee:'0.01',crossed:true}]);

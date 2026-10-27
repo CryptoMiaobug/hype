@@ -37,18 +37,23 @@ def info(body):
             time.sleep(5 * (attempt + 1))
 
 
+# 各接口单页上限：userFillsByTime 2000 条，userFunding 500 条（返回满一页就继续往后翻）
+PAGE_LIMIT = {"userFillsByTime": 2000, "userFunding": 500}
+
+
 def paged(kind, user, start, end):
-    """userFillsByTime / userFunding 每次最多 2000 条，按时间往后翻页。"""
+    """按时间往后翻页直到拉完。HL 按时间升序返回；下一页从本页最后时间开始，重叠部分去重。"""
     out, seen, t = [], set(), start
-    while True:
+    for _ in range(200):  # 防死循环；按天拉一页就够，200 页 = 10 万条
         batch = info({"type": kind, "user": user, "startTime": t, "endTime": end})
         new = [x for x in batch if (x.get("tid") or x.get("hash"), x["time"], json.dumps(x, sort_keys=True)) not in seen]
         for x in new:
             seen.add((x.get("tid") or x.get("hash"), x["time"], json.dumps(x, sort_keys=True)))
         out += new
-        if len(batch) < 2000 or not new:
+        if len(batch) < PAGE_LIMIT[kind] or not new:
             return out
         t = max(x["time"] for x in batch)
+    sys.exit(f"{kind} 翻页超过 200 页，停止（检查接口是否异常）")
 
 
 def net_flow(ledger, me, a, b):
@@ -100,11 +105,12 @@ def main():
         print("up to date:", rows[-1]["d"] if rows else "(no full day yet)")
         return
 
-    lo = start
+    # 只拉待补日子起点之后的数据（已固化的日子不重拉，数据量不随运行天数增长）
+    lo = start if not rows else int(datetime.combine(days[0], datetime.min.time(), TZ).timestamp() * 1000)
     hi = int(datetime.combine(days[-1] + timedelta(days=1), datetime.min.time(), TZ).timestamp() * 1000)
     fills = [f for f in paged("userFillsByTime", me, lo, now_ms) if f["time"] >= start]
     funding = [f for f in paged("userFunding", me, lo, now_ms) if f["time"] >= start]
-    ledger = info({"type": "userNonFundingLedgerUpdates", "user": me, "startTime": lo})
+    ledger = info({"type": "userNonFundingLedgerUpdates", "user": me, "startTime": lo})  # 出入金很少，单页足够
     spot = info({"type": "spotClearinghouseState", "user": me})
     eq_now = next((float(b["total"]) for b in spot.get("balances", []) if b["coin"] == "USDC"), None)
     if eq_now is None:

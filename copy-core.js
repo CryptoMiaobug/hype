@@ -90,10 +90,12 @@ function trades(fills,start){
   px:num(x.px),sz:num(x.sz),value:num(x.px)*num(x.sz),fee:num(x.fee),closed:num(x.closedPnl),hash:x.hash})).sort((a,b)=>b.time-a.time);
 }
 
-// 累计成交额/成交数：有日线时用日线逐日累加（含今日进行中行），不受 userFillsByTime 单次 2000 条上限影响；还没有日线时用起点后的 fills。
+// 累计已实现/手续费/资金费/成交额/成交数：有日线时用日线逐日累加（含今日进行中行），网页只需实时拉今天的明细，
+// 不受 userFillsByTime / userFunding 单页上限影响，请求量也不随运行天数增长；还没有日线时用起点后的明细。
 function totals(days,sum){
- if(!days?.length)return {volume:sum.volume,fills:sum.trades};
- return {volume:days.reduce((s,r)=>s+num(r.volume),0),fills:days.reduce((s,r)=>s+num(r.fills),0)};
+ if(!days?.length)return {volume:sum.volume,fills:sum.trades,closed:sum.closed,fees:sum.fees,funding:sum.funding};
+ const add=k=>days.reduce((s,r)=>s+num(r[k]),0);
+ return {volume:add('volume'),fills:add('fills'),closed:add('closed'),fees:add('fees'),funding:add('funding')};
 }
 
 // 全平再重开的预估手续费：每个仓位 名义 × 吃单费率 × 2（平一次、开一次，按当前标记价、不含滑点）。
