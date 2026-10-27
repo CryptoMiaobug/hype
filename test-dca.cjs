@@ -70,17 +70,17 @@ assert.ok(!fs.existsSync('dca.html'));
   const ctx={PECore:{...PC,yesterday:()=>seed.last},DCACore:D,document,localStorage:{getItem:()=>null,setItem(){}},fetch:async u=>{if(u.startsWith('pe-data'))return {ok:true,json:async()=>seed};throw Error('offline')},AbortSignal:{timeout(){}},Blob,URL,setTimeout,console};
   ctx.window={addEventListener(){},DCACore:D};
   await vm.runInNewContext(fs.readFileSync('pe.js','utf8'),ctx);
-  assert.match(nodes.dca.innerHTML,/每周买卖建议/);assert.match(nodes.dca.innerHTML,/data-dca-win="0" class="active"/);console.log('PASS pe.js panel',asset);
+  assert.match(nodes.dca.innerHTML,/每周买卖建议/);assert.match(nodes.dca.innerHTML,/data-dca-win="365" class="active"/);console.log('PASS pe.js panel',asset);
  }
 })().catch(e=>{console.error(e);process.exit(1)});
-// Coin-page toggle: default all-time; clicking stores the shared choice.
+// Coin-page toggle: default last 1 year; clicking stores the shared choice.
 {const s=JSON.parse(fs.readFileSync('pe-data/bnb.json')).rows,h1=D.panel(s,'pe',zh,365),h0=D.panel(s,'pe',zh);
  assert.equal((h1.match(/data-dca-win=/g)||[]).length,2);assert.match(h1,/data-dca-win="365" class="active" aria-pressed="true"/);assert.match(h0,/data-dca-win="0" class="active" aria-pressed="true"/);
- assert.match(h1,/近1年分位 65%/);assert.match(h0,/全部分位 42%/);assert.match(h0,/样本 2025-01-23 –/);assert.match(h0,/买 100%/);
+ assert.ok(h1.includes('近1年分位 '+Math.round(D.evaluate(s,'pe',365).rank)+'%'));assert.ok(h0.includes('全部分位 '+Math.round(D.evaluate(s,'pe',0).rank)+'%'));assert.match(h0,/样本 2025-01-23 –/);assert.match(h0,/买 100%/);
  const store={m:{},getItem(k){return this.m[k]??null},setItem(k,v){this.m[k]=v}};let got;const el={addEventListener(_,f){this.f=f}};
- assert.equal(D.getWin(store),0,'default all-time');
+ assert.equal(D.getWin(store),365,'default 1y');
  D.bindToggle(el,w=>got=w,store);el.f({target:{closest:()=>({dataset:{dcaWin:'365'}})}});assert.equal(got,365);assert.equal(D.getWin(store),365);
- el.f({target:{closest:()=>({dataset:{dcaWin:'0'}})}});assert.equal(got,0);assert.equal(D.getWin(store),0);assert.equal(D.getWin({getItem(){throw Error()}}),0);
+ el.f({target:{closest:()=>({dataset:{dcaWin:'0'}})}});assert.equal(got,0);assert.equal(D.getWin(store),0);assert.equal(D.getWin({getItem(){throw Error()}}),365);
  console.log('PASS coin-page window toggle');}
 // pe.js stat cards: amounts >= 1M abbreviated (M/B), no long full figures.
 (async()=>{

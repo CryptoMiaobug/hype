@@ -91,8 +91,8 @@ const ruleText = (x, bi) => `${bi(x.range[0], x.range[1])} · ${x.side === 'buy'
 // Percentile window shared by the overview and every coin page (same localStorage key): 365 = last 1 year, 0 = all bundled history.
 const WIN_KEY = 'pe-list-window';
 // store = the page's localStorage (passed in so pages and tests use their own).
-// Default = all history; only an explicit '1y' choice switches to the last 365 days.
-function getWin(store = root.localStorage) { try { return store?.getItem(WIN_KEY) === '1y' ? 365 : 0; } catch { return 0; } }
+// Default = last 365 days; only an explicit 'all' choice switches to all history.
+function getWin(store = root.localStorage) { try { return store?.getItem(WIN_KEY) === 'all' ? 0 : 365; } catch { return 365; } }
 function setWin(win, store = root.localStorage) { try { store?.setItem(WIN_KEY, win ? '1y' : 'all'); } catch {} return win ? 365 : 0; }
 // Rows used for the percentile and the chart's P20/P50/P80 bands.
 const windowRows = (rows, win) => win ? rows.slice(-win) : rows;
