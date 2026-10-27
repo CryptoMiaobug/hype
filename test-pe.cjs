@@ -15,6 +15,7 @@ test('30 contiguous days and fixed HYPE supply',()=>{const rev={...H.revenue,[dd
 test('zero denominator gives NA',()=>{const rev={};for(let i=0;i<30;i++)rev[C.date(C.time(dd(1))-i*C.DAY)]=0;assert.equal(C.calculate(H,rev,{[dd(1)]:[90,100]},dd(1)).at(-1).circ,null);});
 test('UNI supply gap poisons following days, complete data recovers',()=>{const rev={...U.revenue,[dd(1)]:100,[dd(2)]:100},pm={...U.market,[dd(2)]:[10,1000]};assert.equal(C.calculate(U,rev,pm,dd(2)).at(-1).supply,null);pm[dd(1)]=[10,1000];assert.equal(C.calculate(U,rev,pm,dd(2)).at(-1).supply,U.rows.at(-1).supply-20);});
 test('missing recent market keeps day and never borrows old quote',()=>{const r=C.calculate(H,H.revenue,H.market,dd(1)).at(-1);assert.equal(r.date,dd(1));assert.equal(r.price,null);assert.equal(r.circ,null);});
+test('HYPE backfill rows are labelled, contiguous and precede bundled history',()=>{const est=H.rows.filter(r=>r.source==='estimated'),first=H.rows.findIndex(r=>r.source==='bundled');assert.equal(est.length,first);assert.equal(est[0].date,H.estimated.from);assert.equal(est.at(-1).date,H.estimated.to);assert.equal(C.date(C.time(est.at(-1).date)+C.DAY),H.rows[first].date);H.rows.forEach((r,i)=>i&&assert.equal(C.time(r.date)-C.time(H.rows[i-1].date),C.DAY));for(const r of est)if(r.price!=null)assert.ok(Math.abs(r.mcap/r.price-H.estimated.circSupply)<1e-3);});
 console.log(count+' tests passed');
 // Browser controller smoke tests using a small DOM: network denial must not erase history.
 const vm=require('node:vm');
