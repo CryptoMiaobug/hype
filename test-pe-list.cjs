@@ -51,6 +51,34 @@ const PO=require('./payout-core.js'),D=require('./dca-core.js'),PC=require('./pe
  assert.match(idx,/location\.replace\('pe-list\.html'/);assert.match(idx,/url=pe-list\.html/);assert.ok(!idx.includes('app.js'));
  for(const p of ['dashboard.html','valuation.html','hype-pe.html','uni-pe.html','bnb-pe.html','aave-pe.html','pe-list.html','battlefield/index.html']){const h=fs.readFileSync(p,'utf8');assert.match(h,/href="\/?dashboard\.html"[^>]*data-i18n="nav\.dashboard"/,p);assert.ok(!/href="\/?index\.html"/.test(h),p);if(p!=='battlefield/index.html')assert.match(h,/<a class="logo" href="pe-list\.html">/,p+' logo link');}
  console.log('PASS index.html -> pe-list.html; dashboard.html nav');}
+// Live quote: price/PE/rank/action follow the live price (close PE × live/close), closes shown as small text;
+// a coin missing from the quote falls back to its close.
+(async()=>{const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),D=require('./dca-core.js'),PO=require('./payout-core.js'),PC=require('./pe-core.js'),BC=require('./bnb-core.js');
+ const nodes={},make=()=>({innerHTML:'',textContent:'',addEventListener(k,f){this['on'+k]=f}});let quoteUrl='';
+ const ctx={I18N_DICT:{zh:{},en:{}},DCACore:D,PayoutCore:PO,PECore:{...PC,yesterday:()=>'2026-10-08'},BNBCore:{...BC,yesterday:()=>'2026-10-08'},
+  document:{getElementById:id=>nodes[id]??=make()},localStorage:{getItem:()=>null},AbortSignal:{timeout(){}},location:{href:''},
+  fetch:async u=>{if(u.startsWith('pe-data'))return {ok:true,json:async()=>JSON.parse(fs.readFileSync(u))};
+   if(u.includes('/simple/price')){quoteUrl=u;const last=a=>JSON.parse(fs.readFileSync('pe-data/'+a+'.json')).rows.at(-1).price;
+    return {ok:true,json:async()=>({hyperliquid:{usd:last('hype')*1.2,usd_24h_change:14.3,last_updated_at:1793322000},uniswap:{usd:last('uni')*0.8,usd_24h_change:-10.2,last_updated_at:1793322000},binancecoin:{usd:last('bnb')*1.05,last_updated_at:1793322000}})};}
+   throw Error('offline')}};
+ ctx.window={...ctx,I18n:{lang:'zh'}};ctx.window.window=ctx.window;
+ await vm.runInNewContext(fs.readFileSync('pe-list.js','utf8'),Object.assign(ctx,{window:ctx.window}));await new Promise(r=>setTimeout(r,50));
+ assert.match(quoteUrl,/ids=hyperliquid,uniswap,binancecoin,aave&vs_currencies=usd&include_24hr_change=true/);
+ const h=nodes['pe-list'].innerHTML,f2=n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const rowOf=name=>h.split('<tr ').find(x=>x.includes(`<b>${name}</b>`));
+ for(const [a,name,k,field] of [['hype','HYPE',1.2,'circ'],['uni','UNI',0.8,'circ'],['bnb','BNB',1.05,'pe']]){
+  const rows=JSON.parse(fs.readFileSync('pe-data/'+a+'.json')).rows,close=D.evaluate(rows,field,365),live=D.evaluate([...rows,{date:'live',[field]:close.pe*k}],field,365),r=rowOf(name);
+  assert.ok(r.includes(f2(close.pe*k)+' x'),name+' live PE');assert.ok(r.includes('收盘 '+f2(close.pe)+' x'),name+' close PE');
+  assert.ok(r.includes(`<span>${Math.round(live.rank)}%</span>`),name+' live rank');assert.ok(r.includes(`<b>${D.actionText(live.tier,z=>z)}</b>`),name+' live action');
+  assert.ok(r.includes('实时价 '),name+' live stamp');
+ }
+ assert.ok(rowOf('HYPE').includes('24h <span class="up">+14.3%</span>'));assert.ok(!rowOf('BNB').includes('24h '),'no 24h when missing');
+ // AAVE missing from the quote -> unchanged closing numbers + note in status
+ const aave=rowOf('AAVE'),ar=D.evaluate(JSON.parse(fs.readFileSync('pe-data/aave.json')).rows,'circ',365);
+ assert.ok(aave.includes(f2(ar.pe)+' x')&&!aave.includes('收盘 ')&&aave.includes('收盘价'),'AAVE falls back to close');
+ assert.match(nodes.status.textContent,/AAVE 无实时价格，按收盘价计算/);
+ console.log('PASS pe-list live quote + fallback');
+})().catch(e=>{console.error(e);process.exit(1)});
 // Percentile window toggle: 1Y <-> all bundled history, header + stored choice follow; switching back restores 1Y numbers.
 (async()=>{const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),D=require('./dca-core.js'),PO=require('./payout-core.js'),PC=require('./pe-core.js'),BC=require('./bnb-core.js');
  const nodes={},make=()=>({innerHTML:'',textContent:'',addEventListener(k,f){this['on'+k]=f}}),store={},th={textContent:''};

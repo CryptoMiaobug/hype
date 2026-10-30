@@ -3,12 +3,12 @@
    Data = bundled archive + increments cached in this browser (shared with the coin pages) + a live fill for missing days,
    computed with the same cores as the coin pages, so numbers match them. */
 Object.assign(I18N_DICT.zh, {
-  'list.win1y': '近1年分位', 'list.winAll': '全部分位', 'list.colPayout': '回馈率', 'list.payoutPaused': '回馈暂停', 'list.title': 'PE 监控总览', 'list.subtitle': '各币种 PE、分位（默认近 1 年，可切换全部）与每周买卖建议 · 点击币种查看详情 · 非会计利润 PE · 非实时行情',
-  'list.note': 'PE = 流通市值 ÷ 年化回馈额（HYPE：持币人收入；UNI：协议销毁价值代理；BNB：季度 Auto-Burn + Gas 销毁；AAVE：DAO 协议收入，非实际回购）。分位 = 所选区间（近 1 年 = 近 365 日；全部 = 本站已存的全部日期，各币起点不同）内有效流通 PE 中低于当前值的天数占比，P20/P50/P80 与区间同口径；每周买卖建议（每周看一次）：买入 = 平时每周买入额 × 比例（0–10 分位 300%，10–20 分位 200%，20–30 分位 150%，30–40 分位 125%，40–50 分位 100%，50–60 分位 75%，60–70 分位 50%，70–80 分位 25%）；卖出 = 初始仓位的比例（80–85 分位 2%，85–90 分位 3%，90–95 分位 5%，95 分位以上 8%），不设底仓、卖完为止；从 80 分位以上回落到 70–80 分位、且之后未跌破 70 分位时暂停（不买不卖）。卖出档位未经回测，数据仅约一年。价格为 D+1 00:00 UTC 近似收盘。回馈率 = 实际回馈持币人金额 ÷ 协议收入（DefiLlama dailyHoldersRevenue ÷ dailyRevenue），显示近 30 日，小字为近 1 年；近 30 日低于 10% 标「回馈暂停」。BNB 的回馈主体是季度 Auto-Burn，按公式从存量销毁，与收入无关，回馈率显示「不适用」{auto}。仅供研究，不是投资建议。',
+  'list.win1y': '近1年分位', 'list.winAll': '全部分位', 'list.colPayout': '回馈率', 'list.payoutPaused': '回馈暂停', 'list.title': 'PE 监控总览', 'list.subtitle': '各币种 PE、分位（默认近 1 年，可切换全部）与每周买卖建议 · 点击币种查看详情 · 非会计利润 PE · 价格与 PE 按实时价',
+  'list.note': 'PE = 流通市值 ÷ 年化回馈额（HYPE：持币人收入；UNI：协议销毁价值代理；BNB：季度 Auto-Burn + Gas 销毁；AAVE：DAO 协议收入，非实际回购）。分位 = 所选区间（近 1 年 = 近 365 日；全部 = 本站已存的全部日期，各币起点不同）内有效流通 PE 中低于当前值的天数占比，P20/P50/P80 与区间同口径；每周买卖建议（每周看一次）：买入 = 平时每周买入额 × 比例（0–10 分位 300%，10–20 分位 200%，20–30 分位 150%，30–40 分位 125%，40–50 分位 100%，50–60 分位 75%，60–70 分位 50%，70–80 分位 25%）；卖出 = 初始仓位的比例（80–85 分位 2%，85–90 分位 3%，90–95 分位 5%，95 分位以上 8%），不设底仓、卖完为止；从 80 分位以上回落到 70–80 分位、且之后未跌破 70 分位时暂停（不买不卖）。卖出档位未经回测，数据仅约一年。价格、流通 PE、分位与本周操作按 CoinGecko 实时价计算：实时 PE = 数据日收盘 PE × 实时价 ÷ 收盘价（年化回馈额仍截至数据日，30 日滚动，日间变化很小），再与历史每日收盘 PE 比较得出分位；P20/P50/P80 与区间只用收盘数据。小字「收盘」为数据日 D+1 00:00 UTC 近似收盘；实时价获取失败时全部按收盘计算。回馈率 = 实际回馈持币人金额 ÷ 协议收入（DefiLlama dailyHoldersRevenue ÷ dailyRevenue），显示近 30 日，小字为近 1 年；近 30 日低于 10% 标「回馈暂停」。BNB 的回馈主体是季度 Auto-Burn，按公式从存量销毁，与收入无关，回馈率显示「不适用」{auto}。仅供研究，不是投资建议。',
 });
 Object.assign(I18N_DICT.en, {
-  'list.win1y': '1Y percentile', 'list.winAll': 'All-time percentile', 'list.colPayout': 'Payout ratio', 'list.payoutPaused': 'Payout paused', 'list.title': 'PE Monitor Overview', 'list.subtitle': 'PE, percentile (1Y by default, all-time switchable) and weekly buy / sell per asset · tap an asset for details · not accounting-profit PE · not real-time',
-  'list.note': 'PE = circulating market cap ÷ annualized value returned to holders (HYPE: holders revenue; UNI: protocol burn-value proxy; BNB: quarterly Auto-Burn + gas burn; AAVE: DAO protocol revenue, not executed buybacks). Percentile = share of valid days in the selected window (1Y = last 365 days; All = all days stored on this site, start date differs by asset) with circulating PE below the current value; P20/P50/P80 use the same window. Weekly buy / sell (check once a week): buy = your usual weekly buy × the ratio (P0–P10 300%, P10–P20 200%, P20–P30 150%, P30–P40 125%, P40–P50 100%, P50–P60 75%, P60–P70 50%, P70–P80 25%); sell = that % of the initial position (P80–P85 2%, P85–P90 3%, P90–P95 5%, P95+ 8%), no core kept, until sold out; after P80+, a return to P70–P80 is a pause (no trade) until PE drops below P70. Sell tiers are not backtested; only about a year of data. Prices are approximate closes at D+1 00:00 UTC. Payout ratio = value actually returned to holders ÷ protocol revenue (DefiLlama dailyHoldersRevenue ÷ dailyRevenue), last 30 days with the 1-year figure below; under 10% over 30 days is flagged “payout paused”. For BNB the payout is dominated by the quarterly Auto-Burn, which is formula-driven from existing supply and unrelated to revenue, so the ratio shows N/A{auto}. Research only, not investment advice.',
+  'list.win1y': '1Y percentile', 'list.winAll': 'All-time percentile', 'list.colPayout': 'Payout ratio', 'list.payoutPaused': 'Payout paused', 'list.title': 'PE Monitor Overview', 'list.subtitle': 'PE, percentile (1Y by default, all-time switchable) and weekly buy / sell per asset · tap an asset for details · not accounting-profit PE · price and PE use the live price',
+  'list.note': 'PE = circulating market cap ÷ annualized value returned to holders (HYPE: holders revenue; UNI: protocol burn-value proxy; BNB: quarterly Auto-Burn + gas burn; AAVE: DAO protocol revenue, not executed buybacks). Percentile = share of valid days in the selected window (1Y = last 365 days; All = all days stored on this site, start date differs by asset) with circulating PE below the current value; P20/P50/P80 use the same window. Weekly buy / sell (check once a week): buy = your usual weekly buy × the ratio (P0–P10 300%, P10–P20 200%, P20–P30 150%, P30–P40 125%, P40–P50 100%, P50–P60 75%, P60–P70 50%, P70–P80 25%); sell = that % of the initial position (P80–P85 2%, P85–P90 3%, P90–P95 5%, P95+ 8%), no core kept, until sold out; after P80+, a return to P70–P80 is a pause (no trade) until PE drops below P70. Sell tiers are not backtested; only about a year of data. Price, circulating PE, percentile and weekly action use the CoinGecko live price: live PE = the data date’s closing PE × live price ÷ closing price (the annualized value is still as of the data date; it is a 30-day rolling sum and barely moves day to day), then ranked against the daily closing PE history; P20/P50/P80 and the range use closes only. The small “close” figures are approximate closes at D+1 00:00 UTC; if the live price cannot be fetched, everything uses the close. Payout ratio = value actually returned to holders ÷ protocol revenue (DefiLlama dailyHoldersRevenue ÷ dailyRevenue), last 30 days with the 1-year figure below; under 10% over 30 days is flagged “payout paused”. For BNB the payout is dominated by the quarterly Auto-Burn, which is formula-driven from existing supply and unrelated to revenue, so the ratio shows N/A{auto}. Research only, not investment advice.',
 });
 (async () => {
   const D = DCACore, $ = id => document.getElementById(id);
@@ -33,6 +33,7 @@ Object.assign(I18N_DICT.en, {
   // Percentile window: 365 = last 1 year, 0 = all bundled history. Remembered per browser.
   let win = D.getWin(localStorage);
   let payout = null; // { seed } from PayoutCore.load; null until loaded / on failure
+  let quotes = null; // { <gecko id>: { price, chg24, at } } from one CoinGecko simple/price call; null = use closes
 
   async function json(url) {
     const r = await fetch(url, { signal: AbortSignal.timeout(25000), credentials: 'omit' });
@@ -69,15 +70,26 @@ Object.assign(I18N_DICT.en, {
     return rows;
   }
 
+  // Live quote: price moves PE 1:1, while the 30-day revenue denominator barely moves day to day, so
+  // live PE = close PE × live price / close price (denominator stays as of the data date). Percentile and
+  // weekly action use the live PE against the closing history; P20/P50/P80 and range stay closing-only.
+  // No quote (fetch failed / coin missing) -> everything falls back to the close, as before.
   function summarize(a, rows) {
-    const ev = D.evaluate(rows, a.field, win);
-    if (!ev) return null;
-    const i = rows.findIndex(r => r.date === ev.date), r = rows[i], ago = rows[i - 30];
-    const year = (win ? rows.slice(-win) : rows).map(x => x[a.field]).filter(Number.isFinite);
-    return { ...ev, row: r, price: r.price, mcap: r.mcap, annual: r.annual, full: a.field === 'circ' ? r.full : null,
-      price30: chg(r.price, ago?.price), pe30: chg(ev.pe, ago?.[a.field]), min: Math.min(...year), max: Math.max(...year),
-      from: (win ? rows.slice(-win) : rows).find(x => Number.isFinite(x[a.field]))?.date, stale: ev.date < a.core().yesterday() };
+    const close = D.evaluate(rows, a.field, win);
+    if (!close) return null;
+    const i = rows.findIndex(r => r.date === close.date), r = rows[i], ago = rows[i - 30];
+    const span = win ? rows.slice(-win) : rows, year = span.map(x => x[a.field]).filter(Number.isFinite);
+    const q = quotes?.[a.gecko], k = q && r.price > 0 ? q.price / r.price : null;
+    const ev = k ? D.evaluate([...rows, { date: 'live', [a.field]: close.pe * k }], a.field, win) : null;
+    const cur = ev ?? close, px = k ? q.price : r.price;
+    return { ...close, rank: cur.rank, base: cur.base, tier: cur.tier, buffer: cur.buffer, pe: cur.pe,
+      live: !!ev, quote: ev ? q : null, closePe: close.pe, closePrice: r.price,
+      row: r, price: px, mcap: k ? r.mcap * k : r.mcap, annual: r.annual,
+      full: a.field === 'circ' && r.full != null ? r.full * (k ?? 1) : null,
+      price30: chg(px, ago?.price), pe30: chg(cur.pe, ago?.[a.field]), min: Math.min(...year), max: Math.max(...year),
+      from: span.find(x => Number.isFinite(x[a.field]))?.date, stale: close.date < a.core().yesterday() };
   }
+  const hhmm = t => new Date(t).toLocaleTimeString(window.I18n?.lang === 'en' ? 'en-US' : 'zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit' });
 
   function row(a) {
     const s = data[a.id];
@@ -89,14 +101,14 @@ Object.assign(I18N_DICT.en, {
       <td class="pl-sticky">${name}</td>
       <td><div class="pl-rank"><span>${Math.round(s.rank)}%</span><div class="dca-meter" style="background:${D.gradient()}" role="img" aria-label="${rankLabel()} ${Math.round(s.rank)}%"><i style="left:${pos}%"></i></div></div><small>${bi('自 ', 'since ')}${s.from}</small></td>
       <td><span class="pl-dca"><b>${D.actionText(t, bi)}</b><span class="dca-badge">${bi(t.action[0], t.action[1])}</span></span></td>
-      <td class="num">${price(s.price)}<small>${bi('30日 ', '30d ')}${signed(s.price30)}</small></td>
+      <td class="num">${price(s.price)}${s.live ? `<small>${s.quote.chg24 == null ? '' : '24h ' + signed(s.quote.chg24) + ' · '}${bi('收盘 ', 'close ')}${price(s.closePrice)}</small>` : ''}<small>${bi('30日 ', '30d ')}${signed(s.price30)}</small></td>
       <td class="num">${usd(s.mcap)}</td>
-      <td class="num"><b>${num(s.pe)} x</b><small>${bi('30日 ', '30d ')}${signed(s.pe30)}</small></td>
+      <td class="num"><b>${num(s.pe)} x</b>${s.live ? `<small>${bi('收盘 ', 'close ')}${num(s.closePe)} x</small>` : ''}<small>${bi('30日 ', '30d ')}${signed(s.pe30)}</small></td>
       <td class="num">${s.full == null ? '—' : num(s.full) + ' x'}</td>
       <td class="num pl-band">${num(s.p20)} / ${num(s.p50)} / ${num(s.p80)}<small>${bi('区间 ', 'range ')}${num(s.min)} – ${num(s.max)}</small></td>
       <td class="num">${usd(s.annual)}<small>${bi(a.basis[0], a.basis[1])}</small></td>
       <td class="num">${payoutCell(a, s)}</td>
-      <td class="num">${s.date}${s.stale ? `<small>${bi('最近有效日', 'latest valid')}</small>` : ''}</td>
+      <td class="num">${s.date}${s.stale ? `<small>${bi('最近有效日', 'latest valid')}</small>` : ''}<small>${s.live ? bi('实时价 ', 'live price ') + hhmm(s.quote.at) : bi('收盘价', 'closing price')}</small></td>
     </tr>`;
   }
 
@@ -159,10 +171,26 @@ Object.assign(I18N_DICT.en, {
   // Load (or reload via the refresh button): bundled archive + cache, then fill missing days from public APIs.
   const btn = $('refresh'), status = msg => { const el = $('status'); if (el) el.textContent = msg; };
   let seeds = {}, busy = false;
+  // One request for all four live prices. Failure or a missing coin only means that row shows the close.
+  async function loadQuotes(notes) {
+    try {
+      const d = await json('https://api.coingecko.com/api/v3/simple/price?ids=' + ASSETS.map(a => a.gecko).join(',') + '&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true');
+      const out = {};
+      for (const a of ASSETS) {
+        const v = d?.[a.gecko];
+        if (v && Number.isFinite(v.usd) && v.usd > 0) out[a.gecko] = { price: v.usd, chg24: Number.isFinite(v.usd_24h_change) ? v.usd_24h_change : null, at: Number.isFinite(v.last_updated_at) ? v.last_updated_at * 1000 : Date.now() };
+      }
+      quotes = out;
+      const miss = ASSETS.filter(a => !out[a.gecko]).map(a => a.name);
+      if (miss.length) notes.push(miss.join(' / ') + bi(' 无实时价格，按收盘价计算', ': no live price, using the close'));
+    } catch (e) { quotes = null; notes.push(bi('实时价格获取失败，按收盘价计算：', 'Live price fetch failed, using closes: ') + e.message); }
+  }
+  const recompute = () => { for (const a of ASSETS) if (rowsBy[a.id]) data[a.id] = summarize(a, rowsBy[a.id]) ?? { error: bi('有效 PE 不足', 'not enough valid PE') }; };
   async function load() {
     if (busy) return; busy = true; if (btn) btn.disabled = true;
     status(bi('正在获取最新数据…', 'Fetching latest data…'));
     const notes = [];
+    const quoteJob = loadQuotes(notes).then(() => { recompute(); render(); });
     const payoutJob = window.PayoutCore
       ? PayoutCore.load(json, PECore.yesterday()).then(r => { payout = r; }, () => { payout = false; }).then(render)
       : Promise.resolve();
@@ -173,7 +201,8 @@ Object.assign(I18N_DICT.en, {
         data[a.id] = summarize(a, rows) ?? { error: bi('有效 PE 不足', 'not enough valid PE') };
       } catch (e) { data[a.id] = { error: e.message }; }
       render();
-    })]);
+    }), quoteJob]);
+    recompute(); render();
     const stale = ASSETS.filter(a => data[a.id]?.stale).map(a => a.name);
     const t = new Date().toLocaleTimeString(window.I18n?.lang === 'en' ? 'en-US' : 'zh-CN', { hour12: false });
     status([bi('更新于 ', 'Updated ') + t,
@@ -185,7 +214,7 @@ Object.assign(I18N_DICT.en, {
   // Switching the window only recomputes from rows already loaded; no refetch.
   document.querySelectorAll?.('[data-win]').forEach(b => b.onclick = () => {
     win = D.setWin(+b.dataset.win, localStorage);
-    for (const a of ASSETS) if (rowsBy[a.id]) data[a.id] = summarize(a, rowsBy[a.id]) ?? { error: bi('有效 PE 不足', 'not enough valid PE') };
+    recompute();
     render();
   });
   await load();
