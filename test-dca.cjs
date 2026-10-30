@@ -97,3 +97,16 @@ assert.ok(!fs.existsSync('dca.html'));
   console.log('PASS cards',asset,vals.join(' | '));
  }
 })().catch(e=>{console.error(e);process.exit(1)});
+// Live price: overview row and coin-page panel use the same liveEvaluate, so the tier is identical.
+{const D=require('./dca-core.js'),fs=require('node:fs'),assert=require('node:assert/strict'),zh=z=>z;
+ for(const [a,f] of [['hype','circ'],['uni','circ'],['bnb','pe'],['aave','circ']])for(const k of [0.7,0.9,1,1.1,1.3])for(const w of [365,0]){
+  const rows=JSON.parse(fs.readFileSync('pe-data/'+a+'.json')).rows,close=D.evaluate(rows,f,w),q={price:rows.find(r=>r.date===close.date).price*k,chg24:null,at:0};
+  const ev=D.liveEvaluate(rows,f,w,q),ref=D.evaluate([...rows,{date:'live',[f]:close.pe*k}],f,w);
+  assert.equal(ev.live,true);assert.ok(Math.abs(ev.pe-close.pe*k)<1e-9);assert.equal(ev.rank,ref.rank);assert.equal(ev.tier,ref.tier);
+  assert.equal(ev.p20,close.p20);assert.equal(ev.n,close.n);assert.equal(ev.closePe,close.pe);
+  assert.ok(D.panel(rows,f,zh,w,q).includes('dca-ratio">'+D.actionText(ev.tier,zh)+'<'),a+' panel follows live tier');
+ }
+ const rows=JSON.parse(fs.readFileSync('pe-data/uni.json')).rows;
+ for(const bad of [null,{price:0},{price:NaN},{}]){const ev=D.liveEvaluate(rows,'circ',365,bad);assert.equal(ev.live,false);assert.equal(ev.rank,D.evaluate(rows,'circ',365).rank);}
+ assert.match(D.panel(rows,'circ',zh,365),/（收盘价）/);
+ console.log('PASS live evaluate shared by overview + coin pages');}

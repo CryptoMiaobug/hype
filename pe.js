@@ -16,6 +16,7 @@
  let chainData={},chainSnapshot,chainState=[];
  const bi=(zh,en)=>window.I18n?.lang==='en'?en:zh;
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ let quote=null; // live price {price,chg24,at}; null = DCA panel uses the close
  let seed,rows=[],dailyRevenue={},range=365,chart,win=window.DCACore?DCACore.getWin(localStorage):365; // default view: last 1 year
  // Main-chart line visibility by stable key (survives range/language re-renders). Full-unlock is opt-in.
  const lineShown={circ:true,full:false,price:true,p20:true,p50:true,p80:true};const lineNames=()=>({circ:t('流通 PE'),full:t('解锁 PE'),price:t('价格 USD'),p20:win?bi('近1年流通 PE 20分位','1Y circulating PE P20'):bi('全部流通 PE 20分位','All-time circulating PE P20'),p50:win?bi('近1年流通 PE 50分位（中位数）','1Y circulating PE P50 (median)'):bi('全部流通 PE 50分位（中位数）','All-time circulating PE P50 (median)'),p80:win?bi('近1年流通 PE 80分位','1Y circulating PE P80'):bi('全部流通 PE 80分位','All-time circulating PE P80')});const key='hypevalue-pe-v1-'+asset;
@@ -23,8 +24,10 @@
  function render(){
   const target=rows.at(-1),complete=[...rows].reverse().find(r=>r.circ!=null),latest=complete??target;
   $('asof').textContent=t('目标完整 UTC 日：')+C.yesterday()+t(' · 表中截至：')+target.date+t(' · 卡片有效估值日：')+(complete?.date??t('无'));
-  $('cards').innerHTML=[[t('流通 PE'),fmt(latest.circ)+' x'],[t('解锁 PE'),fmt(latest.full)+' x'],[t('近似收盘价格'),'$'+fmt(latest.price,4)],[t('30日')+(asset==='hype'?t('持币人收入'):asset==='aave'?t('协议收入'):t('销毁价值')),usd(latest.r30)],[t('年化分母'),usd(latest.annual)],[t('情景总供应'),big(latest.supply)]].map(([k,v])=>`<div class="stat-card"><div class="label">${t(k)}</div><div class="value">${v}</div><div class="sub">${latest.date} UTC${latest.date!==target.date?t(' · 最近有效，非目标日'):''}</div></div>`).join('');
-  if(window.DCACore&&$('dca'))$('dca').innerHTML=DCACore.panel(rows,'circ',bi,win);
+  // Cards follow the live price (same liveEvaluate as the DCA panel and overview); history table/chart stay daily closes.
+  const lv=complete&&window.DCACore?.liveEvaluate?DCACore.liveEvaluate(rows,'circ',win,quote):null,k=lv?.live?lv.k:1,liveSub=lv?.live?bi('实时价 ','live price ')+DCACore.hhmm(lv.quote.at,window.I18n?.lang==='en')+bi(' · 收盘 ',' · close ')+latest.date+' UTC':null;
+  $('cards').innerHTML=[[t('流通 PE'),fmt(latest.circ==null?null:latest.circ*k)+' x'],[t('解锁 PE'),fmt(latest.full==null?null:latest.full*k)+' x'],[lv?.live?bi('实时价格','Live price'):t('近似收盘价格'),'$'+fmt(lv?.live?lv.quote.price:latest.price,4)],[t('30日')+(asset==='hype'?t('持币人收入'):asset==='aave'?t('协议收入'):t('销毁价值')),usd(latest.r30)],[t('年化分母'),usd(latest.annual)],[t('情景总供应'),big(latest.supply)]].map(([k,v],i)=>`<div class="stat-card"><div class="label">${t(k)}</div><div class="value">${v}</div><div class="sub">${i<3&&liveSub?liveSub:latest.date+' UTC'+(latest.date!==target.date?t(' · 最近有效，非目标日'):'')}</div></div>`).join('');
+  if(window.DCACore&&$('dca'))$('dca').innerHTML=DCACore.panel(rows,'circ',bi,win,quote);
   const shown=range?rows.slice(-range):rows;
   $('tbody').replaceChildren(...[...shown].reverse().map(r=>{const tr=document.createElement('tr');for(const v of [r.date,fmt(r.price,4),fmt(r.circ),fmt(r.full),fmt(dailyRevenue[r.date]),fmt(r.r30),r.source==='bundled'?t('固化历史'):r.source==='estimated'?t('估算（流通量推算）'):r.status==='ok'?t('浏览器增量'):t(r.status)]){const td=document.createElement('td');td.textContent=v;tr.append(td);}return tr;}));
   if(asset==='uni'&&B){
@@ -102,6 +105,8 @@
  }
  async function refresh(){
   $('refresh').disabled=true;const notes=[];
+  // Live price for the weekly buy/sell panel (same calculation as the overview). Failure -> panel shows the close.
+  const quoteJob=window.DCACore?.fetchQuotes?DCACore.fetchQuotes(json,[id]).then(q=>{quote=q[id]??null;},()=>{quote=null;}).then(()=>{if(rows.length)render();}):Promise.resolve();
   try{
    seed??=await json('pe-data/'+asset+'.json');
    if(asset==='uni'&&B){
@@ -136,7 +141,7 @@
    notes.push(pending?pending+' 个增量日期仍待补齐/无有效分母；表格保留 NA，卡片显示明确标注日期的最近有效估值。':'所有目标日期的流通指标已完整。');
    const target=rows.at(-1);if(target.circ==null){const reasons=[];if(!C.valid(rev[end]))reasons.push('当日收入缺失');if(target.r30==null)reasons.push('30日收入窗口不完整');if(target.price==null)reasons.push('缺少 D+1 00:00 UTC 精确配对价格/市值');if(target.annual===0)reasons.push('年化分母为零');notes.push('目标 '+end+'：'+reasons.join('；')+'。请求成功但缺字段也不代表已补齐；上游可能尚未发布符合口径的数据。');}
    if(asset==='uni'&&rows.at(-1).supply==null)notes.push('供应累计存在缺口，全解锁估算暂停；须补全缺口后恢复。');
-  }catch(e){notes.push('读取失败：'+e.message);}finally{status(notes.join(' '));$('refresh').disabled=false;}
+  }catch(e){notes.push('读取失败：'+e.message);}finally{await quoteJob;status(notes.join(' '));$('refresh').disabled=false;}
  }
  if($('clear-sources'))$('clear-sources').onclick=()=>{try{localStorage.removeItem(sourceKey);sourceData=sourceSnapshot?H.parse(sourceSnapshot,C.yesterday()):{};sourceState=[['来源缓存已清除；使用固定快照','Source cache cleared; using snapshot']];}catch(e){sourceState=[['清缓存失败：'+e.message,'Cache clearing failed: '+e.message]];}render();};
  if($('clear-chains'))$('clear-chains').onclick=()=>{try{localStorage.removeItem(chainKey);chainData=chainSnapshot?B.parse(chainSnapshot,C.yesterday()):{};chainState=[['链缓存已清除，使用固定快照；可联网重试。','Chain cache cleared; using snapshot. Retry to fetch gaps.']];render();}catch(e){chainState=[['清缓存失败：'+e.message,'Cache clearing failed: '+e.message]];render();}};

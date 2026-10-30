@@ -53,6 +53,30 @@ function evaluate(rows, field, win = 0) {
   return { date: latest.date, from, pe, p20: pct(vals, 0.2), p50: pct(vals, 0.5), p80: pct(vals, 0.8), rank, base, tier: buffer ? HOLD : base, buffer, n: vals.length };
 }
 
+// Live adjustment shared by the overview and the coin pages, so both show the same tier.
+// Price moves PE 1:1 while the 30-day revenue denominator barely moves, so live PE = close PE × live / close price,
+// ranked against the closing history (same window). P20/P50/P80 and n stay closing-only.
+// No/invalid live price -> the close evaluation with live:false.
+function liveEvaluate(rows, field, win = 0, quote = null) {
+  const close = evaluate(rows, field, win);
+  if (!close) return null;
+  const r = rows.find(x => x.date === close.date), p = quote?.price;
+  if (!(Number.isFinite(p) && p > 0 && Number.isFinite(r?.price) && r.price > 0)) return { ...close, live: false, closePe: close.pe, closePrice: r?.price ?? null };
+  const k = p / r.price, pe = close.pe * k, ev = evaluate([...rows, { date: 'live', [field]: pe }], field, win);
+  return { ...close, rank: ev.rank, base: ev.base, tier: ev.tier, buffer: ev.buffer, pe, live: true, k, quote, closePe: close.pe, closePrice: r.price };
+}
+// One CoinGecko simple/price call -> { <gecko id>: { price, chg24, at(ms) } }; coins without a valid price are omitted.
+async function fetchQuotes(json, ids) {
+  const d = await json('https://api.coingecko.com/api/v3/simple/price?ids=' + ids.join(',') + '&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true');
+  const out = {};
+  for (const id of ids) {
+    const v = d?.[id];
+    if (v && Number.isFinite(v.usd) && v.usd > 0) out[id] = { price: v.usd, chg24: Number.isFinite(v.usd_24h_change) ? v.usd_24h_change : null, at: Number.isFinite(v.last_updated_at) ? v.last_updated_at * 1000 : Date.now() };
+  }
+  return out;
+}
+const hhmm = (t, en) => new Date(t).toLocaleTimeString(en ? 'en-US' : 'zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
 // BTC tiers on the MVRV Z-Score value (not percentile). hi = upper bound (exclusive).
 const BTC_TIERS = [
   { ...tier('z300', 'buy', 300, '#16A34A', ['Z < 0', 'Z < 0'], ['三倍买入', 'Triple buy']), hi: 0 },
@@ -111,8 +135,9 @@ function bindToggle(el, onChange, store = root.localStorage) {
 // Shared footnote for both panels.
 const commonRules = bi => bi('每周固定一天看一次（例如周六），按当天档位操作。卖出比例按初始仓位计（每周卖同样份额，不是按剩余仓位），不设底仓，卖完为止；想长期持有的部分请单独放，不计入初始仓位。', 'Check once a week on a fixed day (e.g. Saturday) and act on that day\'s tier. Sell ratios are of the initial position (the same slice each week, not a share of what is left); no core is kept, sell until done. Keep any long-term holding separate from the initial position.');
 
-function panel(rows, field, bi, win = 0) {
-  const r = evaluate(rows, field, win);
+// quote (optional) = { price, chg24, at } live price; tier then follows the live PE (see liveEvaluate).
+function panel(rows, field, bi, win = 0, quote = null) {
+  const r = liveEvaluate(rows, field, win, quote);
   const f = n => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const head = '<div class="dca-head"><h3>' + bi('每周买卖建议', 'Weekly buy / sell') + '</h3>' + toggle(win, bi) + '</div>';
   const lab = win ? bi('近1年分位', '1Y percentile') : bi('全部分位', 'All-time percentile');
@@ -125,7 +150,7 @@ function panel(rows, field, bi, win = 0) {
     <p class="pe-muted">${detailText(t, bi)}${r.buffer ? bi('（缓冲：刚从卖出区回落，跌破 70 分位后恢复买入）', ' (buffer: just left the sell zone; buying resumes below P70)') : ''}</p>
     <div class="dca-meter" style="background:${gradient()}" role="img" aria-label="${lab} ${Math.round(r.rank)}%"><i style="left:${pos}%"></i></div>
     <div class="dca-scale" aria-hidden="true">${[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(v => `<span style="left:${v}%">${v}</span>`).join('')}</div>
-    <p class="dca-metrics"><span>${bi('当前 PE ', 'Current PE ')}${f(r.pe)} x</span> · <span>${lab} ${Math.round(r.rank)}%</span> · <span>P20/P50/P80 ${f(r.p20)} / ${f(r.p50)} / ${f(r.p80)} x</span> · <span>${bi('样本 ', 'sample ')}${r.from} – ${r.date} · ${r.n}${bi(' 个有效日', ' valid days')}</span></p>
+    <p class="dca-metrics"><span>${bi('当前 PE ', 'Current PE ')}${f(r.pe)} x${r.live ? bi('（实时价 $', ' (live price $') + f(r.quote.price) + ' · ' + hhmm(r.quote.at, bi('', 'en') === 'en') + bi('；收盘 PE ', '; close PE ') + f(r.closePe) + bi(' x）', ' x)') : bi('（收盘价）', ' (closing price)')}</span> · <span>${lab} ${Math.round(r.rank)}%</span> · <span>P20/P50/P80 ${f(r.p20)} / ${f(r.p50)} / ${f(r.p80)} x</span> · <span>${bi('样本 ', 'sample ')}${r.from} – ${r.date} · ${r.n}${bi(' 个有效日', ' valid days')}</span></p>
     <ul class="dca-rules">${rules}</ul>
     <p class="pe-muted dca-note">${commonRules(bi)}${bi('从卖出区回落到 70–80 分位时暂停（不买不卖），跌破 70 分位才恢复买入，避免刚卖完又买回。', ' After the sell zone, P70–P80 is a pause (no trade); buying resumes only below P70, so you do not buy straight back.')}</p>
     <p class="pe-muted dca-note">${win ? bi('分位 = 近 365 日有效 PE 中低于当前值的天数占比，与上图虚线同口径。', 'Percentile = share of valid days in the last 365 with PE below the current value, same basis as the dashed lines on the chart. ') : bi('分位 = 本站已存全部日期的有效 PE 中低于当前值的天数占比，与上图虚线同口径。', 'Percentile = share of all valid days stored on this site with PE below the current value, same basis as the dashed lines on the chart. ')}${bi('仅供研究，不是投资建议。', 'Research only, not investment advice.')}</p>
@@ -152,7 +177,7 @@ function btcPanel(rows, bi) {
   </div>`;
 }
 
-const api = { pct, TIERS, HOLD, tierIndex, gradient, evaluate, panel, getWin, setWin, windowRows, winLabel, toggle, bindToggle, WIN_KEY,
+const api = { pct, TIERS, HOLD, tierIndex, gradient, evaluate, liveEvaluate, fetchQuotes, hhmm, panel, getWin, setWin, windowRows, winLabel, toggle, bindToggle, WIN_KEY,
   BTC_TIERS, btcTierIndex, btcPos, btcGradient, btcEvaluate, btcPanel, actionText };
 if (typeof module !== 'undefined') module.exports = api; else root.DCACore = api;
 })(globalThis);

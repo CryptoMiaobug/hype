@@ -8,6 +8,7 @@
   // Linear-interpolated percentile (numpy 'linear'), same as the HYPE/UNI pages.
   const pct = (vals, q) => { const v = vals.filter(Number.isFinite).sort((a, b) => a - b); if (!v.length) return null; const i = (v.length - 1) * q, lo = Math.floor(i), hi = Math.ceil(i); return v[lo] + (v[hi] - v[lo]) * (i - lo); };
   const KEY = 'hypevalue-pe-v1-bnb';
+  let quote = null; // live price {price,chg24,at}; null = DCA panel uses the close
   let seed, rows = [], rev = {}, range = 365, chart, statusText = '加载中…', win = window.DCACore ? DCACore.getWin(localStorage) : 365;
   const shownLines = { pe: true, price: true, p20: true, p50: true, p80: true };
 
@@ -23,10 +24,13 @@
     const target = rows.at(-1), ok = [...rows].reverse().find(r => r.pe != null), latest = ok ?? target;
     $('asof').textContent = t('目标完整 UTC 日：') + C.yesterday() + t(' · 表中截至：') + target.date + t(' · 卡片有效估值日：') + (ok?.date ?? t('无'));
     const sub = latest.date + ' UTC' + (latest.date !== target.date ? t(' · 最近有效，非目标日') : '');
+    // Cards follow the live price (same liveEvaluate as the DCA panel and overview); history table/chart stay daily closes.
+    const lv = ok && window.DCACore?.liveEvaluate ? DCACore.liveEvaluate(rows, 'pe', win, quote) : null, k = lv?.live ? lv.k : 1;
+    const liveSub = lv?.live ? (en() ? 'live price ' : '实时价 ') + DCACore.hhmm(lv.quote.at, en()) + (en() ? ' · close ' : ' · 收盘 ') + latest.date + ' UTC' : null;
     $('cards').innerHTML = [
-      ['流通 PE', fmt(latest.pe) + ' x'], ['近似收盘价格', '$' + fmt(latest.price, 2)], ['流通市值', usd(latest.mcap)],
+      ['流通 PE', fmt(latest.pe == null ? null : latest.pe * k) + ' x'], [lv?.live ? (en() ? 'Live price' : '实时价格') : '近似收盘价格', '$' + fmt(lv?.live ? lv.quote.price : latest.price, 2)], ['流通市值', usd(latest.mcap == null ? null : latest.mcap * k)],
       ['季度销毁年化（最近4次）', usd(latest.quarterly)], ['Gas 销毁年化（30日）', usd(latest.gas)], ['年化销毁额合计', usd(latest.annual)],
-    ].map(([k, v]) => `<div class="stat-card"><div class="label">${t(k)}</div><div class="value">${v}</div><div class="sub">${sub}</div></div>`).join('');
+    ].map(([k, v], i) => `<div class="stat-card"><div class="label">${t(k)}</div><div class="value">${v}</div><div class="sub">${i < 3 && liveSub ? liveSub : sub}</div></div>`).join('');
 
     const days = C.staleDays(seed, C.yesterday()), last = seed.burns.at(-1);
     $('stale').hidden = days <= 92;
@@ -47,7 +51,7 @@
       for (const v of [r.date, fmt(r.price, 2), fmt(r.pe), usd(r.quarterly), usd(rev[r.date]), usd(r.gas), r.mcapSource === 'backcast' ? t('倒推') : r.mcapSource ?? 'NA', src]) { const td = document.createElement('td'); td.textContent = v; tr.append(td); }
       return tr;
     }));
-    if (window.DCACore && $('dca')) $('dca').innerHTML = DCACore.panel(rows, 'pe', (zh, e) => en() ? e : zh, win);
+    if (window.DCACore && $('dca')) $('dca').innerHTML = DCACore.panel(rows, 'pe', (zh, e) => en() ? e : zh, win, quote);
     drawChart(shown);
   }
 
@@ -104,6 +108,8 @@
   async function refresh() {
     $('refresh').disabled = true;
     const notes = [];
+    // Live price for the weekly buy/sell panel (same calculation as the overview). Failure -> panel shows the close.
+    const quoteJob = window.DCACore?.fetchQuotes ? DCACore.fetchQuotes(json, ['binancecoin']).then(q => { quote = q.binancecoin ?? null; }, () => { quote = null; }).then(() => { if (rows.length) render(); }) : Promise.resolve();
     try {
       seed ??= await json('pe-data/bnb.json');
       let cache = {};
@@ -146,7 +152,7 @@
         notes.push('目标 ' + end + '：' + why.join('；') + '。');
       }
     } catch (e) { notes.push('读取失败：' + e.message); }
-    finally { status(notes.join(' ')); $('refresh').disabled = false; }
+    finally { await quoteJob; status(notes.join(' ')); $('refresh').disabled = false; }
   }
 
   $('refresh').onclick = refresh;

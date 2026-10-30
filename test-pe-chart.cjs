@@ -62,8 +62,29 @@ async function run(asset,{cache={},online=false,end=dd(2)}={}){
  const tooltip=h.option.tooltip.formatter([{axisValue:h.seed.last}]);
  for(const [color,tooltipLabel] of [['#38BDF8','流通 PE'],['#FBBF24','解锁 PE'],['#C084FC','价格'],['#50d2c1',label]])assert.ok(tooltip.includes('background-color:'+color+'"></span>'+tooltipLabel+'：'));
 
- for(const asset of ['hype','uni'])assert.ok(fs.readFileSync(__dirname+'/'+asset+'-pe.html','utf8').includes('pe.js?v=20261027bf'));
+ for(const asset of ['hype','uni'])assert.ok(fs.readFileSync(__dirname+'/'+asset+'-pe.html','utf8').includes('pe.js?v=20261030live3'));
  assert.ok(h.nodes.cards.innerHTML.includes('最近有效，非目标日'));assert.ok(h.nodes.status.textContent.includes('当日收入缺失'));
  console.log('PASS chart',asset,': raw daily mapping, frozen/cache/API precedence, zero/missing, tooltip, table, all 3 ranges, linked UTC axes, unchanged historical curves, API increment, early clock, latest-valid cards');
  }
 })().catch(e=>{console.error(e);process.exitCode=1});
+// Live price on coin pages: cards + DCA panel follow the live price via DCACore.liveEvaluate (same as the overview);
+// without a quote they keep the closing values.
+(async()=>{const D=require('./dca-core.js');
+ for(const [asset,gecko] of [['hype','hyperliquid'],['uni','uniswap'],['aave','aave']])for(const live of [true,false]){
+  const seed=JSON.parse(fs.readFileSync(__dirname+'/pe-data/'+asset+'.json')),nodes={},close=seed.rows.at(-1),k=0.8;
+  const make=()=>({children:[],textContent:'',innerHTML:'',append(x){this.children.push(x)},replaceChildren(...x){this.children=x}});
+  const document={body:{dataset:{asset}},getElementById(id){return nodes[id]??=make()},querySelectorAll(){return []},createElement:make};
+  const win={addEventListener(){},DCACore:D};
+  const ctx={PECore:{...C,yesterday:()=>seed.last},DCACore:D,document,window:win,localStorage:{getItem(){return null},setItem(){}},
+   fetch:async url=>{if(url.startsWith('pe-data'))return {ok:true,json:async()=>seed};if(live&&url.includes('/simple/price?ids='+gecko+'&'))return {ok:true,json:async()=>({[gecko]:{usd:close.price*k,last_updated_at:1793322000}})};throw Error('offline')},
+   AbortSignal:{timeout(){}},Blob,URL,setTimeout,console};
+  await vm.runInNewContext(source,ctx);await new Promise(r=>setTimeout(r,30));
+  const ev=D.liveEvaluate(seed.rows,'circ',365,live?{price:close.price*k,at:0}:null),cards=nodes.cards.innerHTML,f=n=>n.toLocaleString('en-US',{maximumFractionDigits:2});
+  assert.equal(ev.live,live);
+  assert.ok(cards.includes(f(close.circ*(live?k:1))+' x'),asset+' card PE '+live);
+  assert.ok(cards.includes(live?'实时价格':'近似收盘价格'),asset+' price label '+live);
+  assert.ok(nodes.dca.innerHTML.includes('dca-ratio">'+D.actionText(ev.tier,z=>z)+'<'),asset+' panel tier '+live);
+  assert.ok(nodes.dca.innerHTML.includes(live?'（实时价 $':'（收盘价）'),asset+' panel label '+live);
+ }
+ console.log('PASS coin pages follow live price (cards + DCA), close fallback');
+})().catch(e=>{console.error(e);process.exit(1)});

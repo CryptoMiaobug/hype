@@ -70,26 +70,19 @@ Object.assign(I18N_DICT.en, {
     return rows;
   }
 
-  // Live quote: price moves PE 1:1, while the 30-day revenue denominator barely moves day to day, so
-  // live PE = close PE × live price / close price (denominator stays as of the data date). Percentile and
-  // weekly action use the live PE against the closing history; P20/P50/P80 and range stay closing-only.
-  // No quote (fetch failed / coin missing) -> everything falls back to the close, as before.
+  // Live quote: same D.liveEvaluate as the coin pages' DCA panel, so tiers match.
   function summarize(a, rows) {
-    const close = D.evaluate(rows, a.field, win);
-    if (!close) return null;
-    const i = rows.findIndex(r => r.date === close.date), r = rows[i], ago = rows[i - 30];
+    const ev = D.liveEvaluate(rows, a.field, win, quotes?.[a.gecko]);
+    if (!ev) return null;
+    const i = rows.findIndex(r => r.date === ev.date), r = rows[i], ago = rows[i - 30];
     const span = win ? rows.slice(-win) : rows, year = span.map(x => x[a.field]).filter(Number.isFinite);
-    const q = quotes?.[a.gecko], k = q && r.price > 0 ? q.price / r.price : null;
-    const ev = k ? D.evaluate([...rows, { date: 'live', [a.field]: close.pe * k }], a.field, win) : null;
-    const cur = ev ?? close, px = k ? q.price : r.price;
-    return { ...close, rank: cur.rank, base: cur.base, tier: cur.tier, buffer: cur.buffer, pe: cur.pe,
-      live: !!ev, quote: ev ? q : null, closePe: close.pe, closePrice: r.price,
-      row: r, price: px, mcap: k ? r.mcap * k : r.mcap, annual: r.annual,
-      full: a.field === 'circ' && r.full != null ? r.full * (k ?? 1) : null,
-      price30: chg(px, ago?.price), pe30: chg(cur.pe, ago?.[a.field]), min: Math.min(...year), max: Math.max(...year),
-      from: span.find(x => Number.isFinite(x[a.field]))?.date, stale: close.date < a.core().yesterday() };
+    const k = ev.live ? ev.k : 1, px = ev.live ? ev.quote.price : r.price;
+    return { ...ev, row: r, price: px, mcap: r.mcap * k, annual: r.annual,
+      full: a.field === 'circ' && r.full != null ? r.full * k : null,
+      price30: chg(px, ago?.price), pe30: chg(ev.pe, ago?.[a.field]), min: Math.min(...year), max: Math.max(...year),
+      from: span.find(x => Number.isFinite(x[a.field]))?.date, stale: ev.date < a.core().yesterday() };
   }
-  const hhmm = t => new Date(t).toLocaleTimeString(window.I18n?.lang === 'en' ? 'en-US' : 'zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit' });
+  const hhmm = t => D.hhmm(t, window.I18n?.lang === 'en');
 
   function row(a) {
     const s = data[a.id];
@@ -174,13 +167,7 @@ Object.assign(I18N_DICT.en, {
   // One request for all four live prices. Failure or a missing coin only means that row shows the close.
   async function loadQuotes(notes) {
     try {
-      const d = await json('https://api.coingecko.com/api/v3/simple/price?ids=' + ASSETS.map(a => a.gecko).join(',') + '&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true');
-      const out = {};
-      for (const a of ASSETS) {
-        const v = d?.[a.gecko];
-        if (v && Number.isFinite(v.usd) && v.usd > 0) out[a.gecko] = { price: v.usd, chg24: Number.isFinite(v.usd_24h_change) ? v.usd_24h_change : null, at: Number.isFinite(v.last_updated_at) ? v.last_updated_at * 1000 : Date.now() };
-      }
-      quotes = out;
+      const out = quotes = await D.fetchQuotes(json, ASSETS.map(a => a.gecko));
       const miss = ASSETS.filter(a => !out[a.gecko]).map(a => a.name);
       if (miss.length) notes.push(miss.join(' / ') + bi(' 无实时价格，按收盘价计算', ': no live price, using the close'));
     } catch (e) { quotes = null; notes.push(bi('实时价格获取失败，按收盘价计算：', 'Live price fetch failed, using closes: ') + e.message); }

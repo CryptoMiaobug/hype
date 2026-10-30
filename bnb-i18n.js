@@ -3,7 +3,7 @@
 'use strict';
 const zh = {
   'bnb.title': 'BNB PE 观察台',
-  'bnb.subtitle': '最近 4 次季度 Auto-Burn + 30 日 Gas 实时销毁年化 · 非会计利润 PE · 非实时行情',
+  'bnb.subtitle': '最近 4 次季度 Auto-Burn + 30 日 Gas 实时销毁年化 · 非会计利润 PE · 价格与 PE 按实时价',
   'bnb.refresh': '数据更新', 'bnb.download': '下载当前 CSV', 'bnb.seed': '固化原始数据 JSON',
   'bnb.chartTitle': 'PE、价格与每日 Gas 销毁',
   'bnb.rangeGroup': '时间范围', 'bnb.r30': '近30日', 'bnb.r90': '近90日', 'bnb.r365': '近1年', 'bnb.rAll': '全部',
@@ -25,7 +25,7 @@ const zh = {
 };
 const en = {
   'bnb.title': 'BNB PE Dashboard',
-  'bnb.subtitle': 'Latest 4 quarterly Auto-Burns + 30-day annualized gas burn · not an accounting P/E · not real-time',
+  'bnb.subtitle': 'Latest 4 quarterly Auto-Burns + 30-day annualized gas burn · not an accounting P/E · price and PE use the live price',
   'bnb.refresh': 'Update data', 'bnb.download': 'Download CSV', 'bnb.seed': 'Frozen source JSON',
   'bnb.chartTitle': 'PE, price and daily gas burn',
   'bnb.rangeGroup': 'Time range', 'bnb.r30': '30 days', 'bnb.r90': '90 days', 'bnb.r365': '1 year', 'bnb.rAll': 'All',
