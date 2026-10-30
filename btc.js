@@ -8,7 +8,9 @@
  const usd=n=>n==null?'NA':n>=1e12?'$'+fmt(n/1e12,2)+'T':n>=1e9?'$'+fmt(n/1e9,2)+'B':n>=1e6?'$'+fmt(n/1e6,2)+'M':'$'+fmt(n,n<1?4:0);
  const pct=n=>n==null?'NA':fmt(n*100,2)+'%';
  const ranges={dd:0,z:0,mc:0,dom:0},charts={};
- let seed,domSeed,domRows=[],rows=[],live=null,status=['加载中…','Loading…'];
+ let seed,domSeed,domRows=[],rows=[],raw=[],live=null,status=['加载中…','Loading…'];
+ // cur = daily rows + one live point (CoinGecko price) for current value / percentile / weekly action; charts keep daily rows.
+ const cur=()=>live?.price?C.withLive(raw,rows,live.price,live.at):rows;
 
  async function json(url,ms=25000){
   const r=await fetch(url,{signal:AbortSignal.timeout(ms),credentials:'omit'});
@@ -19,16 +21,16 @@
  const zoneText=z=>({under:bi('低估区','Undervalued'),neutral:bi('中性区','Neutral'),warm:bi('偏热区','Warm'),hot:bi('过热区','Overheated')})[C.zone(z)]||'';
 
  function cards(){
-  const last=rows.at(-1),lz=[...rows].reverse().find(r=>r.z!=null);
-  const price=live?.price??last.price,ath=Math.max(last.ath,live?.price??0);
+  const now=cur(),last=now.at(-1),day=rows.at(-1),lz=[...now].reverse().find(r=>r.z!=null),isLive=!!last.live;
+  const price=last.price,ath=last.ath;
   const liveTag=live?bi('CoinGecko 实时 · ','CoinGecko live · ')+live.at:last.date+' UTC';
   const list=[
    [bi('BTC 价格','BTC price'),'$'+fmt(price,0),liveTag],
-   [bi('距历史高点回撤','Drawdown from ATH'),pct(price/ath-1),bi('历史最高日价 ','ATH daily price ')+'$'+fmt(ath,0)+(ath===last.ath?' · '+last.athDate:'')],
-   ['MVRV Z-Score',fmt(lz?.z,2),(lz?zoneText(lz.z)+' · ':'')+(lz?.date??'NA')+' UTC'],
-   ['MVRV',fmt(last.mvrv,3),last.date+' UTC'],
+   [bi('距历史高点回撤','Drawdown from ATH'),pct(last.dd),bi('历史最高日价 ','ATH daily price ')+'$'+fmt(ath,0)+' · '+last.athDate],
+   ['MVRV Z-Score',fmt(lz?.z,2),(lz?zoneText(lz.z)+' · ':'')+(lz?.live?liveTag:(lz?.date??'NA')+' UTC')],
+   ['MVRV',fmt(last.mvrv,3),isLive?liveTag:last.date+' UTC'],
    [bi('BTC 市值','BTC market cap'),usd(live?.mcap??last.mcap),liveTag],
-   [bi('已实现市值','Realized cap'),usd(last.realized),last.date+' UTC'],
+   [bi('已实现市值','Realized cap'),usd(day.realized),day.date+' UTC'],
    [bi('BTC 市值占比','BTC dominance'),live?.dom==null?'NA':fmt(live.dom,2)+'%',live?.dom==null?bi('实时接口不可用','Live feed unavailable'):bi('全市场 ','Total market ')+usd(live.total)]
   ];
   $('cards').innerHTML=list.map(([k,v,s])=>`<div class="stat-card"><div class="label">${k}</div><div class="value">${v}</div><div class="sub">${s}</div></div>`).join('');
@@ -89,29 +91,30 @@
  }
  // 总览表：每行一个指标，分位为全历史；本周买卖只看 MVRV Z-Score 的值（DCACore.BTC_TIERS 11 档）。
  const OV=[
-  {k:'z',page:'btc-mvrv.html',name:['MVRV Z-Score','MVRV Z-Score'],src:()=>rows,val:v=>fmt(v,2),dca:true},
-  {k:'mvrv',page:'btc-mvrv.html',name:['MVRV','MVRV'],src:()=>rows,val:v=>fmt(v,3)},
-  {k:'dd',page:'btc-drawdown.html',name:['历史高点回撤','Drawdown from ATH'],src:()=>rows,val:v=>pct(v)},
+  {k:'z',page:'btc-mvrv.html',name:['MVRV Z-Score','MVRV Z-Score'],src:cur,band:()=>rows,val:v=>fmt(v,2),dca:true},
+  {k:'mvrv',page:'btc-mvrv.html',name:['MVRV','MVRV'],src:cur,band:()=>rows,val:v=>fmt(v,3)},
+  {k:'dd',page:'btc-drawdown.html',name:['历史高点回撤','Drawdown from ATH'],src:cur,band:()=>rows,val:v=>pct(v)},
   {k:'dom',page:'btc-dominance.html',name:['市值占比','BTC dominance'],src:()=>domRows,val:v=>fmt(v,2)+'%'},
   {k:'mc',page:'btc-mcap.html',name:['市值 / 已实现市值','Market cap / realized cap']}];
  function overview(){
-  const tb=$('btc-list');if(!tb)return;const D=window.DCACore,last=rows.at(-1);
+  const tb=$('btc-list');if(!tb)return;const D=window.DCACore,now=cur(),last=now.at(-1);
+  const when=r=>r.live?bi('实时价 ','live price ')+r.at+'<small>'+bi('日线 ','daily ')+r.closeDate+'</small>':r.date;
   tb.innerHTML=OV.map(o=>{
    const link=`<a class="pl-coin" href="${o.page}"><b>${bi(...o.name)}</b></a>`;
-   if(o.k==='mc')return `<tr data-href="${o.page}"><td class="pl-sticky">${link}</td><td class="num"><b>${usd(last.mcap)}</b><small>${bi('已实现 ','Realized ')}${usd(last.realized)}</small></td><td class="pe-muted">—</td><td class="pe-muted">—</td><td class="num pe-muted">—</td><td class="pe-muted">${bi('金额长期上行，不算分位','Grows over time; no percentile')}</td><td class="num">${last.date}</td></tr>`;
-   const s=o.src(),r=C.rank(s,o.k),b=C.band(s,o.k);
+   if(o.k==='mc')return `<tr data-href="${o.page}"><td class="pl-sticky">${link}</td><td class="num"><b>${usd(last.mcap)}</b><small>${bi('已实现 ','Realized ')}${usd(last.realized)}</small></td><td class="pe-muted">—</td><td class="pe-muted">—</td><td class="num pe-muted">—</td><td class="pe-muted">${bi('金额长期上行，不算分位','Grows over time; no percentile')}</td><td class="num">${when(last)}</td></tr>`;
+   const s=o.src(),r=C.rank(s,o.k),b=C.band(o.band?o.band():s,o.k),rr=[...s].reverse().find(x=>x[o.k]!=null&&Number.isFinite(x[o.k]));
    if(!r)return `<tr data-href="${o.page}"><td class="pl-sticky">${link}</td><td colspan="6" class="pe-muted">${bi('加载中…','Loading…')}</td></tr>`;
    // 分位色条用中性色；本周操作按 Z 值档位（见 DCACore.BTC_TIERS），不按分位。
-   const t=o.dca&&D?D.btcEvaluate(rows)?.tier:null,pos=Math.max(0,Math.min(100,r.rank));
+   const t=o.dca&&D?D.btcEvaluate(now)?.tier:null,pos=Math.max(0,Math.min(100,r.rank));
    const meter=`<div class="pl-rank"><span>${Math.round(r.rank)}%</span>${D?`<div class="dca-meter" style="background:linear-gradient(90deg,#1f4d44,#50d2c1)" role="img" aria-label="${bi('全历史分位','All-time percentile')} ${Math.round(r.rank)}%"><i style="left:${pos}%"></i></div>`:''}</div>`;
    const dca=o.dca&&t?`<span class="pl-dca"><b>${D.actionText(t,bi)}</b><span class="dca-badge">${bi(t.action[0],t.action[1])}</span></span>`:'<span class="pe-muted">—</span>';
    const read=o.k==='z'?zoneText(r.value):o.k==='dd'?(r.value>-0.05?bi('接近历史高点','Near ATH'):bi('距高点 ','Below ATH by ')+pct(-r.value)):o.k==='dom'?(r.value>b.p80?bi('高于 P80','Above P80'):r.value<b.p20?bi('低于 P20','Below P20'):bi('P20–P80 之间','Between P20 and P80')):o.k==='mvrv'?(r.value<1?bi('低于持币成本','Below cost basis'):bi('高于持币成本 ','Above cost basis by ')+fmt((r.value-1)*100,0)+'%'):'';
-   return `<tr data-href="${o.page}"${o.dca&&t?` style="--tier:${t.color};--ink:${t.ink}"`:''}><td class="pl-sticky">${link}</td><td class="num"><b>${o.val(r.value)}</b></td><td>${meter}</td><td>${dca}</td><td class="num pl-band">${o.val(b.p20)} / ${o.val(b.p50)} / ${o.val(b.p80)}<small>${bi('样本 ','Sample ')}${b.from} – ${b.to}</small></td><td>${read}</td><td class="num">${r.date}</td></tr>`;
+   return `<tr data-href="${o.page}"${o.dca&&t?` style="--tier:${t.color};--ink:${t.ink}"`:''}><td class="pl-sticky">${link}</td><td class="num"><b>${o.val(r.value)}</b></td><td>${meter}</td><td>${dca}</td><td class="num pl-band">${o.val(b.p20)} / ${o.val(b.p50)} / ${o.val(b.p80)}<small>${bi('样本 ','Sample ')}${b.from} – ${b.to}</small></td><td>${read}</td><td class="num">${rr?when(rr):r.date}</td></tr>`;
   }).join('');
  }
  function renderAll(){
   if(!rows.length)return;
-  domRows=C.dominance(domSeed?.rows,rows);cards();overview();if($('btc-dca')&&window.DCACore)$('btc-dca').innerHTML=DCACore.btcPanel(rows,bi);['dd','z','mc','dom'].filter(k=>$('chart-'+k)).forEach(draw);
+  domRows=C.dominance(domSeed?.rows,rows);cards();overview();if($('btc-dca')&&window.DCACore)$('btc-dca').innerHTML=DCACore.btcPanel(cur(),bi);['dd','z','mc','dom'].filter(k=>$('chart-'+k)).forEach(draw);
   document.querySelectorAll('[data-chart]').forEach(b=>b.setAttribute('aria-pressed',String(ranges[b.dataset.chart]===+b.dataset.range)));
  }
 
@@ -133,7 +136,7 @@
    if(!domSeed&&($('chart-dom')||$('btc-list')))try{domSeed=await json('btc-data/dominance.json');}catch(e){notes.push(['市值占比历史读取失败：'+e.message,'Dominance history failed: '+e.message]);}
    let extra=[];
    try{const c=JSON.parse(localStorage.getItem(KEY)||'null');if(c&&c.seedHash===seed.sourceSHA256&&Array.isArray(c.rows))extra=c.rows;}catch{notes.push(['本机缓存不可用','Local cache unavailable']);}
-   let raw=C.merge(seed.rows,extra);rows=C.derive(raw);renderAll();
+   raw=C.merge(seed.rows,extra);rows=C.derive(raw);renderAll();
    const end=C.yesterday(),last=raw.at(-1)[0];
    if(last<end){
     setStatus('正在从 Coin Metrics 补齐 '+last+' 之后的日线…','Fetching daily data after '+last+' from Coin Metrics…');

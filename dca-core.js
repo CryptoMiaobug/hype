@@ -101,7 +101,8 @@ const btcGradient = () => 'linear-gradient(90deg,' + BTC_TIERS.map((t, i) => `${
 function btcEvaluate(rows) {
   const latest = [...(rows || [])].reverse().find(r => r.z != null && Number.isFinite(r.z));
   if (!latest) return null;
-  return { date: latest.date, z: latest.z, mvrv: latest.mvrv, tier: BTC_TIERS[btcTierIndex(latest.z)] };
+  return { date: latest.date, z: latest.z, mvrv: latest.mvrv, tier: BTC_TIERS[btcTierIndex(latest.z)],
+    live: !!latest.live, price: latest.price, at: latest.at ?? null, closeDate: latest.closeDate ?? latest.date };
 }
 
 // Action text: "买 150%" / "卖 5%" / "暂停".
@@ -170,7 +171,7 @@ function btcPanel(rows, bi) {
     <p class="pe-muted">${detailText(t, bi)}</p>
     <div class="dca-meter" style="background:${btcGradient()}" role="img" aria-label="MVRV Z-Score ${f(r.z)}"><i style="left:${btcPos(r.z).toFixed(2)}%"></i></div>
     <div class="dca-scale" aria-hidden="true">${scale}</div>
-    <p class="dca-metrics"><span>MVRV Z-Score ${f(r.z)}</span> · <span>MVRV ${f(r.mvrv)}</span> · <span>${bi('数据日 ', 'as of ')}${r.date} UTC</span></p>
+    <p class="dca-metrics"><span>MVRV Z-Score ${f(r.z)}</span> · <span>MVRV ${f(r.mvrv)}</span> · <span>${r.live ? bi('实时价 $', 'live price $') + r.price.toLocaleString('en-US', { maximumFractionDigits: 0 }) + (r.at ? ' · ' + r.at : '') + bi('（日线截至 ', ' (daily data through ') + r.closeDate + bi(' UTC）', ' UTC)') : bi('数据日 ', 'as of ') + r.date + ' UTC'}</span></p>
     <ul class="dca-rules">${rules}</ul>
     <p class="pe-muted dca-note">${commonRules(bi)}${bi('Z 2–2.5 为中性区：历史上这段之后 1 年收益中位数为负，不再买入，也还没到卖出起点。', ' Z 2–2.5 is the neutral zone: historically the median 1-year return after it was negative, so no buying, but not yet a sell signal.')}</p>
     <p class="pe-muted dca-note">${bi('档位按 Z 值本身划分（不是分位），依据 2013 年以来周线回测：各轮 Z 峰值逐轮下降（约 10.7 / 10.1 / 7.2 / 3.35），所以卖出从 Z 2.5 起步。历史不代表未来。仅供研究，不是投资建议。', 'Tiers use the Z value itself (not a percentile), based on a weekly backtest since 2013. Cycle Z peaks keep falling (about 10.7 / 10.1 / 7.2 / 3.35), so selling starts at Z 2.5. Past cycles do not guarantee future ones. Research only, not investment advice.')}</p>

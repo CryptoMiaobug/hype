@@ -50,6 +50,17 @@ function derive(rows){
  });
 }
 
+// 实时行：在最新日线后追加一行“今天按实时价”的点，用于当前值、分位和买卖建议（图表仍用日线）。
+// 已实现市值一天只变一点，沿用最新日线值；市值按价格同比例缩放（与 Coin Metrics 同口径）；
+// Z 用与新一天相同的累计标准差（把这一点也算进去），回撤对比截至日线的历史最高价。
+// price 无效时原样返回日线。at = 实时价时间（展示用）。
+function withLive(raw,derived,price,at=null,now=Date.now()){
+ const last=derived?.at(-1);
+ if(!last||!pos(price)||!pos(last.price)||!pos(last.realized))return derived;
+ const mcap=last.mcap*price/last.price,row=derive([...raw,['live',price,mcap,mcap/last.realized]]).at(-1);
+ return [...derived,{...row,date:date(now),athDate:row.athDate==='live'?date(now):row.athDate,live:true,at,closeDate:last.date}];
+}
+
 // Z-Score 区间，阈值沿用常见读法（<0 低估，>7 过热）。
 function zone(z){
  if(z==null)return null;
@@ -77,6 +88,6 @@ function band(series,key,days=0){const w=(days?series.slice(-days):series).filte
 function rank(series,key){const vals=series.map(r=>r[key]).filter(x=>x!=null&&Number.isFinite(x)),cur=[...series].reverse().find(r=>r[key]!=null&&Number.isFinite(r[key]));
  if(!cur||vals.length<2)return null;return {date:cur.date,value:cur[key],rank:100*vals.filter(v=>v<cur[key]).length/vals.length,n:vals.length};}
 
-const api={DAY,date,time,yesterday,parse,merge,derive,zone,dominance,quantile,band,rank,Z_WARMUP};
+const api={DAY,date,time,yesterday,parse,merge,derive,withLive,zone,dominance,quantile,band,rank,Z_WARMUP};
 if(typeof module!=='undefined')module.exports=api;else root.BTCCore=api;
 })(globalThis);

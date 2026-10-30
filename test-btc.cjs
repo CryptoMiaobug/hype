@@ -97,3 +97,20 @@ vm.runInContext(fs.readFileSync('i18n.js','utf8')+'\n'+fs.readFileSync('btc-i18n
 const keys=[...sub.map(p=>fs.readFileSync(p,'utf8')).join('').matchAll(/data-(?:i18n|btc-aria)="([^"]+)"/g)].map(x=>x[1]);
 for(const k of keys)for(const l of ['zh','en'])assert.ok(ctx.D[l][k],l+' 缺词条 '+k);
 console.log('PASS btc: drawdown, expanding Z, fixed history, merge, seed sanity, nav order, i18n ('+keys.length+' keys)');
+// Live point: Z / MVRV / drawdown at the live price; realized cap = latest daily; daily rows untouched.
+{const assert=require('node:assert/strict'),fs=require('node:fs'),C=require('./btc-core.js'),D=require('./dca-core.js');
+ const raw=JSON.parse(fs.readFileSync('btc-data/btc.json','utf8')).rows,d=C.derive(raw),last=d.at(-1);
+ for(const k of [0.6,0.9,1,1.2,2]){
+  const p=last.price*k,w=C.withLive(raw,d,p,'01:23 UTC',Date.parse('2026-10-30T02:00:00Z')),l=w.at(-1);
+  assert.equal(w.length,d.length+1);assert.deepEqual(w.slice(0,-1),d,'history unchanged');
+  assert.equal(l.live,true);assert.equal(l.date,'2026-10-30');assert.equal(l.closeDate,last.date);assert.equal(l.at,'01:23 UTC');
+  assert.ok(Math.abs(l.mcap-last.mcap*k)<1);assert.ok(Math.abs(l.realized-last.realized)/last.realized<1e-12);
+  assert.ok(Math.abs(l.mvrv-last.mvrv*k)<1e-9);
+  const ref=C.derive([...raw,['x',p,last.mcap*k,last.mcap*k/last.realized]]).at(-1);assert.ok(Math.abs(l.z-ref.z)<1e-12);
+  assert.ok(k<=1?l.dd<=0:true);if(p>last.ath){assert.equal(l.dd,0);assert.equal(l.athDate,'2026-10-30');}
+  const ev=D.btcEvaluate(w);assert.equal(ev.live,true);assert.equal(ev.tier,D.BTC_TIERS[D.btcTierIndex(l.z)]);
+  const h=D.btcPanel(w,z=>z);assert.ok(h.includes('dca-ratio">'+D.actionText(ev.tier,z=>z)+'<'));assert.match(h,/实时价 \$/);assert.match(h,/日线截至 /);
+ }
+ for(const bad of [null,0,NaN,-1])assert.equal(C.withLive(raw,d,bad),d,'invalid price -> daily rows');
+ assert.match(D.btcPanel(d,z=>z),/数据日 /);
+ console.log('PASS btc live point (Z/MVRV/drawdown at live price, history unchanged, fallback)');}
