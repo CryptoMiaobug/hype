@@ -16,21 +16,29 @@
 
   const TEXT = {
     zh: {
-      npc: [
-        '欢迎来到宝可梦大赛报名处！',
-        '这里是本届宝可梦大赛的报名柜台。',
-        '报名系统还在准备中，开放后再来找我吧！',
-      ],
+      npc: ['欢迎来到宝可梦大赛报名处！', '要参加今天的练习赛吗？'],
+      ask: '要派哪只宝可梦出战？',
+      cancel: '下次再说',
+      bye: ['好的，随时欢迎再来！'],
+      go: m => [`好的！${m}已经报名！`, '对战马上开始，加油！'],
+      win: ['恭喜你获胜！真是精彩的对战！', '想再来一场的话随时找我哦。'],
+      lose: ['真可惜……不过你的宝可梦表现得很棒！', '要不要换一只再试试？'],
       hint: '方向键 / WASD 移动，空格 / 回车 对话',
       hintTouch: '方向键移动，走到柜台前按 A 对话',
+      hintMenu: '↑ / ↓ 选择，空格 / 回车 确认',
+      hintBattle: '自动对战中，空格 / 回车 / 点击 可加快',
       next: '▼',
     },
     en: {
-      npc: [
-        'Welcome to the Pokémon Contest reception!',
-        'This is the entry desk for this season\'s contest.',
-        'Registration isn\'t open yet. Come back and see me later!',
-      ],
+      npc: ['Welcome to the Pokémon Contest reception!', 'Would you like to enter today\'s practice match?'],
+      ask: 'Which Pokémon will you send out?',
+      cancel: 'Maybe later',
+      bye: ['All right. Come back any time!'],
+      go: m => [`Great! ${m} is entered!`, 'The battle starts now. Good luck!'],
+      win: ['Congratulations, you won! What a great battle!', 'Come see me if you want another round.'],
+      lose: ['So close... your Pokémon did really well!', 'Why not try again with a different one?'],
+      hintMenu: '↑ / ↓ to choose, Space / Enter to confirm',
+      hintBattle: 'Auto battle. Space / Enter / tap to speed up',
       hint: 'Arrows / WASD to move, Space / Enter to talk',
       hintTouch: 'D-pad to move, press A at the counter to talk',
       next: '▼',
@@ -39,46 +47,119 @@
   const lang = () => (window.I18n && window.I18n.lang === 'en' ? 'en' : 'zh');
 
   // ---------- dialog box (DOM, so CJK text renders crisply and is screen-reader friendly) ----------
+  // Modes: start(lines, onDone) = player pages through; say(text, hold) = auto-play line (battle);
+  // choose(prompt, options, onPick) = pick one option (keyboard ↑/↓ + Space, or tap).
   const dialog = {
-    el: null, textEl: null, lines: [], idx: 0, typing: null, open: false,
+    el: null, textEl: null, menuEl: null, lines: [], idx: 0, typing: null, open: false,
+    busy: false, onDone: null, sayDone: null, sayTimer: null, choice: null,
     init() {
       this.el = document.getElementById('dialog');
       this.textEl = document.getElementById('dialog-text');
+      this.menuEl = document.getElementById('dialog-menu');
       this.el.addEventListener('click', () => this.advance());
+      document.addEventListener('keydown', e => {
+        if (!this.choice) return;
+        const k = e.key;
+        if (k === 'ArrowUp' || k === 'w' || k === 'W') { this.move(-1); e.preventDefault(); }
+        else if (k === 'ArrowDown' || k === 's' || k === 'S') { this.move(1); e.preventDefault(); }
+      });
     },
-    start(lines) {
-      this.lines = lines; this.idx = 0; this.open = true;
-      this.el.hidden = false;
-      this.show();
-    },
-    show() {
-      const full = this.lines[this.idx];
+    type(full, after) {
       let n = 0;
       clearInterval(this.typing);
       this.textEl.textContent = '';
       this.el.setAttribute('aria-label', full);
+      this.typingDone = after || null;
       this.typing = setInterval(() => {
         n++;
         this.textEl.textContent = full.slice(0, n);
-        if (n >= full.length) { clearInterval(this.typing); this.typing = null; }
-      }, 35);
+        if (n >= full.length) this.endTyping();
+      }, 30);
+      this.full = full;
     },
+    endTyping() {
+      clearInterval(this.typing); this.typing = null;
+      this.textEl.textContent = this.full;
+      const f = this.typingDone; this.typingDone = null;
+      if (f) f();
+    },
+    showBox(next) { this.open = true; this.el.hidden = false; this.el.classList.toggle('no-next', !next); },
+    start(lines, onDone) {
+      this.clearMenu();
+      this.lines = lines; this.idx = 0; this.onDone = onDone || null;
+      this.showBox(true);
+      this.type(this.lines[0]);
+    },
+    hold(text) { this.clearMenu(); this.showBox(false); this.full = text; this.textEl.textContent = text; },
+    say(text, hold = 900) {
+      this.clearMenu();
+      this.showBox(false);
+      return new Promise(resolve => {
+        this.sayDone = () => { clearTimeout(this.sayTimer); this.sayDone = null; resolve(); };
+        this.type(text, () => { this.sayTimer = setTimeout(() => this.sayDone && this.sayDone(), hold); });
+      });
+    },
+    choose(prompt, options, onPick) {
+      this.lines = []; this.onDone = null;
+      this.showBox(false);
+      this.type(prompt);
+      this.menuEl.innerHTML = '';
+      this.choice = { options, onPick, sel: 0, btns: [] };
+      options.forEach((o, i) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.textContent = o.label; b.setAttribute('role', 'menuitem');
+        b.addEventListener('click', e => { e.stopPropagation(); this.choice.sel = i; this.confirm(); });
+        this.menuEl.appendChild(b);
+        this.choice.btns.push(b);
+      });
+      this.menuEl.hidden = false;
+      this.move(0);
+    },
+    move(d) {
+      const c = this.choice, n = c.options.length;
+      c.sel = (c.sel + d + n) % n;
+      c.btns.forEach((b, i) => { const on = i === c.sel; b.classList.toggle('sel', on); b.setAttribute('aria-current', on ? 'true' : 'false'); });
+      c.btns[c.sel].focus({ preventScroll: true });
+    },
+    confirm() {
+      const c = this.choice; if (!c) return;
+      const pick = c.options[c.sel].value;
+      this.clearMenu(); this.close();
+      c.onPick(pick);
+    },
+    clearMenu() { this.choice = null; if (this.menuEl) { this.menuEl.hidden = true; this.menuEl.innerHTML = ''; } },
     advance() {
       if (!this.open) return;
-      if (this.typing) {            // first press finishes the line
-        clearInterval(this.typing); this.typing = null;
-        this.textEl.textContent = this.lines[this.idx];
-        return;
-      }
+      if (this.typing) { this.endTyping(); return; }   // first press finishes the line
+      if (this.choice) { this.confirm(); return; }
+      if (this.sayDone) { this.sayDone(); return; }   // skip the pause in auto-play
+      if (this.busy) return;
       this.idx++;
-      if (this.idx >= this.lines.length) this.close();
-      else this.show();
+      if (this.idx >= this.lines.length) {
+        const f = this.onDone; this.close(); if (f) f();
+      } else this.type(this.lines[this.idx]);
     },
     close() {
       this.open = false; this.el.hidden = true;
       clearInterval(this.typing); this.typing = null;
     },
   };
+
+  // Starters you can enter with (scripts in assets/battles.json)
+  const PICKS = ['pikachu', 'charmander', 'squirtle', 'bulbasaur'];
+  const PICK_NAME = {
+    pikachu: { zh: '皮卡丘', en: 'Pikachu' }, charmander: { zh: '小火龙', en: 'Charmander' },
+    squirtle: { zh: '杰尼龟', en: 'Squirtle' }, bulbasaur: { zh: '妙蛙种子', en: 'Bulbasaur' },
+  };
+
+  let hintMode = 'arena';
+  function setHint(mode) {
+    hintMode = mode;
+    const t = TEXT[lang()];
+    const touch = matchMedia('(pointer: coarse)').matches;
+    document.getElementById('hint').textContent =
+      mode === 'menu' ? t.hintMenu : mode === 'battle' ? t.hintBattle : touch ? t.hintTouch : t.hint;
+  }
 
   // ---------- virtual pad (touch) ----------
   const pad = { held: null, action: false };
@@ -143,12 +224,9 @@
       this.keys.Z.on('down', talk);
       this.input.on('pointerdown', () => { if (dialog.open) dialog.advance(); });
 
-      const setHint = () => {
-        const t = TEXT[lang()];
-        document.getElementById('hint').textContent = matchMedia('(pointer: coarse)').matches ? t.hintTouch : t.hint;
-      };
-      setHint();
-      window.onArenaLang = setHint;
+      setHint('arena');
+      window.onArenaLang = () => setHint(hintMode);
+      this.events.on('wake', this.onWake, this);
     }
 
     fitCamera() {
@@ -188,7 +266,40 @@
       // NPC stands behind the counter: talk across it (facing up at the counter tile in front of her)
       const acrossCounter = this.facing === 'up' && fx === this.npc.x && fy === this.npc.y + 2;
       const adjacent = fx === this.npc.x && fy === this.npc.y;
-      if (acrossCounter || adjacent) dialog.start(TEXT[lang()].npc);
+      if (acrossCounter || adjacent) this.talkToNpc();
+    }
+
+    talkToNpc() {
+      const t = TEXT[lang()];
+      dialog.start(t.npc, () => this.askPick());
+    }
+
+    askPick() {
+      const L = lang(), t = TEXT[L];
+      const opts = PICKS.map(k => ({ value: k, label: PICK_NAME[k][L] }));
+      opts.push({ value: null, label: t.cancel });
+      setHint('menu');
+      dialog.choose(t.ask, opts, pick => {
+        setHint('arena');
+        if (!pick) { dialog.start(t.bye); return; }
+        dialog.start(t.go(PICK_NAME[pick][L]), () => this.startBattle(pick));
+      });
+    }
+
+    startBattle(pick) {
+      this.face('up');
+      this.cameras.main.fadeOut(250, 255, 255, 255);
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        this.scene.sleep();
+        this.scene.run('battle', { pick });
+      });
+    }
+
+    onWake(sys, data) {
+      this.cameras.main.fadeIn(250, 255, 255, 255);
+      this.fitCamera();
+      const t = TEXT[lang()];
+      if (data && data.result) dialog.start(t[data.result === 'win' ? 'win' : 'lose']);
     }
 
     heldDir() {
@@ -202,6 +313,11 @@
 
     update() {
       if (pad.action) { pad.action = false; this.interact(); }
+      if (dialog.choice && pad.held && !this.padRepeat) {   // touch d-pad drives the menu
+        this.padRepeat = true;
+        if (pad.held === 'up' || pad.held === 'down') dialog.move(pad.held === 'up' ? -1 : 1);
+      }
+      if (!pad.held) this.padRepeat = false;
       if (this.moving || dialog.open) return;
       const dir = this.heldDir();
       if (!dir) {
@@ -225,6 +341,8 @@
     }
   }
 
+  window.ArenaUI = { dialog, pad, setHint };
+
   function boot() {
     dialog.init();
     bindPad();
@@ -235,7 +353,7 @@
       pixelArt: true,
       backgroundColor: '#04241f',
       scale: { mode: Phaser.Scale.RESIZE, width: host.clientWidth, height: host.clientHeight },
-      scene: Arena,
+      scene: [Arena, window.ArenaBattle],
     });
   }
   window.addEventListener('DOMContentLoaded', boot);

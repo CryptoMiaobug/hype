@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="zh"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>竞技场 — CoinValue</title>
-<link rel="stylesheet" href="../style.css?v=20261008pe"><link rel="stylesheet" href="../nav-pe.css?v=20261024nav"><link rel="stylesheet" href="arena.css?v=20261031a">
+<link rel="stylesheet" href="../style.css?v=20261008pe"><link rel="stylesheet" href="../nav-pe.css?v=20261024nav"><link rel="stylesheet" href="arena.css?v=20261031b">
 <script defer src="../i18n.js?v=20261031arena"></script>
-<script defer src="vendor/phaser.min.js"></script><script defer src="game.js?v=20261031a"></script>
+<script defer src="vendor/phaser.min.js"></script><script defer src="battle.js?v=20261031b"></script><script defer src="game.js?v=20261031b"></script>
 <script data-goatcounter="https://cryptomiao.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script></head>
 <body data-page="arena"><div class="topbar"><a class="logo" href="../pe-list.html"><span class="dot"></span>CoinValue</a><nav class="topnav"><details class="nav-pe"><summary data-i18n="nav.pe">PE 监控</summary><div class="nav-pe-menu"><a href="../pe-list.html" data-i18n="nav.peAll">全部总览</a><a href="../hype-pe.html">HYPE PE</a><a href="../uni-pe.html">UNI PE</a><a href="../bnb-pe.html">BNB PE</a><a href="../aave-pe.html">AAVE PE</a></div></details>
 <details class="nav-pe nav-btc"><summary data-i18n="nav.btc">BTC 数据</summary><div class="nav-pe-menu"><a href="../btc-overview.html" data-i18n="nav.btcAll">全部总览</a><a href="../btc-mvrv.html" data-i18n="nav.btcZ">MVRV Z-Score</a><a href="../btc-drawdown.html" data-i18n="nav.btcDd">历史高点回撤</a><a href="../btc-dominance.html" data-i18n="nav.btcDom">市值占比</a><a href="../btc-mcap.html" data-i18n="nav.btcMc">市值与已实现市值</a></div></details>
@@ -11,7 +11,7 @@
 <main class="arena-wrap">
   <h1 class="sr-only" data-i18n="arena.title">宝可梦大赛报名处</h1>
   <div id="game" class="arena-game" role="application" aria-label="宝可梦大赛报名处" data-i18n-title="arena.title"></div>
-  <div id="dialog" class="arena-dialog" hidden role="dialog" aria-live="polite" tabindex="0"><p id="dialog-text"></p><span class="arena-next" aria-hidden="true">▼</span></div>
+  <div id="dialog" class="arena-dialog" hidden role="dialog" aria-live="polite" tabindex="0"><p id="dialog-text"></p><div id="dialog-menu" class="arena-menu" role="menu" hidden></div><span class="arena-next" aria-hidden="true">▼</span></div>
   <p id="hint" class="arena-hint"></p>
   <div id="pad" class="arena-pad" aria-hidden="true">
     <button type="button" data-dir="up" class="pu">▲</button>

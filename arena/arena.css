@@ -45,3 +45,17 @@ body[data-page="arena"] { display: flex; flex-direction: column; overflow: hidde
   .arena-pad .pa { grid-column: 5; grid-row: 2; height: 64px; align-self: center; border-radius: 50%; background: rgba(224,80,80,.55); font-weight: 700; }
   .arena-dialog { bottom: 220px; font-size: 16px; }
 }
+
+/* Auto-play lines have no "next" arrow */
+.arena-dialog.no-next .arena-next { display: none; }
+
+/* Pick-a-Pokémon menu inside the dialog box */
+.arena-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; margin-top: 8px; }
+.arena-menu[hidden] { display: none; }
+.arena-menu button {
+  position: relative; text-align: left; padding: 4px 8px 4px 22px; border: 0; border-radius: 6px;
+  background: transparent; color: inherit; font: inherit; cursor: pointer;
+}
+.arena-menu button:hover, .arena-menu button.sel { background: #e8eef8; }
+.arena-menu button.sel::before { content: "▶"; position: absolute; left: 6px; color: #e05050; font-size: 12px; top: 50%; transform: translateY(-50%); }
+.arena-menu button:focus-visible { outline: 2px solid #4870c0; outline-offset: 1px; }
