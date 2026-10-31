@@ -19,8 +19,10 @@
       npc: ['欢迎来到宝可梦大赛报名处！', '要参加今天的练习赛吗？'],
       ask: '要派哪只宝可梦出战？',
       askTier: '要报名哪一档？',
-      tier: (n, name) => `第 ${n} 档 · ${name}`,
-      starter: '新手体验 · 御三家',
+      tier: (n, name, count) => `第 ${n} 档 · ${name}（${count}）`,
+      askPage: (p, n) => `要派哪只宝可梦出战？（第 ${p}/${n} 页）`,
+      prevPage: '◀ 上一页',
+      nextPage: '下一页 ▶',
       back: '返回',
       cancel: '下次再说',
       bye: ['好的，随时欢迎再来！'],
@@ -37,8 +39,10 @@
       npc: ['Welcome to the Pokémon Contest reception!', 'Would you like to enter today\'s practice match?'],
       ask: 'Which Pokémon will you send out?',
       askTier: 'Which division will you enter?',
-      tier: (n, name) => `Tier ${n} · ${name}`,
-      starter: 'Starter trial',
+      tier: (n, name, count) => `Tier ${n} · ${name} (${count})`,
+      askPage: (p, n) => `Which Pokémon will you send out? (page ${p}/${n})`,
+      prevPage: '◀ Prev',
+      nextPage: 'Next ▶',
       back: 'Back',
       cancel: 'Maybe later',
       bye: ['All right. Come back any time!'],
@@ -107,12 +111,12 @@
         this.type(text, () => { this.sayTimer = setTimeout(() => this.sayDone && this.sayDone(), hold); });
       });
     },
-    choose(prompt, options, onPick) {
+    choose(prompt, options, onPick, sel = 0) {
       this.lines = []; this.onDone = null;
       this.showBox(false);
       this.type(prompt);
       this.menuEl.innerHTML = '';
-      this.choice = { options, onPick, sel: 0, btns: [] };
+      this.choice = { options, onPick, sel: Math.max(0, Math.min(sel, options.length - 1)), btns: [] };
       options.forEach((o, i) => {
         const b = document.createElement('button');
         b.type = 'button'; b.textContent = o.label; b.setAttribute('role', 'menuitem');
@@ -134,7 +138,7 @@
       const c = this.choice; if (!c) return;
       const pick = c.options[c.sel].value;
       // Poké Ball sound only when a Pokémon is sent out; menus/back just beep
-      const isMon = typeof pick === 'string' && pick !== 'starter' && pick !== '__back';
+      const isMon = typeof pick === 'string' && !pick.startsWith('__');
       if (window.ArenaMusic) window.ArenaMusic.sfx(isMon ? 'ball' : 'select');
       this.clearMenu(); this.close();
       c.onPick(pick);
@@ -157,16 +161,11 @@
     },
   };
 
-  // Starters you can enter with (scripts in assets/battles.json)
-  const PICKS = ['pikachu', 'charmander', 'squirtle', 'bulbasaur'];
-  const PICK_NAME = {
-    pikachu: { zh: '皮卡丘', en: 'Pikachu' }, charmander: { zh: '小火龙', en: 'Charmander' },
-    squirtle: { zh: '杰尼龟', en: 'Squirtle' }, bulbasaur: { zh: '妙蛙种子', en: 'Bulbasaur' },
-  };
+  const PAGE_SIZE = 10;   // Pokémon per menu page
 
-  // Tier list for the division menu; fetched once, null if missing (then only the starter set shows).
+  // Tier list for the division menu; fetched once, null if missing.
   let rosterP = null;
-  const loadRoster = () => rosterP || (rosterP = fetch('assets/roster.json?v=20261031g')
+  const loadRoster = () => rosterP || (rosterP = fetch('assets/roster.json?v=20261031i')
     .then(r => (r.ok ? r.json() : null)).catch(() => null));
 
   const playMusic = n => { if (window.ArenaMusic) window.ArenaMusic.play(n); };
@@ -294,43 +293,54 @@
       dialog.start(t.npc, () => this.askPick());
     }
 
-    // Step 1: division. Open tiers come from assets/roster.json (battle-gen/build_tier_battles.mjs);
-    // the original starter set stays as its own entry.
-    askPick() {
+    // Step 1: division (tier 1-10). The tier list comes from assets/roster.json, made by
+    // battle-gen/build_tier_battles.mjs; each Pokémon's battles are in assets/battles/<id>.json.
+    askPick(sel = 0) {
       const L = lang(), t = TEXT[L];
       setHint('menu');
       loadRoster().then(R => {
-        const opts = [{ value: 'starter', label: t.starter }];
-        if (R) [...R.open].sort((a, b) => b - a).forEach(n => opts.push({ value: n, label: t.tier(n, R.tiers[n][L]) }));
+        if (!R) { setHint('arena'); dialog.start(t.bye); return; }
+        const opts = [...R.open].sort((a, b) => a - b)
+          .map(n => ({ value: n, label: t.tier(n, R.tiers[n][L], R.tiers[n].mon.length) }));
         opts.push({ value: null, label: t.cancel });
         dialog.choose(t.askTier, opts, tier => {
           if (!tier) { setHint('arena'); dialog.start(t.bye); return; }
-          this.askMon(tier, R);
-        });
+          this.askMon(R, tier, 0, opts.findIndex(o => o.value === tier));
+        }, sel);
       });
     }
 
-    // Step 2: Pokémon in that division.
-    askMon(tier, R) {
+    // Step 2: Pokémon in that tier, PAGE_SIZE per page (tiers 3/5/6/7 have 60-70).
+    // keep = '__prev' / '__next' puts the cursor back on that button, so repeated presses flip pages.
+    askMon(R, tier, page, tierSel, keep) {
       const L = lang(), t = TEXT[L];
-      const list = tier === 'starter'
-        ? PICKS.map(k => ({ value: k, label: PICK_NAME[k][L] }))
-        : R.tiers[tier].mon.map(k => ({ value: k, label: R.mon[k][L] }));
-      list.push({ value: '__back', label: t.back });
-      dialog.choose(t.ask, list, pick => {
-        if (pick === '__back') { this.askPick(); return; }
+      const all = R.tiers[tier].mon;
+      const pages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+      const opts = all.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map(k => ({ value: k, label: R.mon[k][L] }));
+      if (pages > 1) {
+        opts.push({ value: '__prev', label: t.prevPage });
+        opts.push({ value: '__next', label: t.nextPage });
+      }
+      opts.push({ value: '__back', label: t.back });
+      const prompt = pages > 1 ? t.askPage(page + 1, pages) : t.ask;
+      const sel = keep ? opts.findIndex(o => o.value === keep) : 0;
+      dialog.choose(prompt, opts, pick => {
+        if (pick === '__back') { this.askPick(tierSel); return; }
+        if (pick === '__prev' || pick === '__next') {
+          this.askMon(R, tier, (page + (pick === '__next' ? 1 : -1) + pages) % pages, tierSel, pick);
+          return;
+        }
         setHint('arena');
-        const name = tier === 'starter' ? PICK_NAME[pick][L] : R.mon[pick][L];
-        dialog.start(t.go(name), () => this.startBattle(pick, tier === 'starter' ? null : R.v));
-      });
+        dialog.start(t.go(R.mon[pick][L]), () => this.startBattle(pick, R.v, tier >= 9 ? 'legend' : 'battle'));
+      }, sel);
     }
 
-    startBattle(pick, v) {
+    startBattle(pick, v, music) {
       this.face('up');
       this.cameras.main.fadeOut(250, 255, 255, 255);
       this.cameras.main.once('camerafadeoutcomplete', () => {
         this.scene.sleep();
-        this.scene.run('battle', v ? { pick, file: true, v } : { pick });
+        this.scene.run('battle', { pick, file: true, v, music });
       });
     }
 

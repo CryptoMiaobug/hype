@@ -8,7 +8,7 @@
 
   const W = 240, H = 124;
   const W_ = W;              // battle "stage" in world px (the text box is DOM, below it)
-  const DATA_V = '20261031g';
+  const DATA_V = '20261031i';
 
   const STAT = {
     zh: { atk: '攻击', def: '防御', spa: '特攻', spd: '特防', spe: '速度', acc: '命中率', eva: '闪避率' },
@@ -19,8 +19,8 @@
     en: { par: 'is paralyzed! It may be unable to move!', brn: 'was burned!', psn: 'was poisoned!', tox: 'was badly poisoned!', slp: 'fell asleep!', frz: 'was frozen solid!' },
   };
   const CANT = {
-    zh: { par: '因麻痹而无法行动！', flinch: '畏缩了，无法行动！', slp: '正在呼呼大睡。', frz: '被冻住了，无法行动！', recharge: '需要休息，无法行动！', truant: '正在偷懒。', nopp: '没有可以使出的招式了！' },
-    en: { par: 'is paralyzed! It can\'t move!', flinch: 'flinched and couldn\'t move!', slp: 'is fast asleep.', frz: 'is frozen solid!', recharge: 'must recharge!', truant: 'is loafing around!', nopp: 'has no moves left!' },
+    zh: { par: '因麻痹而无法行动！', flinch: '畏缩了，无法行动！', slp: '正在呼呼大睡。', frz: '被冻住了，无法行动！', recharge: '需要休息，无法行动！', attract: '着迷了，无法行动！', truant: '正在偷懒。', nopp: '没有可以使出的招式了！' },
+    en: { par: 'is paralyzed! It can\'t move!', flinch: 'flinched and couldn\'t move!', slp: 'is fast asleep.', frz: 'is frozen solid!', recharge: 'must recharge!', attract: 'is immobilized by love!', truant: 'is loafing around!', nopp: 'has no moves left!' },
   };
 
   const lang = () => (window.I18n && window.I18n.lang === 'en' ? 'en' : 'zh');
@@ -32,6 +32,7 @@
 
     init(data) {
       this.pick = data.pick;
+      this.music = data.music || 'battle';   // tiers 9-10 use the legendary battle theme
       // which script file holds this Pokémon's battles
       this.dataKey = data.file ? 'battles-' + data.pick : 'battles';
       this.dataUrl = data.file ? `assets/battles/${data.pick}.json?v=${data.v || DATA_V}` : `assets/battles.json?v=${DATA_V}`;
@@ -92,7 +93,7 @@
       this.events.once('shutdown', () => this.scale.off('resize', this.onResize));
 
       if (window.ArenaMusic) {
-        window.ArenaMusic.play('battle');
+        window.ArenaMusic.play(this.music);
         const moves = this.B.steps.filter(st => st.t === 'move').map(st => st.m);
         window.ArenaMusic.preloadSfx([...moves, 'hit', 'hit_super', 'hit_weak', 'faint']);
       }
@@ -225,6 +226,8 @@
               : st.from === 'sand' ? (zh ? '受到了沙暴的伤害！' : 'is buffeted by the sandstorm!')
               : st.from === 'hail' ? (zh ? '受到了冰雹的伤害！' : 'is pelted by hail!')
               : st.from === 'confusion' ? (zh ? '在混乱中攻击了自己！' : 'hurt itself in its confusion!')
+              : st.from === 'roughskin' ? (zh ? '被粗糙皮肤弄伤了！' : 'was hurt by Rough Skin!')
+              : st.from === 'trap' ? (zh ? '被紧紧缠住，受到了伤害！' : 'is hurt by the trap!')
               : (zh ? '受到了伤害！' : 'was hurt!');
             await this.say(zh ? who + why : `${who} ${why}`, 400);
           } else {
