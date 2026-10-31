@@ -18,6 +18,10 @@
     zh: {
       npc: ['欢迎来到宝可梦大赛报名处！', '要参加今天的练习赛吗？'],
       ask: '要派哪只宝可梦出战？',
+      askTier: '要报名哪一档？',
+      tier: (n, name) => `第 ${n} 档 · ${name}`,
+      starter: '新手体验 · 御三家',
+      back: '返回',
       cancel: '下次再说',
       bye: ['好的，随时欢迎再来！'],
       go: m => [`好的！${m}已经报名！`, '对战马上开始，加油！'],
@@ -32,6 +36,10 @@
     en: {
       npc: ['Welcome to the Pokémon Contest reception!', 'Would you like to enter today\'s practice match?'],
       ask: 'Which Pokémon will you send out?',
+      askTier: 'Which division will you enter?',
+      tier: (n, name) => `Tier ${n} · ${name}`,
+      starter: 'Starter trial',
+      back: 'Back',
       cancel: 'Maybe later',
       bye: ['All right. Come back any time!'],
       go: m => [`Great! ${m} is entered!`, 'The battle starts now. Good luck!'],
@@ -125,7 +133,9 @@
     confirm() {
       const c = this.choice; if (!c) return;
       const pick = c.options[c.sel].value;
-      if (window.ArenaMusic) window.ArenaMusic.sfx(pick ? 'ball' : 'select');
+      // Poké Ball sound only when a Pokémon is sent out; menus/back just beep
+      const isMon = typeof pick === 'string' && pick !== 'starter' && pick !== '__back';
+      if (window.ArenaMusic) window.ArenaMusic.sfx(isMon ? 'ball' : 'select');
       this.clearMenu(); this.close();
       c.onPick(pick);
     },
@@ -153,6 +163,11 @@
     pikachu: { zh: '皮卡丘', en: 'Pikachu' }, charmander: { zh: '小火龙', en: 'Charmander' },
     squirtle: { zh: '杰尼龟', en: 'Squirtle' }, bulbasaur: { zh: '妙蛙种子', en: 'Bulbasaur' },
   };
+
+  // Tier list for the division menu; fetched once, null if missing (then only the starter set shows).
+  let rosterP = null;
+  const loadRoster = () => rosterP || (rosterP = fetch('assets/roster.json?v=20261031g')
+    .then(r => (r.ok ? r.json() : null)).catch(() => null));
 
   const playMusic = n => { if (window.ArenaMusic) window.ArenaMusic.play(n); };
 
@@ -279,24 +294,43 @@
       dialog.start(t.npc, () => this.askPick());
     }
 
+    // Step 1: division. Open tiers come from assets/roster.json (battle-gen/build_tier_battles.mjs);
+    // the original starter set stays as its own entry.
     askPick() {
       const L = lang(), t = TEXT[L];
-      const opts = PICKS.map(k => ({ value: k, label: PICK_NAME[k][L] }));
-      opts.push({ value: null, label: t.cancel });
       setHint('menu');
-      dialog.choose(t.ask, opts, pick => {
-        setHint('arena');
-        if (!pick) { dialog.start(t.bye); return; }
-        dialog.start(t.go(PICK_NAME[pick][L]), () => this.startBattle(pick));
+      loadRoster().then(R => {
+        const opts = [{ value: 'starter', label: t.starter }];
+        if (R) [...R.open].sort((a, b) => b - a).forEach(n => opts.push({ value: n, label: t.tier(n, R.tiers[n][L]) }));
+        opts.push({ value: null, label: t.cancel });
+        dialog.choose(t.askTier, opts, tier => {
+          if (!tier) { setHint('arena'); dialog.start(t.bye); return; }
+          this.askMon(tier, R);
+        });
       });
     }
 
-    startBattle(pick) {
+    // Step 2: Pokémon in that division.
+    askMon(tier, R) {
+      const L = lang(), t = TEXT[L];
+      const list = tier === 'starter'
+        ? PICKS.map(k => ({ value: k, label: PICK_NAME[k][L] }))
+        : R.tiers[tier].mon.map(k => ({ value: k, label: R.mon[k][L] }));
+      list.push({ value: '__back', label: t.back });
+      dialog.choose(t.ask, list, pick => {
+        if (pick === '__back') { this.askPick(); return; }
+        setHint('arena');
+        const name = tier === 'starter' ? PICK_NAME[pick][L] : R.mon[pick][L];
+        dialog.start(t.go(name), () => this.startBattle(pick, tier === 'starter' ? null : R.v));
+      });
+    }
+
+    startBattle(pick, v) {
       this.face('up');
       this.cameras.main.fadeOut(250, 255, 255, 255);
       this.cameras.main.once('camerafadeoutcomplete', () => {
         this.scene.sleep();
-        this.scene.run('battle', { pick });
+        this.scene.run('battle', v ? { pick, file: true, v } : { pick });
       });
     }
 

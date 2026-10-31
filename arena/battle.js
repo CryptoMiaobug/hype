@@ -1,12 +1,14 @@
 /* 竞技场 — auto-play battle scene.
- * Plays one pre-recorded battle from assets/battles.json (made by battle-gen/build_battles.mjs
+ * Plays one pre-recorded battle. Starter tier: assets/battles.json (battle-gen/build_battles.mjs);
+ * other tiers: one file per Pokémon, assets/battles/<id>.json (battle-gen/build_tier_battles.mjs),
  * with the Pokémon Showdown engine). The player only watches; text goes through the shared
  * DOM dialog (window.ArenaUI.dialog) so CJK stays crisp and screen readers get it. */
 (function () {
   'use strict';
 
-  const W = 240, H = 124;              // battle "stage" in world px (the text box is DOM, below it)
-  const DATA_V = '20261031b';
+  const W = 240, H = 124;
+  const W_ = W;              // battle "stage" in world px (the text box is DOM, below it)
+  const DATA_V = '20261031g';
 
   const STAT = {
     zh: { atk: '攻击', def: '防御', spa: '特攻', spd: '特防', spe: '速度', acc: '命中率', eva: '闪避率' },
@@ -17,8 +19,8 @@
     en: { par: 'is paralyzed! It may be unable to move!', brn: 'was burned!', psn: 'was poisoned!', tox: 'was badly poisoned!', slp: 'fell asleep!', frz: 'was frozen solid!' },
   };
   const CANT = {
-    zh: { par: '因麻痹而无法行动！', flinch: '畏缩了，无法行动！', slp: '正在呼呼大睡。', frz: '被冻住了，无法行动！' },
-    en: { par: 'is paralyzed! It can\'t move!', flinch: 'flinched and couldn\'t move!', slp: 'is fast asleep.', frz: 'is frozen solid!' },
+    zh: { par: '因麻痹而无法行动！', flinch: '畏缩了，无法行动！', slp: '正在呼呼大睡。', frz: '被冻住了，无法行动！', recharge: '需要休息，无法行动！', truant: '正在偷懒。', nopp: '没有可以使出的招式了！' },
+    en: { par: 'is paralyzed! It can\'t move!', flinch: 'flinched and couldn\'t move!', slp: 'is fast asleep.', frz: 'is frozen solid!', recharge: 'must recharge!', truant: 'is loafing around!', nopp: 'has no moves left!' },
   };
 
   const lang = () => (window.I18n && window.I18n.lang === 'en' ? 'en' : 'zh');
@@ -28,26 +30,33 @@
   class Battle extends Phaser.Scene {
     constructor() { super('battle'); }
 
-    init(data) { this.pick = data.pick; }
+    init(data) {
+      this.pick = data.pick;
+      // which script file holds this Pokémon's battles
+      this.dataKey = data.file ? 'battles-' + data.pick : 'battles';
+      this.dataUrl = data.file ? `assets/battles/${data.pick}.json?v=${data.v || DATA_V}` : `assets/battles.json?v=${DATA_V}`;
+    }
 
     preload() {
+      const key = this.dataKey;
+      // pick the battle as soon as the script is in, then load only the two sprites it needs
       const addImages = d => {
-        const keys = new Set([...d.picks, ...Object.values(d.trainers).map(t => t.mon)]);
-        for (const k of keys) if (!this.textures.exists('mon-' + k)) this.load.image('mon-' + k, `assets/mon/${k}.png`);
-        for (const k of d.picks) if (!this.textures.exists('back-' + k)) this.load.image('back-' + k, `assets/mon/${k}-back.png`);
+        const pool = d.battles.filter(b => b.pick === this.pick);
+        this.B = pool[Math.floor(Math.random() * pool.length)];
+        const foe = this.B.foe, me = this.B.pick;
+        if (!this.textures.exists('mon-' + foe)) this.load.image('mon-' + foe, `assets/mon/${foe}.png`);
+        if (!this.textures.exists('back-' + me)) this.load.image('back-' + me, `assets/mon/${me}-back.png`);
       };
-      if (this.cache.json.exists('battles')) addImages(this.cache.json.get('battles'));
+      if (this.cache.json.exists(key)) addImages(this.cache.json.get(key));
       else {
-        this.load.once('filecomplete-json-battles', (key, type, data) => addImages(data));
-        this.load.json('battles', `assets/battles.json?v=${DATA_V}`);
+        this.load.once('filecomplete-json-' + key, (k, type, data) => addImages(data));
+        this.load.json(key, this.dataUrl);
       }
     }
 
     create() {
       this.UI = window.ArenaUI;
-      this.D = this.cache.json.get('battles');
-      const pool = this.D.battles.filter(b => b.pick === this.pick);
-      this.B = pool[Math.floor(Math.random() * pool.length)];
+      this.D = this.cache.json.get(this.dataKey);
       this.hp = { me: this.B.maxHp.me, foe: this.B.maxHp.foe };
       this.texts = [];
 
@@ -213,6 +222,9 @@
             const why = st.from === 'brn' ? (zh ? '受到了灼伤的伤害！' : 'is hurt by its burn!')
               : st.from === 'psn' ? (zh ? '受到了毒的伤害！' : 'is hurt by poison!')
               : st.from === 'recoil' ? (zh ? '受到了反作用力伤害！' : 'is damaged by the recoil!')
+              : st.from === 'sand' ? (zh ? '受到了沙暴的伤害！' : 'is buffeted by the sandstorm!')
+              : st.from === 'hail' ? (zh ? '受到了冰雹的伤害！' : 'is pelted by hail!')
+              : st.from === 'confusion' ? (zh ? '在混乱中攻击了自己！' : 'hurt itself in its confusion!')
               : (zh ? '受到了伤害！' : 'was hurt!');
             await this.say(zh ? who + why : `${who} ${why}`, 400);
           } else {
@@ -238,6 +250,17 @@
         case 'miss': await this.say(zh ? `${who}的攻击没有命中！` : `${who}'s attack missed!`); break;
         case 'fail': await this.say(zh ? '但是失败了！' : 'But it failed!'); break;
         case 'status': await this.say(zh ? who + STATUS.zh[st.v] : `${who} ${STATUS.en[st.v]}`); break;
+        case 'weather': {
+          const W = {
+            zh: { rain: '开始下雨了！', sun: '日照变强了！', sand: '刮起了沙暴！', hail: '开始下冰雹了！', none: '天气恢复了平静。' },
+            en: { rain: 'It started to rain!', sun: 'The sunlight turned harsh!', sand: 'A sandstorm kicked up!', hail: 'It started to hail!', none: 'The weather cleared up.' },
+          };
+          const tint = { rain: 0x6080c0, sun: 0xfff0a0, sand: 0xc0a060, hail: 0xe0f0ff }[st.v];
+          if (this.weatherFx) { this.weatherFx.destroy(); this.weatherFx = null; }
+          if (tint) this.weatherFx = this.add.rectangle(W_ / 2, H / 2, W_ + 1200, H + 800, tint, 0.18).setDepth(-1);
+          await this.say(W[L][st.v] || W[L].none);
+          break;
+        }
         case 'cure': await this.say(zh ? `${who}的异常状态治愈了！` : `${who} was cured!`); break;
         case 'cant': {
           const c = CANT[L][st.v] || (zh ? '无法行动！' : 'can\'t move!');

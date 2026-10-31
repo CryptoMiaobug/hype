@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  const V = '20261031f';
+  const V = '20261031g';
   const VOLUME = 0.45;         // music bus
   const SFX_VOLUME = 0.8;      // effects sit a bit above the music, as in the games
   const FADE = 0.4;            // seconds
