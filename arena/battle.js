@@ -8,7 +8,7 @@
 
   const W = 240, H = 124;
   const W_ = W;              // battle "stage" in world px (the text box is DOM, below it)
-  const DATA_V = '20261031l';
+  const DATA_V = '20261031m';
 
   const STAT = {
     zh: { atk: '攻击', def: '防御', spa: '特攻', spd: '特防', spe: '速度', acc: '命中率', eva: '闪避率' },
