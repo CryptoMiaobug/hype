@@ -165,7 +165,7 @@
 
   // Tier list for the division menu; fetched once, null if missing.
   let rosterP = null;
-  const loadRoster = () => rosterP || (rosterP = fetch('assets/roster.json?v=20261031k')
+  const loadRoster = () => rosterP || (rosterP = fetch('assets/roster.json?v=20261031l')
     .then(r => (r.ok ? r.json() : null)).catch(() => null));
 
   const playMusic = n => { if (window.ArenaMusic) window.ArenaMusic.play(n); };
