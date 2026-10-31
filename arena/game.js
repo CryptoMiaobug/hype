@@ -16,19 +16,19 @@
 
   const TEXT = {
     zh: {
-      npc: ['欢迎来到宝可梦大赛报名处！', '要参加今天的练习赛吗？'],
-      ask: '要派哪只宝可梦出战？',
-      askTier: '要报名哪一档？',
+      npc: ['欢迎来到宝可梦竞技场！', '每只宝可梦都是这里的擂主，要挑战哪一只？'],
+      ask: '要挑战哪只擂主？',
+      askTier: '要挑战哪一档的擂主？',
       tier: (n, name, count) => `第 ${n} 档 · ${name}（${count}）`,
-      askPage: (p, n) => `要派哪只宝可梦出战？（第 ${p}/${n} 页）`,
+      askPage: (p, n) => `要挑战哪只擂主？（第 ${p}/${n} 页）`,
       prevPage: '◀ 上一页',
       nextPage: '下一页 ▶',
       back: '返回',
       cancel: '下次再说',
       bye: ['好的，随时欢迎再来！'],
-      go: m => [`好的！${m}已经报名！`, '对战马上开始，加油！'],
-      win: ['恭喜你获胜！真是精彩的对战！', '想再来一场的话随时找我哦。'],
-      lose: ['真可惜……不过你的宝可梦表现得很棒！', '要不要换一只再试试？'],
+      go: m => [`好的！挑战擂主${m}！`, '你的挑战者已经安排好了，对战马上开始！'],
+      win: ['恭喜你击败了擂主！真是精彩的对战！', '想再挑战的话随时找我哦。'],
+      lose: ['擂主守住了……不过你的挑战者表现得很棒！', '要不要再挑战一次？'],
       hint: '方向键 / WASD 移动，空格 / 回车 对话',
       hintTouch: '方向键移动，走到柜台前按 A 对话',
       hintMenu: '↑ / ↓ 选择，空格 / 回车 确认',
@@ -36,19 +36,19 @@
       next: '▼',
     },
     en: {
-      npc: ['Welcome to the Pokémon Contest reception!', 'Would you like to enter today\'s practice match?'],
-      ask: 'Which Pokémon will you send out?',
-      askTier: 'Which division will you enter?',
+      npc: ['Welcome to the Pokémon Arena!', 'Every Pokémon here is a champion. Which one will you challenge?'],
+      ask: 'Which champion will you challenge?',
+      askTier: 'Which tier of champions will you challenge?',
       tier: (n, name, count) => `Tier ${n} · ${name} (${count})`,
-      askPage: (p, n) => `Which Pokémon will you send out? (page ${p}/${n})`,
+      askPage: (p, n) => `Which champion will you challenge? (page ${p}/${n})`,
       prevPage: '◀ Prev',
       nextPage: 'Next ▶',
       back: 'Back',
       cancel: 'Maybe later',
       bye: ['All right. Come back any time!'],
-      go: m => [`Great! ${m} is entered!`, 'The battle starts now. Good luck!'],
-      win: ['Congratulations, you won! What a great battle!', 'Come see me if you want another round.'],
-      lose: ['So close... your Pokémon did really well!', 'Why not try again with a different one?'],
+      go: m => [`Great! You will challenge ${m}!`, 'Your challenger is ready. The battle starts now!'],
+      win: ['You beat the champion! What a great battle!', 'Come see me if you want another round.'],
+      lose: ['The champion held on... but your challenger did really well!', 'Why not challenge again?'],
       hintMenu: '↑ / ↓ to choose, Space / Enter to confirm',
       hintBattle: 'Auto battle. Space / Enter / tap to speed up',
       hint: 'Arrows / WASD to move, Space / Enter to talk',
@@ -165,7 +165,7 @@
 
   // Tier list for the division menu; fetched once, null if missing.
   let rosterP = null;
-  const loadRoster = () => rosterP || (rosterP = fetch('assets/roster.json?v=20261031i')
+  const loadRoster = () => rosterP || (rosterP = fetch('assets/roster.json?v=20261031k')
     .then(r => (r.ok ? r.json() : null)).catch(() => null));
 
   const playMusic = n => { if (window.ArenaMusic) window.ArenaMusic.play(n); };
@@ -331,7 +331,7 @@
           return;
         }
         setHint('arena');
-        dialog.start(t.go(R.mon[pick][L]), () => this.startBattle(pick, R.v, tier >= 9 ? 'legend' : 'battle'));
+        dialog.start(t.go(R.mon[pick][L]), () => this.startBattle(pick, R.v, tier >= 9 ? 'legend' : 'battle'));   // pick = champion
       }, sel);
     }
 
@@ -340,7 +340,7 @@
       this.cameras.main.fadeOut(250, 255, 255, 255);
       this.cameras.main.once('camerafadeoutcomplete', () => {
         this.scene.sleep();
-        this.scene.run('battle', { pick, file: true, v, music });
+        this.scene.run('battle', { champ: pick, v, music });
       });
     }
 

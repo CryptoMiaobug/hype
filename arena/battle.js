@@ -8,7 +8,7 @@
 
   const W = 240, H = 124;
   const W_ = W;              // battle "stage" in world px (the text box is DOM, below it)
-  const DATA_V = '20261031i';
+  const DATA_V = '20261031k';
 
   const STAT = {
     zh: { atk: '攻击', def: '防御', spa: '特攻', spd: '特防', spe: '速度', acc: '命中率', eva: '闪避率' },
@@ -31,19 +31,19 @@
     constructor() { super('battle'); }
 
     init(data) {
-      this.pick = data.pick;
+      this.champ = data.champ;                 // the champion the player challenges (the foe side)
       this.music = data.music || 'battle';   // tiers 9-10 use the legendary battle theme
-      // which script file holds this Pokémon's battles
-      this.dataKey = data.file ? 'battles-' + data.pick : 'battles';
-      this.dataUrl = data.file ? `assets/battles/${data.pick}.json?v=${data.v || DATA_V}` : `assets/battles.json?v=${DATA_V}`;
+      // assets/battles/<champion>.json holds its 100 battles (battle-gen/build_tier_battles.mjs)
+      this.dataKey = 'battles-' + data.champ;
+      this.dataUrl = `assets/battles/${data.champ}.json?v=${data.v || DATA_V}`;
     }
 
     preload() {
       const key = this.dataKey;
       // pick the battle as soon as the script is in, then load only the two sprites it needs
       const addImages = d => {
-        const pool = d.battles.filter(b => b.pick === this.pick);
-        this.B = pool[Math.floor(Math.random() * pool.length)];
+        // any of the champion's battles; the challenger ('me') comes with the battle
+        this.B = d.battles[Math.floor(Math.random() * d.battles.length)];
         const foe = this.B.foe, me = this.B.pick;
         if (!this.textures.exists('mon-' + foe)) this.load.image('mon-' + foe, `assets/mon/${foe}.png`);
         if (!this.textures.exists('back-' + me)) this.load.image('back-' + me, `assets/mon/${me}-back.png`);
@@ -184,10 +184,10 @@
       const foeMon = this.D.mon[this.B.foe][L], myMon = this.D.mon[this.B.pick][L];
 
       await this.tween({ targets: this.sprite.foe, x: this.home.foe.x, duration: 600, ease: 'Quad.out' });
-      await this.say(zh ? `${tr}向你发起了对战！` : `${tr} wants to battle!`);
+      await this.say(zh ? `擂主训练家${tr}接受了挑战！` : `Champion trainer ${tr} accepts the challenge!`);
       this.box.foe.c.setVisible(true);
-      await this.say(zh ? `${tr}派出了${foeMon}！` : `${tr} sent out ${foeMon}!`, 700);
-      await this.say(zh ? `去吧！${myMon}！` : `Go! ${myMon}!`, 300);
+      await this.say(zh ? `${tr}派出了擂主${foeMon}！` : `${tr} sent out the champion ${foeMon}!`, 700);
+      await this.say(zh ? `去吧！挑战者${myMon}！` : `Go! Challenger ${myMon}!`, 300);
       await this.tween({ targets: this.sprite.me, x: this.home.me.x, duration: 500, ease: 'Quad.out' });
       this.box.me.c.setVisible(true);
       await this.wait(300);
@@ -198,8 +198,8 @@
       const win = this.B.result === 'win';
       if (window.ArenaMusic) { if (win) window.ArenaMusic.play('victory'); else window.ArenaMusic.stop(); }
       const end = zh
-        ? (win ? [`你战胜了${tr}！`] : [`你输给了${tr}……`, `${myMon}已经尽力了！`])
-        : (win ? [`You defeated ${tr}!`] : [`You lost to ${tr}...`, `${myMon} did its best!`]);
+        ? (win ? [`你战胜了${tr}！`, `擂主${foeMon}被击败了！`] : [`你输给了${tr}……`, `擂主${foeMon}守住了擂台！`])
+        : (win ? [`You defeated ${tr}!`, `The champion ${foeMon} has fallen!`] : [`You lost to ${tr}...`, `The champion ${foeMon} held on!`]);
       this.UI.dialog.busy = false;
       this.UI.dialog.start(end, () => this.finish());
     }
