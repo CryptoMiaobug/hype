@@ -152,6 +152,8 @@
     squirtle: { zh: '杰尼龟', en: 'Squirtle' }, bulbasaur: { zh: '妙蛙种子', en: 'Bulbasaur' },
   };
 
+  const playMusic = n => { if (window.ArenaMusic) window.ArenaMusic.play(n); };
+
   let hintMode = 'arena';
   function setHint(mode) {
     hintMode = mode;
@@ -225,7 +227,8 @@
       this.input.on('pointerdown', () => { if (dialog.open) dialog.advance(); });
 
       setHint('arena');
-      window.onArenaLang = () => setHint(hintMode);
+      playMusic('lobby');
+      window.onArenaLang = () => { setHint(hintMode); if (window.ArenaMusic) window.ArenaMusic.refreshLabel(); };
       this.events.on('wake', this.onWake, this);
     }
 
@@ -298,6 +301,7 @@
     onWake(sys, data) {
       this.cameras.main.fadeIn(250, 255, 255, 255);
       this.fitCamera();
+      playMusic('lobby');
       const t = TEXT[lang()];
       if (data && data.result) dialog.start(t[data.result === 'win' ? 'win' : 'lose']);
     }

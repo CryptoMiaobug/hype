@@ -82,6 +82,7 @@
       this.scale.on('resize', this.onResize);
       this.events.once('shutdown', () => this.scale.off('resize', this.onResize));
 
+      if (window.ArenaMusic) window.ArenaMusic.play('battle');
       this.run();
     }
 
@@ -180,6 +181,7 @@
       for (const st of this.B.steps) await this.step(st, L);
 
       const win = this.B.result === 'win';
+      if (window.ArenaMusic) { if (win) window.ArenaMusic.play('victory'); else window.ArenaMusic.stop(); }
       const end = zh
         ? (win ? [`你战胜了${tr}！`] : [`你输给了${tr}……`, `${myMon}已经尽力了！`])
         : (win ? [`You defeated ${tr}!`] : [`You lost to ${tr}...`, `${myMon} did its best!`]);

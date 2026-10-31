@@ -59,3 +59,12 @@ body[data-page="arena"] { display: flex; flex-direction: column; overflow: hidde
 .arena-menu button:hover, .arena-menu button.sel { background: #e8eef8; }
 .arena-menu button.sel::before { content: "▶"; position: absolute; left: 6px; color: #e05050; font-size: 12px; top: 50%; transform: translateY(-50%); }
 .arena-menu button:focus-visible { outline: 2px solid #4870c0; outline-offset: 1px; }
+
+/* Music on/off */
+.arena-music {
+  position: absolute; top: 10px; right: 10px; z-index: 6; width: 40px; height: 40px;
+  border: 2px solid rgba(255,255,255,.5); border-radius: 50%; background: rgba(4,36,31,.7);
+  color: #fff; font-size: 18px; line-height: 1; cursor: pointer;
+}
+.arena-music:hover { background: rgba(4,36,31,.9); }
+.arena-music:focus-visible { outline: 2px solid #a8b8d8; outline-offset: 2px; }
