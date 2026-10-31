@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  const V = '20261031e';
+  const V = '20261031f';
   const VOLUME = 0.45;         // music bus
   const SFX_VOLUME = 0.8;      // effects sit a bit above the music, as in the games
   const FADE = 0.4;            // seconds
@@ -20,6 +20,22 @@
   let wanted = null;           // track that should be playing
   let muted = false;
   try { muted = localStorage.getItem(STORE) === '1'; } catch (e) { /* storage blocked */ }
+
+  // iPhone: Web Audio is silenced by the ring/silent switch unless the page asks for the
+  // "playback" audio session (Safari 17+). Older iOS: playing an <audio> element once inside a
+  // user gesture switches the session the same way.
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* not supported */ }
+  let htmlUnlocked = false;
+  function unlockHtmlAudio() {
+    if (htmlUnlocked) return;
+    htmlUnlocked = true;
+    try {
+      const a = new Audio('data:audio/mpeg;base64,//NAxAAAAANIAAAAAExBTUUzLjEwMFVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/80LEWwAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/80DEpAAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsSjAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==');
+      a.setAttribute('playsinline', '');
+      const pr = a.play();
+      if (pr && pr.catch) pr.catch(() => { htmlUnlocked = false; });
+    } catch (e) { htmlUnlocked = false; }
+  }
 
   function ensureCtx() {
     if (ctx) return ctx;
@@ -60,7 +76,7 @@
   }
 
   async function start(name) {
-    if (!ensureCtx() || ctx.state !== 'running') return;   // will retry on unlock
+    if (!ctx || ctx.state !== 'running') return;   // no gesture yet: unlock() starts it
     if (current && current.name === name) return;
     stopCurrent();
     if (!name) return;
@@ -105,7 +121,7 @@
   }
   // Decode the effects a battle will use ahead of time so they fire on cue.
   async function preloadSfx(keys) {
-    if (!ensureCtx()) return;
+    if (!ctx) return;
     const m = await loadSfxMap();
     [...new Set(keys.map(k => m[k]).filter(Boolean))].forEach(f => loadSfx(f).catch(() => {}));
   }
@@ -136,14 +152,28 @@
     renderButton();
   }
 
-  // First user gesture: create/resume the context and start whatever should be playing.
+  // User gestures: create/resume the context and start whatever should be playing.
+  // Mobile browsers only count touchend / pointerup / click as a gesture (not touchstart or a
+  // touch pointerdown), and iOS needs a sound started synchronously inside that handler.
   function unlock() {
     if (!ensureCtx()) return;
-    const go = () => { if (wanted) start(wanted); };
-    if (ctx.state === 'suspended') ctx.resume().then(go, () => {});
-    else go();
+    unlockHtmlAudio();
+    if (ctx.state !== 'running') {
+      try {   // a 1-sample silent buffer, started inside the gesture, is what unlocks iOS
+        const b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource();
+        s.buffer = b; s.connect(ctx.destination); s.start(0);
+      } catch (e) { /* ignore */ }
+      ctx.resume().then(() => { if (wanted) start(wanted); }, () => {});
+    } else if (wanted && !(current && current.name === wanted)) start(wanted);
   }
-  ['pointerdown', 'keydown', 'touchend'].forEach(ev => window.addEventListener(ev, unlock, { capture: true, passive: true }));
+  ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach(ev =>
+    window.addEventListener(ev, unlock, { capture: true, passive: true }));
+  // iOS suspends ("interrupted") the context when the app goes to the background or a call
+  // comes in; pick the music back up when the page is visible again (next tap if needed).
+  document.addEventListener('visibilitychange', () => {
+    if (!ctx || document.hidden) return;
+    if (ctx.state !== 'running') ctx.resume().then(() => { if (wanted) start(wanted); }, () => {});
+  });
 
   let btn = null;
   function renderButton() {
