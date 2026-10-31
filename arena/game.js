@@ -117,6 +117,7 @@
     },
     move(d) {
       const c = this.choice, n = c.options.length;
+      if (d && window.ArenaMusic) window.ArenaMusic.sfx('select');
       c.sel = (c.sel + d + n) % n;
       c.btns.forEach((b, i) => { const on = i === c.sel; b.classList.toggle('sel', on); b.setAttribute('aria-current', on ? 'true' : 'false'); });
       c.btns[c.sel].focus({ preventScroll: true });
@@ -124,6 +125,7 @@
     confirm() {
       const c = this.choice; if (!c) return;
       const pick = c.options[c.sel].value;
+      if (window.ArenaMusic) window.ArenaMusic.sfx(pick ? 'ball' : 'select');
       this.clearMenu(); this.close();
       c.onPick(pick);
     },

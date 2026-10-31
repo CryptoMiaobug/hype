@@ -82,7 +82,11 @@
       this.scale.on('resize', this.onResize);
       this.events.once('shutdown', () => this.scale.off('resize', this.onResize));
 
-      if (window.ArenaMusic) window.ArenaMusic.play('battle');
+      if (window.ArenaMusic) {
+        window.ArenaMusic.play('battle');
+        const moves = this.B.steps.filter(st => st.t === 'move').map(st => st.m);
+        window.ArenaMusic.preloadSfx([...moves, 'hit', 'hit_super', 'hit_weak', 'faint']);
+      }
       this.run();
     }
 
@@ -178,7 +182,8 @@
       this.box.me.c.setVisible(true);
       await this.wait(300);
 
-      for (const st of this.B.steps) await this.step(st, L);
+      const steps = this.B.steps;
+      for (let i = 0; i < steps.length; i++) await this.step(steps[i], L, steps.slice(i + 1, i + 3));
 
       const win = this.B.result === 'win';
       if (window.ArenaMusic) { if (win) window.ArenaMusic.play('victory'); else window.ArenaMusic.stop(); }
@@ -189,15 +194,18 @@
       this.UI.dialog.start(end, () => this.finish());
     }
 
-    async step(st, L) {
+    sfx(key, maxWait) { return window.ArenaMusic ? window.ArenaMusic.sfx(key, maxWait) : Promise.resolve(); }
+
+    async step(st, L, ahead = []) {
       const zh = L === 'zh';
       const who = this.name(st.s), whoL = this.name(st.s, true);
       switch (st.t) {
         case 'move': {
           const mv = this.D.moves[st.m][L];
-          await this.say(zh ? `${who}使用了${mv}！` : `${who} used ${mv}!`, 450);
+          await this.say(zh ? `${who}使用了${mv}！` : `${who} used ${mv}!`, 300);
           const dx = st.s === 'me' ? 10 : -10;
-          await this.tween({ targets: this.sprite[st.s], x: this.home[st.s].x + dx, duration: 110, yoyo: true });
+          // the move's own sound plays with the lunge (capped so long ones like Gust don't stall the battle)
+          await Promise.all([this.sfx(st.m, 900), this.tween({ targets: this.sprite[st.s], x: this.home[st.s].x + dx, duration: 110, yoyo: true })]);
           break;
         }
         case 'dmg': {
@@ -208,6 +216,10 @@
               : (zh ? '受到了伤害！' : 'was hurt!');
             await this.say(zh ? who + why : `${who} ${why}`, 400);
           } else {
+            // hit sound depends on effectiveness, which the script lists right after the damage
+            const eff = ahead.find(a => a.t === 'eff' && a.s === st.s);
+            const hit = eff && eff.v === 'super' ? 'hit_super' : eff && eff.v === 'resist' ? 'hit_weak' : 'hit';
+            this.sfx(hit);
             await this.tween({ targets: this.sprite[st.s], alpha: 0.15, duration: 70, yoyo: true, repeat: 2 });
           }
           await this.animateHp(st.s, st.hp);
@@ -241,6 +253,7 @@
           break;
         }
         case 'faint':
+          this.sfx('faint');
           await this.tween({ targets: this.sprite[st.s], y: this.home[st.s].y + 40, alpha: 0, duration: 450, ease: 'Quad.in' });
           await this.say(zh ? `${who}倒下了！` : `${who} fainted!`);
           break;
