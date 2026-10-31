@@ -1,0 +1,47 @@
+/* 竞技场 page: full-height game area below the site topbar */
+html, body { height: 100%; }
+body[data-page="arena"] { display: flex; flex-direction: column; overflow: hidden; }
+.arena-wrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.arena-game { flex: 1; min-height: 0; background: #04241f; touch-action: none; }
+.arena-game canvas { display: block; image-rendering: pixelated; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* GBA-style dialog box */
+.arena-dialog {
+  position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%);
+  width: min(640px, calc(100% - 24px)); min-height: 84px; box-sizing: border-box;
+  padding: 14px 40px 14px 20px;
+  background: #f8f8f8; color: #303030;
+  border: 4px solid #383848; border-radius: 10px;
+  box-shadow: inset 0 0 0 3px #a8b8d8, 0 4px 0 rgba(0,0,0,.35);
+  font: 600 18px/1.6 "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  cursor: pointer; z-index: 5;
+}
+.arena-dialog[hidden] { display: none; }
+.arena-dialog p { margin: 0; white-space: pre-wrap; }
+.arena-next { position: absolute; right: 14px; bottom: 8px; color: #e05050; font-size: 14px; animation: arena-blink 0.8s steps(2) infinite; }
+@keyframes arena-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .arena-next { animation: none; } }
+
+.arena-hint { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; padding: 8px 12px; text-align: center; font-size: 13px; color: var(--text-dim, #8fb5ac); background: rgba(4,36,31,.75); pointer-events: none; }
+
+/* Touch: controls get their own strip under the game instead of covering the room */
+.arena-pad { display: none; }
+@media (pointer: coarse) {
+  .arena-hint { position: static; order: 2; }
+  .arena-pad {
+    display: grid; order: 3; flex: none; padding: 8px 16px 14px; background: #04241f;
+    grid-template-columns: 52px 52px 52px 1fr 64px; grid-template-rows: 48px 48px 48px; gap: 4px;
+  }
+  .arena-pad button {
+    border: 2px solid rgba(255,255,255,.5); border-radius: 10px;
+    background: rgba(255,255,255,.08); color: #fff; font-size: 18px; touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  .arena-pad .pu { grid-column: 2; grid-row: 1; }
+  .arena-pad .pl { grid-column: 1; grid-row: 2; }
+  .arena-pad .pr { grid-column: 3; grid-row: 2; }
+  .arena-pad .pd { grid-column: 2; grid-row: 3; }
+  .arena-pad .pa { grid-column: 5; grid-row: 2; height: 64px; align-self: center; border-radius: 50%; background: rgba(224,80,80,.55); font-weight: 700; }
+  .arena-dialog { bottom: 220px; font-size: 16px; }
+}
