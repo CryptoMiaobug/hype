@@ -26,6 +26,7 @@
       back: '返回',
       cancel: '下次再说',
       bye: ['好的，随时欢迎再来！'],
+      payDone: ['报名成功，战斗结果请查看「竞技场」！'],   // closing the QR / payment screen
       go: m => [`好的！挑战擂主${m}！`, '你的挑战者已经安排好了，对战马上开始！'],
       win: ['恭喜你击败了擂主！真是精彩的对战！', '想再挑战的话随时找我哦。'],
       lose: ['擂主守住了……不过你的挑战者表现得很棒！', '要不要再挑战一次？'],
@@ -114,6 +115,7 @@
       back: 'Back',
       cancel: 'Maybe later',
       bye: ['All right. Come back any time!'],
+      payDone: ['You\'re signed up! Check the results on the [Arena] board!'],
       go: m => [`Great! You will challenge ${m}!`, 'Your challenger is ready. The battle starts now!'],
       win: ['You beat the champion! What a great battle!', 'Come see me if you want another round.'],
       lose: ['The champion held on... but your challenger did really well!', 'Why not challenge again?'],
@@ -895,7 +897,7 @@
           const ok = await copyText(PAY_ADDRESS);
           this.showPay(R, tier, tierSel, ok ? t.copied : t.copyFail, 0);
         } else if (pick === '__back') this.askFeeTier(tierSel);
-        else { setHint('arena'); dialog.start(t.bye); }
+        else { setHint('arena'); dialog.start(t.payDone); }
       }, sel, payPanel(t, status));
     }
 
