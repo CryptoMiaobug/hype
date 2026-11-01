@@ -48,6 +48,19 @@
       boardTitle: '公告栏',
       boardBody: ['欢迎来到竞技场！'],
       boardAlt: '公告栏',
+      betsTitle: '最近比赛',
+      betsCols: ['地址', '参赛费', '档位', '结果'],
+      betsLoading: '比赛载入中…',
+      betsEmpty: '还没有比赛',
+      betsError: '比赛载入失败，请稍后再试',
+      betsTier: (n, name) => `第${'一二三四五六七八九十'[n - 1]}档（${name}）`,
+      betsWin: m => (m > 1 ? `胜（暴击${m}倍）` : '胜'),
+      betsLoss: '负',
+      betsPending: '待开奖',
+      betsPage: (p, n) => `第 ${p}/${n} 页`,
+      betsPrev: '◀ 上一页',
+      betsNext: '下一页 ▶',
+      betsCaption: '最近比赛，每页 10 笔，数据直接读取 Arbitrum 链上记录',
     },
     en: {
       npc: ['Welcome to the Pokémon Arena!', 'Every Pokémon here is a champion. Which one will you challenge?'],
@@ -78,6 +91,19 @@
       boardTitle: 'Notice Board',
       boardBody: ['Welcome to the Arena!'],
       boardAlt: 'Notice board',
+      betsTitle: 'Recent matches',
+      betsCols: ['Address', 'Entry fee', 'Tier', 'Result'],
+      betsLoading: 'Loading matches…',
+      betsEmpty: 'No matches yet',
+      betsError: 'Could not load matches. Please try again later.',
+      betsTier: (n, name) => `Tier ${n} (${name})`,
+      betsWin: m => (m > 1 ? `Win (Crit ×${m})` : 'Win'),
+      betsLoss: 'Loss',
+      betsPending: 'Pending',
+      betsPage: (p, n) => `Page ${p}/${n}`,
+      betsPrev: '◀ Prev',
+      betsNext: 'Next ▶',
+      betsCaption: 'Recent matches, 10 per page, read directly from Arbitrum',
       hint: 'Arrows / WASD to move, Space / Enter to talk',
       hintTouch: 'D-pad to move, press A at the counter to talk',
       next: '▼',
@@ -259,8 +285,113 @@
     const paper = document.createElement('div');
     paper.className = 'arena-board-paper';
     t.boardBody.forEach(line => { const p = document.createElement('p'); p.textContent = line; paper.appendChild(p); });
-    box.append(h, paper);
+    box.append(h, paper, betsPanel(t));
     return box;
+  }
+
+  // ---------- recent matches on the notice board (bets.js reads them from Arbitrum) ----------
+  const BETS_PAGE = 10;
+  const BETS_REFRESH_MS = 10000;   // re-read the chain while the board is open
+  const shortAddr = a => a.slice(0, 6) + '…' + a.slice(-4);
+  const fmtFee = raw => (raw / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'U';
+  const bets = { page: 0, list: null, err: false, el: null, timer: null, keys: null };
+
+  function betsPanel(t) {
+    const box = document.createElement('div');
+    box.className = 'arena-bets';
+    box.addEventListener('click', e => e.stopPropagation());   // paging must not close the board
+    bets.el = box; bets.page = 0;
+    renderBets(t);
+    refreshBets();
+    clearInterval(bets.timer);
+    bets.timer = setInterval(() => {
+      if (!box.isConnected) { stopBets(); return; }
+      refreshBets();
+    }, BETS_REFRESH_MS);
+    if (!bets.keys) {   // ← / → flip pages while the board is open
+      bets.keys = e => {
+        if (!bets.el || !bets.el.isConnected) return;
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { flipBets(-1); e.preventDefault(); }
+        else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { flipBets(1); e.preventDefault(); }
+      };
+      document.addEventListener('keydown', bets.keys);
+    }
+    return box;
+  }
+
+  function stopBets() { clearInterval(bets.timer); bets.timer = null; bets.el = null; }
+
+  function flipBets(d) {
+    if (!bets.list || !bets.list.length) return;
+    const pages = Math.ceil(bets.list.length / BETS_PAGE);
+    const p = Math.min(pages - 1, Math.max(0, bets.page + d));
+    if (p !== bets.page) { bets.page = p; renderBets(TEXT[lang()]); }
+  }
+
+  async function refreshBets() {
+    if (!window.ArenaBets) { bets.err = true; renderBets(TEXT[lang()]); return; }
+    try {
+      const [res, R] = await Promise.all([window.ArenaBets.load(), loadRoster()]);
+      bets.list = res.list; bets.roster = R; bets.err = false;
+    } catch (e) {
+      if (!bets.list) bets.err = true;   // keep showing the last good list on a failed refresh
+    }
+    if (bets.el && bets.el.isConnected) renderBets(TEXT[lang()]);
+  }
+
+  function renderBets(t) {
+    const box = bets.el;
+    if (!box) return;
+    const L = lang();
+    box.textContent = '';
+    const h = document.createElement('h3');
+    h.textContent = t.betsTitle;
+    box.appendChild(h);
+    const msg = s => { const p = document.createElement('p'); p.className = 'arena-bets-msg'; p.setAttribute('role', 'status'); p.textContent = s; box.appendChild(p); };
+    if (bets.err) return msg(t.betsError);
+    if (!bets.list) return msg(t.betsLoading);
+    if (!bets.list.length) return msg(t.betsEmpty);
+
+    const pages = Math.ceil(bets.list.length / BETS_PAGE);
+    bets.page = Math.min(bets.page, pages - 1);
+    const table = document.createElement('table');
+    const cap = document.createElement('caption');
+    cap.className = 'arena-sr'; cap.textContent = t.betsCaption;
+    const head = document.createElement('tr');
+    t.betsCols.forEach(c => { const th = document.createElement('th'); th.scope = 'col'; th.textContent = c; head.appendChild(th); });
+    const thead = document.createElement('thead'); thead.appendChild(head);
+    const tbody = document.createElement('tbody');
+    for (const e of bets.list.slice(bets.page * BETS_PAGE, (bets.page + 1) * BETS_PAGE)) {
+      const tr = document.createElement('tr');
+      const name = bets.roster && bets.roster.tiers[e.tier] ? bets.roster.tiers[e.tier][L] : '';
+      const r = e.result;
+      const res = r.kind === 'win' ? t.betsWin(r.mult) : r.kind === 'loss' ? t.betsLoss : t.betsPending;
+      const cells = [shortAddr(e.who), fmtFee(e.raw), t.betsTier(e.tier, name), res];
+      cells.forEach((v, i) => {
+        const td = document.createElement('td'); td.textContent = v;
+        if (i === 0) { td.className = 'arena-bets-addr'; td.title = e.who; }
+        if (i === 3) td.className = 'is-' + r.kind;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    }
+    table.append(cap, thead, tbody);
+    box.appendChild(table);
+
+    if (pages > 1) {
+      const nav = document.createElement('div');
+      nav.className = 'arena-bets-nav';
+      const btn = (label, d, off) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.textContent = label; b.disabled = off;
+        b.addEventListener('click', ev => { ev.stopPropagation(); flipBets(d); });
+        return b;
+      };
+      const info = document.createElement('span');
+      info.setAttribute('aria-live', 'polite'); info.textContent = t.betsPage(bets.page + 1, pages);
+      nav.append(btn(t.betsPrev, -1, bets.page === 0), info, btn(t.betsNext, 1, bets.page >= pages - 1));
+      box.appendChild(nav);
+    }
   }
 
   // Tier list for the division menu; fetched once, null if missing.
