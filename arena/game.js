@@ -358,7 +358,7 @@
   // ---------- lobby notice board: menu -> guide / recent matches / Mewtwo event ----------
   // Mewtwo event switch: false = menu says "coming soon" and the event page carries a notice.
   // Set true only once roulette.py runs with mew_enabled (otherwise nobody gets the 100U).
-  const MEW_LIVE = false;
+  const MEW_LIVE = true;
   // Public commitment of the roulette seed chain (roulette-bot data/roulette_state.json, never changes).
   const COMMITMENT = '5b1f1744fa9b197454c843af759531473af206391a010dfae605c38a21d66c80';
   const shortCommit = c => c.slice(0, 8) + '…' + c.slice(-4);
