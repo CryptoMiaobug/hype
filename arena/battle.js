@@ -40,6 +40,7 @@
       this.crit = data.crit > 1 ? data.crit : 0;   // winning multiplier >1 = crit bonus line at the end
       this.mew = !!data.mew;                       // beat-Mewtwo bonus (status 3) = jackpot line at the very end
       this.replay = !!data.replay;
+      this.wild = !!data.wild;                     // tall-grass encounter: wild Pokémon, no trainer
       // assets/battles/<champion>/<k>.json holds battles k*chunk .. k*chunk+chunk-1 (battle-gen/build_tier_battles.mjs).
       // Replay: battle n. Counter: a random one of the champion's `count` battles. Only that one file is loaded.
       const chunk = data.chunk || 100;
@@ -179,6 +180,7 @@
       const L = lang();
       const mon = this.D.mon[side === 'me' ? this.B.pick : this.B.foe][L];
       if (side === 'me') return mon;
+      if (this.wild) return L === 'zh' ? '野生的' + mon : (lower ? 'the wild ' : 'Wild ') + mon;
       return L === 'zh' ? '对手的' + mon : (lower ? 'the foe\'s ' : 'The foe\'s ') + mon;
     }
 
@@ -196,13 +198,19 @@
       const foeMon = this.D.mon[this.B.foe][L], myMon = this.D.mon[this.B.pick][L];
 
       await this.tween({ targets: this.sprite.foe, x: this.home.foe.x, duration: 600, ease: 'Quad.out' });
-      await this.say(zh ? `擂主训练家${tr}接受了挑战！` : `Champion trainer ${tr} accepts the challenge!`);
-      this.box.foe.c.setVisible(true);
-      await this.say(zh ? `${tr}派出了擂主${foeMon}！` : `${tr} sent out the champion ${foeMon}!`, 700);
       const who = this.who;
-      await this.say(who
-        ? (zh ? `挑战者${who}派出了${myMon}！` : `Challenger ${who} sent out ${myMon}!`)
-        : (zh ? `去吧！挑战者${myMon}！` : `Go! Challenger ${myMon}!`), 300);
+      if (this.wild) {
+        this.box.foe.c.setVisible(true);
+        await this.say(zh ? `野生的${foeMon}出现了！` : `A wild ${foeMon} appeared!`, 600);
+        await this.say(zh ? `去吧！${myMon}！` : `Go! ${myMon}!`, 300);
+      } else {
+        await this.say(zh ? `擂主训练家${tr}接受了挑战！` : `Champion trainer ${tr} accepts the challenge!`);
+        this.box.foe.c.setVisible(true);
+        await this.say(zh ? `${tr}派出了擂主${foeMon}！` : `${tr} sent out the champion ${foeMon}!`, 700);
+        await this.say(who
+          ? (zh ? `挑战者${who}派出了${myMon}！` : `Challenger ${who} sent out ${myMon}!`)
+          : (zh ? `去吧！挑战者${myMon}！` : `Go! Challenger ${myMon}!`), 300);
+      }
       await this.tween({ targets: this.sprite.me, x: this.home.me.x, duration: 500, ease: 'Quad.out' });
       this.box.me.c.setVisible(true);
       await this.wait(300);
@@ -213,7 +221,10 @@
       const win = this.B.result === 'win';
       if (window.ArenaMusic) { if (win) window.ArenaMusic.play('victory'); else window.ArenaMusic.stop(); }
       const me = who || (zh ? '你' : 'You');
-      const end = zh
+      const end = this.wild
+        ? (zh ? (win ? [`打倒了野生的${foeMon}！`] : [`${myMon}倒下了……`, '下次换一只宝可梦再试试吧！'])
+              : (win ? [`You defeated the wild ${foeMon}!`] : [`${myMon} fainted...`, 'Try another Pokémon next time!']))
+        : zh
         ? (win ? [`${me}战胜了${tr}！`, `擂主${foeMon}被击败了！`] : [`${me}输给了${tr}……`, `擂主${foeMon}守住了擂台！`])
         : (win ? [`${me} defeated ${tr}!`, `The champion ${foeMon} has fallen!`] : [`${me} lost to ${tr}...`, `The champion ${foeMon} held on!`]);
       if (win && this.crit) end.push(zh ? `恭喜本场比赛获得${this.crit}倍暴击奖励！！！` : `Congratulations! This match earned a ${this.crit}× critical bonus!!!`);
@@ -309,7 +320,7 @@
       this.UI.setHint('arena');
       const result = this.B.result;
       this.scene.stop();
-      this.scene.wake('arena', this.replay ? { replay: true } : { result });
+      this.scene.wake('arena', this.replay ? { replay: true } : this.wild ? { wild: true, result } : { result });
     }
   }
 

@@ -7,6 +7,9 @@
 
   const TILE = 32;
   const STEP_MS = 180;          // time to walk one tile
+  const WILD_RATE = 1 / 8;      // chance per step on tall grass
+  const WILD_COOL = 3;          // steps after a battle with no encounter
+  const WILD_PICKS = 5;         // Pokémon offered to send out (at least one recorded win and one loss)
   const DIRS = {
     left:  { dx: -1, dy: 0, anim: 'left' },
     right: { dx: 1,  dy: 0, anim: 'right' },
@@ -27,6 +30,11 @@
       cancel: '下次再说',
       bye: ['好的，随时欢迎再来！'],
       payDone: ['报名成功，战斗结果请查看「竞技场」！'],   // closing the QR / payment screen
+      // tall grass (wild encounters)
+      wildAsk: m => `野生的${m}出现了！\n要派哪只宝可梦上场？`,
+      wildRun: '逃跑',
+      wildFled: ['顺利逃走了！'],
+      wildFail: ['草丛里好像没有动静……'],
       go: m => [`好的！挑战擂主${m}！`, '你的挑战者已经安排好了，对战马上开始！'],
       win: ['恭喜你击败了擂主！真是精彩的对战！', '想再挑战的话随时找我哦。'],
       lose: ['擂主守住了……不过你的挑战者表现得很棒！', '要不要再挑战一次？'],
@@ -116,6 +124,10 @@
       cancel: 'Maybe later',
       bye: ['All right. Come back any time!'],
       payDone: ['You\'re signed up! Check the results on the [Arena] board!'],
+      wildAsk: m => `A wild ${m} appeared!\nWhich Pokémon will you send out?`,
+      wildRun: 'Run',
+      wildFled: ['Got away safely!'],
+      wildFail: ['Nothing seems to be moving in the grass...'],
       go: m => [`Great! You will challenge ${m}!`, 'Your challenger is ready. The battle starts now!'],
       win: ['You beat the champion! What a great battle!', 'Come see me if you want another round.'],
       lose: ['The champion held on... but your challenger did really well!', 'Why not challenge again?'],
@@ -658,18 +670,39 @@
     a.addEventListener('pointerdown', e => { e.preventDefault(); pad.action = true; });
   }
 
+  // Indices of WILD_PICKS battles with different challengers, at least one recorded win and one loss; null if impossible.
+  function pickWildOffers(battles) {
+    const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    const idx = shuffle(battles.map((b, i) => i));
+    // a win/loss pair with different challengers (pick the loss first: some champions have very few)
+    let win, lose;
+    for (const l of idx) {
+      if (battles[l].result === 'win') continue;
+      const w = idx.find(i => battles[i].result === 'win' && battles[i].pick !== battles[l].pick);
+      if (w !== undefined) { win = w; lose = l; break; }
+    }
+    if (win === undefined) return null;
+    const out = [win, lose], used = new Set([battles[win].pick, battles[lose].pick]);
+    for (const i of idx) {
+      if (out.length >= WILD_PICKS) break;
+      if (!used.has(battles[i].pick)) { out.push(i); used.add(battles[i].pick); }
+    }
+    return out.length >= WILD_PICKS ? shuffle(out) : null;
+  }
+
   class Arena extends Phaser.Scene {
     constructor() { super('arena'); }
 
     preload() {
       this.load.image('tiles', 'assets/tileset.png');
-      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261101ae');
+      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261101ah');
       this.load.atlas('player', 'assets/player.png', 'assets/player.json');
       this.load.image('board', 'assets/board.png?v=20261101ad');        // title plank says 竞技场
       this.load.image('board-en', 'assets/board-en.png?v=20261101ad');  // ... or ARENA
       for (const n of ['signup', 'trial']) for (const sfx of ['', '-en'])   // counter-top labels
         this.load.image(`desk-${n}${sfx}`, `assets/desk-${n}${sfx}.png?v=20261101ag`);
       this.load.image('sign', 'assets/sign.png?v=20261101z');
+      this.load.image('grass', 'assets/grass.png?v=20261101ah');   // art-gen/build_grass.py
     }
 
     create() {
@@ -721,6 +754,15 @@
         img.deskName = n;
         return img;
       });
+
+      // Tall grass (wild encounters) from the map's `grass` cells; feet hide in it like the GBA games
+      this.grass = new Set((prop('grass') || '').split(';').filter(Boolean));
+      for (const c of this.grass) {
+        const [x, y] = c.split(',').map(Number);
+        this.add.image(x * TILE, y * TILE, 'grass').setOrigin(0, 0).setDepth(0.5);
+      }
+      this.feet = this.add.image(0, 0, 'grass').setOrigin(0, 0).setCrop(0, 18, TILE, TILE - 18).setDepth(6).setVisible(false);
+      this.wildCool = 0;
 
       // Player: 32x41 sprite, feet on the bottom of its tile
       this.tx = sx; this.ty = sy; this.facing = 'up'; this.moving = false;
@@ -775,6 +817,59 @@
 
     placePlayer() {
       this.player.setPosition(this.tx * TILE + TILE / 2, (this.ty + 1) * TILE);
+      this.updateFeet();
+    }
+
+    onGrass() { return !!this.grass && this.grass.has(this.tx + ',' + this.ty); }
+    updateFeet() {
+      if (!this.feet) return;
+      const on = this.onGrass();
+      this.feet.setVisible(on);
+      if (on) this.feet.setPosition(this.tx * TILE, this.ty * TILE);
+    }
+
+    // After each step on tall grass: maybe a wild Pokémon jumps out.
+    afterStep() {
+      if (!this.onGrass()) return;
+      if (this.wildCool > 0) { this.wildCool--; return; }
+      if (Math.random() < WILD_RATE) this.startWild();
+    }
+
+    // Wild encounter: any of the champions, picked at random. Its first battle file (chunk 0) is loaded and
+    // WILD_PICKS different challengers are offered, at least one that won and one that lost in the recording.
+    async startWild() {
+      if (this.wildBusy) return;
+      this.wildBusy = true;
+      this.player.anims.stop(); this.face(this.facing);
+      const L = lang(), t = TEXT[L];
+      setHint('menu');
+      const fail = () => { this.wildBusy = false; this.wildCool = WILD_COOL; setHint('arena'); dialog.start(t.wildFail); };
+      const R = await loadRoster();
+      if (!R) return fail();
+      const ids = Object.keys(R.mon);
+      const champ = ids[Math.floor(Math.random() * ids.length)];
+      let D;
+      try {
+        const r = await fetch(`assets/battles/${champ}/0.json?v=${R.v}`);
+        D = r.ok ? await r.json() : null;
+      } catch (e) { D = null; }
+      if (!D || !D.battles) return fail();
+      const offers = pickWildOffers(D.battles);
+      if (!offers) return fail();
+      if (window.ArenaMusic) window.ArenaMusic.sfx('select');
+      const opts = offers.map(n => ({ value: 'w' + n, label: D.mon[D.battles[n].pick][L] }));
+      opts.push({ value: null, label: t.wildRun });
+      this.wildBusy = false;
+      dialog.choose(t.wildAsk(D.mon[champ][L]), opts, v => {
+        if (!v) { this.wildCool = WILD_COOL; setHint('arena'); dialog.start(t.wildFled); return; }
+        setHint('arena');
+        const n = Number(v.slice(1));
+        this.cameras.main.fadeOut(250, 255, 255, 255);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+          this.scene.sleep();
+          this.scene.run('battle', { champ, n, chunk: R.chunk, v: R.v, music: 'battle', wild: true });
+        });
+      });
     }
 
     blocked(x, y) {
@@ -958,6 +1053,7 @@
       playMusic('lobby');
       const t = TEXT[lang()];
       if (data && data.replay) { bets.page = this.replayPage || 0; this.openBets(true); return; }   // back to the match list
+      if (data && data.wild) { this.wildCool = WILD_COOL; this.updateFeet(); return; }   // back in the grass
       if (data && data.result) dialog.start(t[data.result === 'win' ? 'win' : 'lose']);
     }
 
@@ -980,7 +1076,7 @@
         else flipBets(pad.held === 'left' ? -1 : 1);
       }
       if (!pad.held) this.padRepeat = false;
-      if (this.moving || dialog.open) return;
+      if (this.moving || dialog.open || this.wildBusy) return;
       const dir = this.heldDir();
       if (!dir) {
         if (this.player.anims.isPlaying) this.face(this.facing);
@@ -998,7 +1094,8 @@
         x: nx * TILE + TILE / 2,
         y: (ny + 1) * TILE,
         duration: STEP_MS,
-        onComplete: () => { this.moving = false; },
+        onStart: () => this.feet.setVisible(false),
+        onComplete: () => { this.moving = false; this.updateFeet(); this.afterStep(); },
       });
     }
   }
