@@ -300,7 +300,7 @@
 
     preload() {
       this.load.image('tiles', 'assets/tileset.png');
-      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261101d');
+      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261101f');
       this.load.atlas('player', 'assets/player.png', 'assets/player.json');
       this.load.image('board', 'assets/board.png?v=20261101d');
     }
