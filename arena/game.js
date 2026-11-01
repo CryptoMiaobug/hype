@@ -200,7 +200,7 @@
 
     preload() {
       this.load.image('tiles', 'assets/tileset.png');
-      this.load.tilemapTiledJSON('map', 'assets/arena.json');
+      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261101a');
       this.load.atlas('player', 'assets/player.png', 'assets/player.json');
     }
 
@@ -213,8 +213,8 @@
       const prop = k => (map.properties.find(p => p.name === k) || {}).value;
       this.solid = JSON.parse(prop('solid'));
       const [sx, sy] = prop('spawn').split(',').map(Number);
-      const [nx, ny] = prop('npc').split(',').map(Number);
-      this.npc = { x: nx, y: ny };
+      // receptionists: main hall + east hall (same dialogue for now)
+      this.npcs = ['npc', 'npc2'].map(prop).filter(Boolean).map(v => { const [x, y] = v.split(',').map(Number); return { x, y }; });
       this.mapW = map.width; this.mapH = map.height;
 
       // Player: 32x41 sprite, feet on the bottom of its tile
@@ -282,10 +282,9 @@
       if (this.moving) return;
       const d = DIRS[this.facing];
       const fx = this.tx + d.dx, fy = this.ty + d.dy;
-      // NPC stands behind the counter: talk across it (facing up at the counter tile in front of her)
-      const acrossCounter = this.facing === 'up' && fx === this.npc.x && fy === this.npc.y + 2;
-      const adjacent = fx === this.npc.x && fy === this.npc.y;
-      if (acrossCounter || adjacent) this.talkToNpc();
+      // NPCs stand behind a counter: talk across it (facing up at the counter tile in front of them)
+      const hit = this.npcs.some(n => (this.facing === 'up' && fx === n.x && fy === n.y + 2) || (fx === n.x && fy === n.y));
+      if (hit) this.talkToNpc();
     }
 
     talkToNpc() {
