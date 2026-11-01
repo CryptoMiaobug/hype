@@ -32,6 +32,9 @@
       payDone: ['报名成功，战斗结果请查看「竞技场」！'],   // closing the QR / payment screen
       // tall grass (wild encounters)
       wildAsk: m => `野生的${m}出现了！\n要派哪只宝可梦上场？`,
+      challengerAsk: m => `挑战擂主${m}！\n要派哪只宝可梦上场？`,
+      challengerLoading: '正在准备出战宝可梦……',
+      challengerFail: ['出战宝可梦载入失败，请重新选择擂主。'],
       wildRun: '逃跑',
       wildFled: ['顺利逃走了！'],
       wildFail: ['草丛里好像没有动静……'],
@@ -146,6 +149,9 @@
       bye: ['All right. Come back any time!'],
       payDone: ['You\'re signed up! Check the results on the [Arena] board!'],
       wildAsk: m => `A wild ${m} appeared!\nWhich Pokémon will you send out?`,
+      challengerAsk: m => `Challenge ${m}!\nWhich Pokémon will you send out?`,
+      challengerLoading: 'Preparing your Pokémon choices…',
+      challengerFail: ['Could not load the Pokémon choices. Please choose the champion again.'],
       wildRun: 'Run',
       wildFled: ['Got away safely!'],
       wildFail: ['Nothing seems to be moving in the grass...'],
@@ -743,6 +749,17 @@
     return out.length >= WILD_PICKS ? shuffle(out) : null;
   }
 
+  // Both grass encounters and counter challenges use the same recorded challenger choices.
+  async function loadChallengerOffers(R, champ) {
+    try {
+      const r = await fetch(`assets/battles/${champ}/0.json?v=${R.v}`);
+      const D = r.ok ? await r.json() : null;
+      if (!D || !Array.isArray(D.battles)) return null;
+      const offers = pickWildOffers(D.battles);
+      return offers ? { D, offers } : null;
+    } catch (e) { return null; }
+  }
+
   class Arena extends Phaser.Scene {
     constructor() { super('arena'); }
 
@@ -901,14 +918,9 @@
       if (!R) return fail();
       const ids = Object.keys(R.mon);
       const champ = ids[Math.floor(Math.random() * ids.length)];
-      let D;
-      try {
-        const r = await fetch(`assets/battles/${champ}/0.json?v=${R.v}`);
-        D = r.ok ? await r.json() : null;
-      } catch (e) { D = null; }
-      if (!D || !D.battles) return fail();
-      const offers = pickWildOffers(D.battles);
-      if (!offers) return fail();
+      const choices = await loadChallengerOffers(R, champ);
+      if (!choices) return fail();
+      const { D, offers } = choices;
       if (window.ArenaMusic) window.ArenaMusic.sfx('select');
       const opts = offers.map(n => ({ value: 'w' + n, label: D.mon[D.battles[n].pick][L] }));
       opts.push({ value: null, label: t.wildRun });
@@ -1100,17 +1112,37 @@
           this.askMon(R, tier, (page + (pick === '__next' ? 1 : -1) + pages) % pages, tierSel, pick);
           return;
         }
-        setHint('arena');
-        dialog.start(t.go(R.mon[pick][L]), () => this.startBattle(pick, R.v, tier >= 9 ? 'legend' : 'battle', R.mon[pick].battles, R.chunk));   // pick = champion
+        this.askChallenger(R, pick, tier, page, tierSel);
       }, sel);
     }
 
-    startBattle(pick, v, music, count, chunk) {
+    // Step 3: choose one of the same distinct challengers offered by a grass encounter.
+    async askChallenger(R, champ, tier, page, tierSel) {
+      const L = lang(), t = TEXT[L];
+      const back = () => this.askMon(R, tier, page, tierSel, champ);
+      setHint('menu');
+      dialog.hold(t.challengerLoading);
+      dialog.busy = true;
+      const choices = await loadChallengerOffers(R, champ);
+      dialog.busy = false;
+      if (!choices) { dialog.start(t.challengerFail, back); return; }
+      const { D, offers } = choices;
+      const opts = offers.map(n => ({ value: 'w' + n, label: D.mon[D.battles[n].pick][L] }));
+      opts.push({ value: '__back', label: t.back });
+      dialog.choose(t.challengerAsk(R.mon[champ][L]), opts, pick => {
+        if (pick === '__back') { back(); return; }
+        const n = Number(pick.slice(1));
+        setHint('arena');
+        dialog.start(t.go(R.mon[champ][L]), () => this.startBattle(champ, R.v, tier >= 9 ? 'legend' : 'battle', R.mon[champ].battles, R.chunk, n));
+      });
+    }
+
+    startBattle(pick, v, music, count, chunk, n) {
       this.face('up');
       this.cameras.main.fadeOut(250, 255, 255, 255);
       this.cameras.main.once('camerafadeoutcomplete', () => {
         this.scene.sleep();
-        this.scene.run('battle', { champ: pick, v, music, count, chunk });
+        this.scene.run('battle', { champ: pick, v, music, count, chunk, n });
       });
     }
 
