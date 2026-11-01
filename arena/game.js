@@ -66,6 +66,7 @@
       // 竞技场说明（主人 2026-11-01 14:26 定稿）。{h} 小标题，{li} 列表，{p} 段落，**粗体**，{commit} 承诺值
       rules: [
         { title: '欢迎来到宝可梦竞技场！' },
+        { p: '本游戏绝对安全，无需钱包、授权、合约。' },
         { p: '这里有 386 只宝可梦擂主，分成 10 档。报名后，系统会派出一只挑战者替你上场，对战结果马上揭晓。' },
         { h: '【如何报名】' },
         { li: '到大厅柜台选一档，用 Arbitrum One 网络转 USDC 到竞技场地址，转账就算报名。' },
@@ -154,6 +155,7 @@
       commitCopied: 'Copied',
       rules: [
         { title: 'Welcome to the Pokémon Arena!' },
+        { p: 'This game is completely safe: no wallet connection, no approvals, no contracts.' },
         { p: '386 Pokémon champions hold the arena, split into 10 tiers. Once you enter, a challenger takes the field for you and the result is revealed right away.' },
         { h: 'How to enter' },
         { li: 'Pick a tier at the main-hall counter and send USDC on Arbitrum One to the arena address. The transfer is your entry.' },
