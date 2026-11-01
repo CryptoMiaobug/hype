@@ -39,7 +39,7 @@
       feeAsk: '你要挑战哪一档？',
       feeTier: (n, name, fee) => `第 ${n} 档 · ${name}（${fee}U）`,
       payText: (n, name, fee) => `第 ${n} 档 · ${name}，报名费 ${fee} USDC\n请使用 Arbitrum 网络转账`,
-      payNote: '仅收 Arbitrum One 网络上的 USDC，其他网络或币种转入无法找回。',
+      payNote: '只收 Arbitrum One 上的 USDC，转错网络或币种请联系管理员。',
       payAlt: 'Arbitrum 收款地址二维码',
       copy: '复制地址',
       copied: '地址已复制',
@@ -122,7 +122,7 @@
       feeAsk: 'Which tier will you challenge?',
       feeTier: (n, name, fee) => `Tier ${n} · ${name} (${fee}U)`,
       payText: (n, name, fee) => `Tier ${n} · ${name}: entry fee ${fee} USDC\nPlease send on the Arbitrum network`,
-      payNote: 'USDC on Arbitrum One only. Funds sent on other networks or in other coins cannot be recovered.',
+      payNote: 'USDC on Arbitrum One only. If you sent the wrong network or coin, please contact the admin.',
       payAlt: 'QR code of the Arbitrum payment address',
       copy: 'Copy address',
       copied: 'Address copied',
@@ -203,8 +203,10 @@
       document.addEventListener('keydown', e => {
         if (!this.choice) return;
         const k = e.key;
-        if (k === 'ArrowUp' || k === 'w' || k === 'W') { this.move(-1); e.preventDefault(); }
-        else if (k === 'ArrowDown' || k === 's' || k === 'S') { this.move(1); e.preventDefault(); }
+        if (k === 'ArrowUp' || k === 'w' || k === 'W') { this.move(-this.cols()); e.preventDefault(); }
+        else if (k === 'ArrowDown' || k === 's' || k === 'S') { this.move(this.cols()); e.preventDefault(); }
+        else if (k === 'ArrowLeft' || k === 'a' || k === 'A') { this.move(-1); e.preventDefault(); }
+        else if (k === 'ArrowRight' || k === 'd' || k === 'D') { this.move(1); e.preventDefault(); }
       });
     },
     type(full, after) {
@@ -259,6 +261,13 @@
       });
       this.menuEl.hidden = false;
       this.move(0);
+    },
+    // columns of the current menu as laid out (1 = vertical list); up/down jump a row, left/right step one
+    cols() {
+      const b = this.choice && this.choice.btns;
+      if (!b || !b.length) return 1;
+      const top = b[0].offsetTop;
+      return Math.max(1, b.filter(x => x.offsetTop === top).length);
     },
     move(d) {
       const c = this.choice, n = c.options.length;
@@ -919,7 +928,7 @@
       if ((dialog.choice || (bets.el && bets.el.isConnected)) && pad.held && !this.padRepeat) {   // touch d-pad drives the menu / board
         this.padRepeat = true;
         const d = pad.held === 'up' ? -1 : pad.held === 'down' ? 1 : 0;
-        if (dialog.choice) { if (d) dialog.move(d); }
+        if (dialog.choice) dialog.move(d ? d * dialog.cols() : (pad.held === 'left' ? -1 : 1));
         else if (d) moveBetSel(d);
         else flipBets(pad.held === 'left' ? -1 : 1);
       }
