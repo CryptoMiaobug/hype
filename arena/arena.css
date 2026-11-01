@@ -158,3 +158,6 @@ body[data-page="arena"] .notice-bar { flex: 0 0 auto; }
   .arena-bets td, .arena-bets th { padding: 2px 3px; }
   .arena-bets-addr { font-size: 11px; }
 }
+/* board menu: hide the prompt line, stack the options vertically */
+.arena-dialog.is-board-menu > p { display: none; }
+.arena-dialog.is-board-menu .arena-menu { grid-template-columns: 1fr; justify-content: stretch; }

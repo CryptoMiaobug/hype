@@ -281,6 +281,8 @@
       this.extraEl = node || null;
       if (node) this.el.insertBefore(node, this.menuEl);
       this.el.classList.toggle('has-extra', !!node);
+      // board menu: no title lines, options stacked vertically
+      this.el.classList.toggle('is-board-menu', !!(node && node.classList && node.classList.contains('arena-board-head')));
     },
     // Full notice (e.g. the lobby board): node replaces the text line; any press closes it.
     notice(node) {
@@ -366,13 +368,11 @@
   // header shown above the board menu (title + welcome line)
   function boardHead(t) {
     const box = document.createElement('div');
-    box.className = 'arena-board';
-    const h = document.createElement('h2');
-    h.textContent = t.boardTitle;
+    box.className = 'arena-board arena-board-head';
     const paper = document.createElement('div');
     paper.className = 'arena-board-paper';
     t.boardBody.forEach(line => { const p = document.createElement('p'); p.textContent = line; paper.appendChild(p); });
-    box.append(h, paper);
+    box.append(paper);
     return box;
   }
 
