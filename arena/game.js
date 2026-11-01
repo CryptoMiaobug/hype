@@ -34,6 +34,20 @@
       hintMenu: '↑ / ↓ 选择，空格 / 回车 确认',
       hintBattle: '自动对战中，空格 / 回车 / 点击 可加快',
       next: '▼',
+      // main-hall receptionist: entry fee
+      feeNpc: ['欢迎来到宝可梦竞技场！'],
+      feeAsk: '你要挑战哪一档？',
+      feeTier: (n, name, fee) => `第 ${n} 档 · ${name}（${fee}U）`,
+      payText: (n, name, fee) => `第 ${n} 档 · ${name}，报名费 ${fee} USDC\n请使用 Arbitrum 网络转账`,
+      payNote: '仅收 Arbitrum One 网络上的 USDC，其他网络或币种转入无法找回。',
+      payAlt: 'Arbitrum 收款地址二维码',
+      copy: '复制地址',
+      copied: '地址已复制',
+      copyFail: '复制失败，请长按地址手动复制',
+      close: '关闭',
+      boardTitle: '公告栏',
+      boardBody: ['欢迎来到竞技场！'],
+      boardAlt: '公告栏',
     },
     en: {
       npc: ['Welcome to the Pokémon Arena!', 'Every Pokémon here is a champion. Which one will you challenge?'],
@@ -51,6 +65,19 @@
       lose: ['The champion held on... but your challenger did really well!', 'Why not challenge again?'],
       hintMenu: '↑ / ↓ to choose, Space / Enter to confirm',
       hintBattle: 'Auto battle. Space / Enter / tap to speed up',
+      feeNpc: ['Welcome to the Pokémon Arena!'],
+      feeAsk: 'Which tier will you challenge?',
+      feeTier: (n, name, fee) => `Tier ${n} · ${name} (${fee}U)`,
+      payText: (n, name, fee) => `Tier ${n} · ${name}: entry fee ${fee} USDC\nPlease send on the Arbitrum network`,
+      payNote: 'USDC on Arbitrum One only. Funds sent on other networks or in other coins cannot be recovered.',
+      payAlt: 'QR code of the Arbitrum payment address',
+      copy: 'Copy address',
+      copied: 'Address copied',
+      copyFail: 'Copy failed. Press and hold the address to copy it.',
+      close: 'Close',
+      boardTitle: 'Notice Board',
+      boardBody: ['Welcome to the Arena!'],
+      boardAlt: 'Notice board',
       hint: 'Arrows / WASD to move, Space / Enter to talk',
       hintTouch: 'D-pad to move, press A at the counter to talk',
       next: '▼',
@@ -111,10 +138,12 @@
         this.type(text, () => { this.sayTimer = setTimeout(() => this.sayDone && this.sayDone(), hold); });
       });
     },
-    choose(prompt, options, onPick, sel = 0) {
+    // extra: optional DOM node shown between the prompt and the menu (e.g. the payment QR)
+    choose(prompt, options, onPick, sel = 0, extra = null) {
       this.lines = []; this.onDone = null;
       this.showBox(false);
       this.type(prompt);
+      this.setExtra(extra);
       this.menuEl.innerHTML = '';
       this.choice = { options, onPick, sel: Math.max(0, Math.min(sel, options.length - 1)), btns: [] };
       options.forEach((o, i) => {
@@ -143,7 +172,24 @@
       this.clearMenu(); this.close();
       c.onPick(pick);
     },
-    clearMenu() { this.choice = null; if (this.menuEl) { this.menuEl.hidden = true; this.menuEl.innerHTML = ''; } },
+    setExtra(node) {
+      if (this.extraEl) this.extraEl.remove();
+      this.extraEl = node || null;
+      if (node) this.el.insertBefore(node, this.menuEl);
+      this.el.classList.toggle('has-extra', !!node);
+    },
+    // Full notice (e.g. the lobby board): node replaces the text line; any press closes it.
+    notice(node) {
+      this.clearMenu();
+      this.lines = ['']; this.idx = 0; this.onDone = null;
+      clearInterval(this.typing); this.typing = null;
+      this.full = ''; this.textEl.textContent = '';
+      this.el.setAttribute('aria-label', node.textContent);
+      this.showBox(true);
+      this.el.classList.add('is-notice');
+      this.setExtra(node);
+    },
+    clearMenu() { this.choice = null; this.setExtra(null); if (this.menuEl) { this.menuEl.hidden = true; this.menuEl.innerHTML = ''; } },
     advance() {
       if (!this.open) return;
       if (this.typing) { this.endTyping(); return; }   // first press finishes the line
@@ -157,11 +203,65 @@
     },
     close() {
       this.open = false; this.el.hidden = true;
+      this.el.classList.remove('is-notice'); this.setExtra(null);
       clearInterval(this.typing); this.typing = null;
     },
   };
 
   const PAGE_SIZE = 10;   // Pokémon per menu page
+
+  // Entry fee (main-hall receptionist): tier n costs n USDC on Arbitrum One.
+  // The QR (assets/pay/arb-usdc-qr.png, made by pay-gen/build_pay_qr.py) encodes PAY_ADDRESS only.
+  const PAY_ADDRESS = '0x5D9ac14a4b277b97806aB20F319796D37A9010d5';
+  const PAY_QR = 'assets/pay/arb-usdc-qr.png?v=20261101b';
+  const tierFee = n => n;
+
+  async function copyText(s) {
+    try { await navigator.clipboard.writeText(s); return true; } catch (e) { /* fall back below */ }
+    const ta = document.createElement('textarea');
+    ta.value = s; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.remove();
+    return ok;
+  }
+
+  // QR + address block shown inside the dialog; clicks here don't advance the dialog.
+  function payPanel(t, status) {
+    const box = document.createElement('div');
+    box.className = 'arena-pay';
+    box.addEventListener('click', e => e.stopPropagation());
+    const img = document.createElement('img');
+    img.src = PAY_QR; img.alt = t.payAlt; img.width = 180; img.height = 180;
+    const info = document.createElement('div');
+    info.className = 'arena-pay-info';
+    const addr = document.createElement('code');
+    addr.className = 'arena-pay-addr'; addr.textContent = PAY_ADDRESS;
+    const note = document.createElement('p');
+    note.className = 'arena-pay-note'; note.textContent = t.payNote;
+    info.append(addr, note);
+    if (status) {
+      const st = document.createElement('p');
+      st.className = 'arena-pay-status'; st.setAttribute('role', 'status'); st.textContent = status;
+      info.append(st);
+    }
+    box.append(img, info);
+    return box;
+  }
+
+  // Lobby notice board contents
+  function boardPanel(t) {
+    const box = document.createElement('div');
+    box.className = 'arena-board';
+    const h = document.createElement('h2');
+    h.textContent = t.boardTitle;
+    const paper = document.createElement('div');
+    paper.className = 'arena-board-paper';
+    t.boardBody.forEach(line => { const p = document.createElement('p'); p.textContent = line; paper.appendChild(p); });
+    box.append(h, paper);
+    return box;
+  }
 
   // Tier list for the division menu; fetched once, null if missing.
   let rosterP = null;
@@ -200,8 +300,9 @@
 
     preload() {
       this.load.image('tiles', 'assets/tileset.png');
-      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261101a');
+      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261101d');
       this.load.atlas('player', 'assets/player.png', 'assets/player.json');
+      this.load.image('board', 'assets/board.png?v=20261101d');
     }
 
     create() {
@@ -216,6 +317,20 @@
       // receptionists: main hall + east hall (same dialogue for now)
       this.npcs = ['npc', 'npc2'].map(prop).filter(Boolean).map(v => { const [x, y] = v.split(',').map(Number); return { x, y }; });
       this.mapW = map.width; this.mapH = map.height;
+
+      // Notice board (w x h tiles); walk up to it and press A, or click/tap it
+      const bp = prop('board');
+      if (bp) {
+        const [bx, by, bw = 2, bh = 2] = bp.split(',').map(Number);
+        this.board = { x: bx, y: by, w: bw, h: bh };
+        this.add.image(bx * TILE, by * TILE, 'board').setOrigin(0, 0).setDepth(4)
+          .setInteractive({ useHandCursor: true })
+          .on('pointerdown', (p, lx, ly, ev) => {
+            if (dialog.open) return;
+            ev.stopPropagation();   // keep the scene-level tap handler from closing it at once
+            this.openBoard();
+          });
+      }
 
       // Player: 32x41 sprite, feet on the bottom of its tile
       this.tx = sx; this.ty = sy; this.facing = 'up'; this.moving = false;
@@ -283,13 +398,58 @@
       const d = DIRS[this.facing];
       const fx = this.tx + d.dx, fy = this.ty + d.dy;
       // NPCs stand behind a counter: talk across it (facing up at the counter tile in front of them)
-      const hit = this.npcs.some(n => (this.facing === 'up' && fx === n.x && fy === n.y + 2) || (fx === n.x && fy === n.y));
-      if (hit) this.talkToNpc();
+      const b = this.board;
+      if (b && fx >= b.x && fx < b.x + b.w && fy >= b.y && fy < b.y + b.h) { this.openBoard(); return; }
+      const i = this.npcs.findIndex(n => (this.facing === 'up' && fx === n.x && fy === n.y + 2) || (fx === n.x && fy === n.y));
+      if (i === 0) this.talkToFeeNpc();   // main hall: entry fee
+      else if (i > 0) this.talkToNpc();   // east hall: pick a champion and watch
+    }
+
+    openBoard() {
+      if (window.ArenaMusic) window.ArenaMusic.sfx('select');
+      dialog.notice(boardPanel(TEXT[lang()]));
     }
 
     talkToNpc() {
       const t = TEXT[lang()];
       dialog.start(t.npc, () => this.askPick());
+    }
+
+    // Main-hall receptionist: pick a tier, then show the entry-fee QR (tier n = n USDC).
+    talkToFeeNpc() {
+      const t = TEXT[lang()];
+      dialog.start(t.feeNpc, () => this.askFeeTier());
+    }
+
+    askFeeTier(sel = 0) {
+      const L = lang(), t = TEXT[L];
+      setHint('menu');
+      loadRoster().then(R => {
+        if (!R) { setHint('arena'); dialog.start(t.bye); return; }
+        const opts = [...R.open].sort((a, b) => a - b)
+          .map(n => ({ value: n, label: t.feeTier(n, R.tiers[n][L], tierFee(n)) }));
+        opts.push({ value: null, label: t.cancel });
+        dialog.choose(t.feeAsk, opts, tier => {
+          if (!tier) { setHint('arena'); dialog.start(t.bye); return; }
+          this.showPay(R, tier, opts.findIndex(o => o.value === tier));
+        }, sel);
+      });
+    }
+
+    showPay(R, tier, tierSel, status = '', sel = 0) {
+      const L = lang(), t = TEXT[L];
+      const opts = [
+        { value: '__copy', label: t.copy },
+        { value: '__back', label: t.back },
+        { value: '__close', label: t.close },
+      ];
+      dialog.choose(t.payText(tier, R.tiers[tier][L], tierFee(tier)), opts, async pick => {
+        if (pick === '__copy') {
+          const ok = await copyText(PAY_ADDRESS);
+          this.showPay(R, tier, tierSel, ok ? t.copied : t.copyFail, 0);
+        } else if (pick === '__back') this.askFeeTier(tierSel);
+        else { setHint('arena'); dialog.start(t.bye); }
+      }, sel, payPanel(t, status));
     }
 
     // Step 1: division (tier 1-10). The tier list comes from assets/roster.json, made by

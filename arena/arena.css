@@ -74,3 +74,33 @@ body[data-page="arena"] { display: flex; flex-direction: column; overflow: hidde
   .arena-menu { gap: 0 12px; margin-top: 4px; }
   .arena-menu button { padding: 2px 6px 2px 20px; }
 }
+
+/* Entry-fee QR panel (main-hall receptionist) */
+.arena-pay { display: flex; gap: 14px; align-items: center; margin-top: 10px; cursor: default; }
+.arena-pay img { flex: none; width: 180px; height: 180px; image-rendering: pixelated; border: 2px solid #383848; border-radius: 6px; background: #fff; }
+.arena-pay-info { min-width: 0; }
+.arena-pay-addr {
+  display: block; padding: 6px 8px; border-radius: 6px; background: #e8eef8; color: #202030;
+  font: 600 14px/1.45 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  word-break: break-all; user-select: all; -webkit-user-select: all;
+}
+.arena-pay-note { margin: 6px 0 0; font-size: 13px; font-weight: 500; line-height: 1.5; color: #a03030; white-space: normal; }
+.arena-pay-status { margin: 4px 0 0; font-size: 13px; color: #287048; white-space: normal; }
+.arena-dialog.has-extra .arena-menu { grid-template-columns: repeat(3, auto); justify-content: start; }
+@media (max-width: 520px) {
+  .arena-pay { flex-direction: column; align-items: stretch; gap: 8px; }
+  .arena-pay img { width: 150px; height: 150px; align-self: center; }
+  .arena-pay-addr { font-size: 12px; }
+}
+@media (pointer: coarse) and (max-height: 760px) {
+  .arena-dialog.has-extra { bottom: 8px; }   /* tall panel: let it cover the d-pad strip while open */
+}
+
+/* Lobby notice board */
+.arena-dialog.is-notice > p { display: none; }
+.arena-board h2 { margin: 0 0 8px; font-size: 18px; color: #6a4626; }
+.arena-board-paper {
+  padding: 14px 16px; border-radius: 4px; background: #fffdf4; color: #303030;
+  border: 3px solid #85582c; box-shadow: inset 0 0 0 2px #c6966a;
+}
+.arena-board-paper p { margin: 0; font-size: 20px; text-align: center; }
