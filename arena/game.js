@@ -85,6 +85,26 @@
         { commit: true },
         { p: '请理性参与，量力而行。', cls: 'is-note' },
       ],
+      // 点承诺值打开（roulette-bot/roulette.py 的种子哈希链 + 抽号）
+      commitTip: '点击查看说明',
+      commitPage: [
+        { title: '【承诺值说明】' },
+        { p: '承诺值是一串固定的「指纹」，在开奖上线前就公开了，以后不会改。它保证每天开奖用的「种子」早就定好，不能临时更换。' },
+        { h: '【种子和承诺值】' },
+        { li: '每天开奖用一个种子（按北京时间算日期）。所有种子都提前生成，连成一条链：对某天的种子算一次 SHA-256，就得到前一天的种子。' },
+        { li: '对第一天的种子再算一次 SHA-256，得到的就是承诺值。' },
+        { li: '所以承诺值一公开，以后每一天的种子就都定死了。SHA-256 不能倒推，公开某天的种子，也推不出后面几天的种子。' },
+        { h: '【每场结果怎么算】' },
+        { li: '号码 = HMAC-SHA256(当天种子, "交易哈希:日志序号:计数")，取前 8 个字节当整数，除以 37 取余数，得到 0–36。计数从 0 开始；取到的数落在除不尽 37 的最后一小段时，计数加 1 重算，保证每个号码机会一样。' },
+        { li: '交易哈希是你那笔转账的哈希，转账上链前谁都不知道；「当天」看转账所在区块的时间。' },
+        { li: '号码对应结果：0 = 胜 10 倍；1–2 = 胜 3 倍；3–8 = 胜 2 倍；9–16 = 胜 1 倍；17–36 = 负。' },
+        { li: '第十档开奖为胜时，再用 "mew:交易哈希:日志序号:计数" 同样算一次，除以 373 余数是 0 就击败超梦。' },
+        { h: '【怎么核对】' },
+        { li: '某一天过去后，公布那天的种子。' },
+        { li: '对公布的种子算 SHA-256，应等于前一天的种子；第一天的种子算出来应等于下面的承诺值。' },
+        { li: '再用种子和你的交易哈希按上面的方法算号码，应和你收到的结果一致。' },
+        { commit: true, full: true },
+      ],
       // 【活动】击败超梦！！！（主人 2026-11-01 14:29 定稿）
       mewPage: [
         { title: '【活动】击败超梦！！！' },
@@ -97,7 +117,7 @@
         { p: '大奖数量不限，每一场都有机会！', cls: 'is-note' },
       ],
       mewSoonNote: '活动即将开始，开始时间另行公告。',
-      betsTitle: '最近比赛',
+      betsTitle: '**最近比赛**（点击观赛）',
       betsCols: ['训练师', '参赛费', '档位', '结果'],
       betsLoading: '比赛载入中…',
       betsEmpty: '还没有比赛',
@@ -174,6 +194,25 @@
         { commit: true },
         { p: 'Please play responsibly and within your means.', cls: 'is-note' },
       ],
+      commitTip: 'Tap for details',
+      commitPage: [
+        { title: '[About the commitment]' },
+        { p: 'The commitment is a fixed “fingerprint” published before the draws went live. It never changes, so the daily “seeds” used for the draws were fixed in advance and cannot be swapped.' },
+        { h: 'Seeds and the commitment' },
+        { li: 'Each day (Beijing time) uses one seed. All seeds were made in advance as a chain: SHA-256 of one day’s seed gives the previous day’s seed.' },
+        { li: 'SHA-256 of the first day’s seed is the commitment.' },
+        { li: 'So once the commitment is public, every future seed is locked. SHA-256 cannot be reversed, so a revealed seed does not give away later ones.' },
+        { h: 'How each result is drawn' },
+        { li: 'Number = HMAC-SHA256(day seed, "txHash:logIndex:counter"); the first 8 bytes as an integer, mod 37, gives 0–36. The counter starts at 0; if the integer falls in the small leftover range that 37 does not divide evenly, the counter goes up by 1 and it is redrawn, so every number is equally likely.' },
+        { li: 'The tx hash is your transfer’s hash, unknown to anyone until it is on chain. The day is taken from the time of the block your transfer is in.' },
+        { li: 'Number to result: 0 = win 10×; 1–2 = win 3×; 3–8 = win 2×; 9–16 = win 1×; 17–36 = loss.' },
+        { li: 'For a tier 10 win, the same is done with "mew:txHash:logIndex:counter"; mod 373 equal to 0 means Mewtwo is beaten.' },
+        { h: 'How to check' },
+        { li: 'After a day is over, that day’s seed is published.' },
+        { li: 'SHA-256 of the published seed should equal the previous day’s seed; for the first day it should equal the commitment below.' },
+        { li: 'Then compute the number from the seed and your tx hash as above; it should match the result you received.' },
+        { commit: true, full: true },
+      ],
       mewPage: [
         { title: '[Event] Beat Mewtwo!!!' },
         { p: 'Mewtwo, the legendary strongest Pokémon, is defending tier 10.' },
@@ -185,7 +224,7 @@
         { p: 'No limit on jackpots. Every match has a chance!', cls: 'is-note' },
       ],
       mewSoonNote: 'The event is coming soon; the start date will be announced.',
-      betsTitle: 'Recent matches',
+      betsTitle: '**Recent matches** (tap to watch)',
       betsCols: ['Trainer', 'Entry fee', 'Tier', 'Result'],
       betsLoading: 'Loading matches…',
       betsEmpty: 'No matches yet',
@@ -414,7 +453,8 @@
   }
 
   // one text page of the board (guide / event); blocks = TEXT.*.rules / mewPage
-  function boardPage(t, blocks, note, back) {
+  // onCommit: makes the short commitment a link to the commitment page
+  function boardPage(t, blocks, note, back, onCommit) {
     const box = document.createElement('div');
     box.className = 'arena-board';
     box.addEventListener('click', e => e.stopPropagation());   // reading/scrolling/copying must not close it
@@ -434,8 +474,17 @@
       if (b.commit) {   // short form on screen, full value in the copy button + accessible label
         flush();
         const row = document.createElement('div'); row.className = 'arena-commit';
-        const code = document.createElement('code'); code.textContent = shortCommit(COMMITMENT);
-        code.title = COMMITMENT; code.setAttribute('aria-label', COMMITMENT);
+        let code;
+        if (onCommit) {
+          code = document.createElement('a'); code.href = '#'; code.className = 'arena-commit-link';
+          code.textContent = shortCommit(COMMITMENT); code.title = t.commitTip;
+          code.setAttribute('aria-label', `${COMMITMENT}（${t.commitTip}）`);
+          code.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); onCommit(); });
+        } else {
+          code = document.createElement('code'); code.textContent = b.full ? COMMITMENT : shortCommit(COMMITMENT);
+          code.title = COMMITMENT; code.setAttribute('aria-label', COMMITMENT);
+          if (b.full) row.classList.add('is-full');
+        }
         const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = t.commitCopy;
         const done = document.createElement('span'); done.className = 'arena-commit-done'; done.setAttribute('aria-live', 'polite');
         btn.addEventListener('click', async ev => {
@@ -579,7 +628,7 @@
     const L = lang();
     box.textContent = '';
     const h = document.createElement('h3');
-    h.textContent = t.betsTitle;
+    richText(h, t.betsTitle);
     box.appendChild(h);
     const msg = s => { const p = document.createElement('p'); p.className = 'arena-bets-msg'; p.setAttribute('role', 'status'); p.textContent = s; box.appendChild(p); };
     if (bets.err) return msg(t.betsError);
@@ -911,12 +960,24 @@
         { value: '__close', label: t.boardMenu.close },
       ];
       dialog.choose(t.boardTitle, opts, v => {
-        if (v === '__rules') this.boardShow(back => boardPage(t, t.rules, null, back), 0);
+        if (v === '__rules') this.showRules();
         else if (v === '__bets') { this.betsFromMenu = true; this.openBets(false); }
         else if (v === '__mew') this.boardShow(back => boardPage(t, t.mewPage, MEW_LIVE ? null : t.mewSoonNote, back), 2);
         else dialog.close();
       }, sel, boardHead(t));
       this.boardSel = sel;
+    }
+
+    // 【竞技场说明】; the commitment link opens its own page, whose Back returns here
+    showRules() {
+      const t = TEXT[lang()];
+      this.boardShow(back => boardPage(t, t.rules, null, back, () => {
+        if (window.ArenaMusic) window.ArenaMusic.sfx('select');
+        const toRules = () => { dialog.close(); this.showRules(); };
+        dialog.close();
+        dialog.notice(boardPage(t, t.commitPage, null, toRules));
+        dialog.onDone = () => this.showRules();
+      }), 0);
     }
 
     // show a board page; back (button, Space/Enter/A, or a tap outside the page) returns to the menu on item sel
