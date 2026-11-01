@@ -1,0 +1,46 @@
+# Publish the site to GitHub Pages (replaces the built-in "deploy from branch" publisher).
+# Builds with the same Jekyll action the built-in publisher used, so the output is unchanged.
+name: pages
+
+on:
+  push:
+    branches: [main]
+  # Data jobs push with GITHUB_TOKEN, which does not fire `push` workflows,
+  # so publish again whenever one of them finishes.
+  workflow_run:
+    workflows: [pe-daily, btc-daily, btc-dominance-daily]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; a new one waits for the running one instead of failing.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+        with:
+          ref: main   # always publish the latest main (workflow_run would otherwise use its own sha)
+      - uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697   # v1
+        with:
+          source: ./
+          destination: ./_site
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa   # v3
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346   # v5
