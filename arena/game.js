@@ -355,7 +355,7 @@
       const resume = bets.page;
       stopBets();
       dialog.close();
-      arenaScene.startReplay(m, idx.v, shortAddr(e.who), e.tier, resume);
+      arenaScene.startReplay(m, idx.v, shortAddr(e.who), e.tier, resume, e.result.kind === 'win' ? e.result.mult : 0);
     } catch (err) {
       const t = TEXT[lang()];
       const box = bets.el;
@@ -609,13 +609,13 @@
     }
 
     // Notice-board replay: battle n of champion m.champ, challenger shown as the entrant's address.
-    startReplay(m, v, who, tier, page) {
+    startReplay(m, v, who, tier, page, crit) {
       this.replayPage = page;
       this.face('up');
       this.cameras.main.fadeOut(250, 255, 255, 255);
       this.cameras.main.once('camerafadeoutcomplete', () => {
         this.scene.sleep();
-        this.scene.run('battle', { champ: m.champ, n: m.n, expect: m.expect, who, v, music: tier >= 9 ? 'legend' : 'battle', replay: true });
+        this.scene.run('battle', { champ: m.champ, n: m.n, expect: m.expect, who, crit, v, music: tier >= 9 ? 'legend' : 'battle', replay: true });
       });
     }
 

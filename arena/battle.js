@@ -37,6 +37,7 @@
       // shown as the entrant's address (who). Otherwise a random battle with an unnamed challenger.
       this.fixedN = Number.isInteger(data.n) ? data.n : null;
       this.who = data.who || null;
+      this.crit = data.crit > 1 ? data.crit : 0;   // winning multiplier >1 = crit bonus line at the end
       this.replay = !!data.replay;
       // assets/battles/<champion>.json holds its 100 battles (battle-gen/build_tier_battles.mjs)
       this.dataKey = 'battles-' + data.champ;
@@ -211,6 +212,7 @@
       const end = zh
         ? (win ? [`${me}战胜了${tr}！`, `擂主${foeMon}被击败了！`] : [`${me}输给了${tr}……`, `擂主${foeMon}守住了擂台！`])
         : (win ? [`${me} defeated ${tr}!`, `The champion ${foeMon} has fallen!`] : [`${me} lost to ${tr}...`, `The champion ${foeMon} held on!`]);
+      if (win && this.crit) end.push(zh ? `恭喜本场比赛获得${this.crit}倍暴击奖励！！！` : `Congratulations! This match earned a ${this.crit}× critical bonus!!!`);
       this.UI.dialog.busy = false;
       this.UI.dialog.start(end, () => this.finish());
     }
