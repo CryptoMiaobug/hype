@@ -661,9 +661,12 @@
 
     preload() {
       this.load.image('tiles', 'assets/tileset.png');
-      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261101z');
+      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261101ae');
       this.load.atlas('player', 'assets/player.png', 'assets/player.json');
-      this.load.image('board', 'assets/board.png?v=20261101d');
+      this.load.image('board', 'assets/board.png?v=20261101ad');        // title plank says 竞技场
+      this.load.image('board-en', 'assets/board-en.png?v=20261101ad');  // ... or ARENA
+      for (const n of ['signup', 'trial']) for (const sfx of ['', '-en'])   // counter-top labels
+        this.load.image(`desk-${n}${sfx}`, `assets/desk-${n}${sfx}.png?v=20261101ae`);
       this.load.image('sign', 'assets/sign.png?v=20261101z');
     }
 
@@ -685,7 +688,7 @@
       if (bp) {
         const [bx, by, bw = 2, bh = 2] = bp.split(',').map(Number);
         this.board = { x: bx, y: by, w: bw, h: bh };
-        this.add.image(bx * TILE, by * TILE, 'board').setOrigin(0, 0).setDepth(4)
+        this.boardImg = this.add.image(bx * TILE, by * TILE, lang() === 'en' ? 'board-en' : 'board').setOrigin(0, 0).setDepth(4)
           .setInteractive({ useHandCursor: true })
           .on('pointerdown', (p, lx, ly, ev) => {
             if (dialog.open) return;
@@ -708,6 +711,14 @@
           .setInteractive({ hitArea: new Phaser.Geom.Rectangle(0, TILE * 2, TILE, TILE), hitAreaCallback: Phaser.Geom.Rectangle.Contains, useHandCursor: true })
           .on('pointerdown', open);
       }
+
+      // Labels on the grey counter tops: 报名处 (main hall) / 模拟挑战 (east hall); swapped with the page language
+      this.deskImgs = (prop('desks') || '').split(';').filter(Boolean).map(v => {
+        const [n, x, y] = v.split(',');
+        const img = this.add.image(+x * TILE, +y * TILE, 'desk-' + n + (lang() === 'en' ? '-en' : '')).setOrigin(0, 0).setDepth(1);
+        img.deskName = n;
+        return img;
+      });
 
       // Player: 32x41 sprite, feet on the bottom of its tile
       this.tx = sx; this.ty = sy; this.facing = 'up'; this.moving = false;
@@ -736,7 +747,11 @@
 
       setHint('arena');
       playMusic('lobby');
-      window.onArenaLang = () => { setHint(hintMode); if (window.ArenaMusic) window.ArenaMusic.refreshLabel(); };
+      window.onArenaLang = () => {
+        setHint(hintMode); if (window.ArenaMusic) window.ArenaMusic.refreshLabel();
+        if (this.boardImg) this.boardImg.setTexture(lang() === 'en' ? 'board-en' : 'board');
+        for (const d of this.deskImgs) d.setTexture('desk-' + d.deskName + (lang() === 'en' ? '-en' : ''));
+      };
       this.events.on('wake', this.onWake, this);
       arenaScene = this;
     }
