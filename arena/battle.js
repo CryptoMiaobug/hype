@@ -39,9 +39,14 @@
       this.who = data.who || null;
       this.crit = data.crit > 1 ? data.crit : 0;   // winning multiplier >1 = crit bonus line at the end
       this.replay = !!data.replay;
-      // assets/battles/<champion>.json holds its 100 battles (battle-gen/build_tier_battles.mjs)
-      this.dataKey = 'battles-' + data.champ;
-      this.dataUrl = `assets/battles/${data.champ}.json?v=${data.v || DATA_V}`;
+      // assets/battles/<champion>/<k>.json holds battles k*chunk .. k*chunk+chunk-1 (battle-gen/build_tier_battles.mjs).
+      // Replay: battle n. Counter: a random one of the champion's `count` battles. Only that one file is loaded.
+      const chunk = data.chunk || 100;
+      const n = this.fixedN !== null ? this.fixedN : Math.floor(Math.random() * (data.count || chunk));
+      const k = Math.floor(n / chunk);
+      this.inFile = n - k * chunk;
+      this.dataKey = `battles-${data.champ}-${k}`;
+      this.dataUrl = `assets/battles/${data.champ}/${k}.json?v=${data.v || DATA_V}`;
     }
 
     preload() {
@@ -49,9 +54,7 @@
       // pick the battle as soon as the script is in, then load only the two sprites it needs
       const addImages = d => {
         // any of the champion's battles; the challenger ('me') comes with the battle
-        this.B = this.fixedN !== null && d.battles[this.fixedN]
-          ? d.battles[this.fixedN]
-          : d.battles[Math.floor(Math.random() * d.battles.length)];
+        this.B = d.battles[this.inFile] || d.battles[Math.floor(Math.random() * d.battles.length)];
         const foe = this.B.foe, me = this.B.pick;
         if (!this.textures.exists('mon-' + foe)) this.load.image('mon-' + foe, `assets/mon/${foe}.png`);
         if (!this.textures.exists('back-' + me)) this.load.image('back-' + me, `assets/mon/${me}-back.png`);

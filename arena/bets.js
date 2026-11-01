@@ -96,7 +96,7 @@
   }
 
   // Replay for a settled match: among all recorded battles of the entry's tier whose challenger
-  // outcome equals the match result, take number(result tx hash) mod count. idx = match-index-v1.json.
+  // outcome equals the match result, take number(result tx hash) mod count. idx = assets/match-index.json.
   // Candidate order: roster order of champions, then battle order inside assets/battles/<id>.json.
   // -> { champ, n (battle index in that file), expect: 'win' | 'lose' } or null if not settled.
   function matchBattle(entry, idx) {
@@ -109,7 +109,7 @@
     for (const [champ, s] of list) {
       for (let n = 0; n < s.length; n++) {
         if (s[n] !== want) continue;
-        if (k-- === 0) return { champ, n, expect: want === 'w' ? 'win' : 'lose' };
+        if (k-- === 0) return { champ, n, chunk: idx.chunk, expect: want === 'w' ? 'win' : 'lose' };
       }
     }
     return null;

@@ -339,9 +339,10 @@
     if (row && row.scrollIntoView) row.scrollIntoView({ block: 'nearest' });
   }
 
-  // Replay of a settled match (rule: bets.js matchBattle + assets/match-index-v1.json)
+  // Replay of a settled match (rule: bets.js matchBattle + assets/match-index.json)
+  const MATCH_IDX_V = '20261101s';   // bump with every re-recording (battle-gen/build_match_index.mjs)
   let matchIdxP = null;
-  const loadMatchIdx = () => matchIdxP || (matchIdxP = fetch('assets/match-index-v1.json?v=20261101p')
+  const loadMatchIdx = () => matchIdxP || (matchIdxP = fetch('assets/match-index.json?v=' + MATCH_IDX_V)
     .then(r => { if (!r.ok) throw new Error('index ' + r.status); return r.json(); })
     .catch(e => { matchIdxP = null; throw e; }));
 
@@ -461,7 +462,7 @@
 
   // Tier list for the division menu; fetched once, null if missing.
   let rosterP = null;
-  const loadRoster = () => rosterP || (rosterP = fetch('assets/roster.json?v=20261031m')
+  const loadRoster = () => rosterP || (rosterP = fetch('assets/roster.json?v=20261101s')
     .then(r => (r.ok ? r.json() : null)).catch(() => null));
 
   const playMusic = n => { if (window.ArenaMusic) window.ArenaMusic.play(n); };
@@ -615,7 +616,7 @@
       this.cameras.main.fadeOut(250, 255, 255, 255);
       this.cameras.main.once('camerafadeoutcomplete', () => {
         this.scene.sleep();
-        this.scene.run('battle', { champ: m.champ, n: m.n, expect: m.expect, who, crit, v, music: tier >= 9 ? 'legend' : 'battle', replay: true });
+        this.scene.run('battle', { champ: m.champ, n: m.n, chunk: m.chunk, expect: m.expect, who, crit, v, music: tier >= 9 ? 'legend' : 'battle', replay: true });
       });
     }
 
@@ -699,16 +700,16 @@
           return;
         }
         setHint('arena');
-        dialog.start(t.go(R.mon[pick][L]), () => this.startBattle(pick, R.v, tier >= 9 ? 'legend' : 'battle'));   // pick = champion
+        dialog.start(t.go(R.mon[pick][L]), () => this.startBattle(pick, R.v, tier >= 9 ? 'legend' : 'battle', R.mon[pick].battles, R.chunk));   // pick = champion
       }, sel);
     }
 
-    startBattle(pick, v, music) {
+    startBattle(pick, v, music, count, chunk) {
       this.face('up');
       this.cameras.main.fadeOut(250, 255, 255, 255);
       this.cameras.main.once('camerafadeoutcomplete', () => {
         this.scene.sleep();
-        this.scene.run('battle', { champ: pick, v, music });
+        this.scene.run('battle', { champ: pick, v, music, count, chunk });
       });
     }
 
