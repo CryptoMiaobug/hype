@@ -180,7 +180,7 @@
 
     async run() {
       const L = lang(), zh = L === 'zh';
-      const tr = this.D.trainers[this.B.trainer][L];
+      const tr = 'Miao';   // every champion trainer is shown as Miao (recorded names in battles/*.json are ignored)
       const foeMon = this.D.mon[this.B.foe][L], myMon = this.D.mon[this.B.pick][L];
 
       await this.tween({ targets: this.sprite.foe, x: this.home.foe.x, duration: 600, ease: 'Quad.out' });
