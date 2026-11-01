@@ -378,7 +378,7 @@
     table.append(cap, thead, tbody);
     box.appendChild(table);
 
-    if (pages > 1) {
+    {   // pager is always shown (buttons greyed out when there is only one page)
       const nav = document.createElement('div');
       nav.className = 'arena-bets-nav';
       const btn = (label, d, off) => {
