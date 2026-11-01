@@ -57,7 +57,7 @@
       boardTitle: '公告栏',
       boardBody: ['欢迎来到竞技场！'],
       boardAlt: '公告栏',
-      boardMenu: { rules: '【竞技场说明】', bets: '【竞技场】', mew: '【活动】击败超梦！！！', close: '关闭' },
+      boardMenu: { rules: '【竞技场说明】', bets: '【竞技场】', commit: '【结果计算】', mew: '【活动】击败超梦！！！', close: '关闭' },
       arenaTitle: '【竞技场】',
       boardSoon: '（即将开始）',
       boardBack: '返回',
@@ -74,21 +74,21 @@
         { li: '只取到小数后 2 位。低于 0.5U 不参赛。超过 10U 按 10U 参赛，多出的部分自动退回。' },
         { li: '只收 Arbitrum One 上的 USDC，转错网络或币种请联系管理员。' },
         { h: '【结果和奖励】' },
-        { li: '胜（1倍，暴击2、3、10倍）' },
-        { li: '负：没有奖励' },
-        { p: '奖励自动转回你付款的地址，通常几秒到一分钟内到账。' },
+        { p: '每场结果由「种子」和「交易哈希」算出。' },
+        { li: '**胜（1倍，暴击2、3、10倍）**' },
+        { li: '**负：没有奖励**' },
+        { p: '**奖励自动转回你付款的地址，通常几秒到一分钟内到账。**' },
         { h: '【竞技场】' },
         { p: '每场比赛的对战都能在公告栏的【竞技场】里看回放。' },
         { h: '【结果计算】' },
-        { li: '每场结果由「种子」和「交易哈希」算出。' },
-        { li: '详情参见承诺值：' },
-        { commit: true },
+        { p: '**详情参见承诺值：**' },
+        { commit: true, bold: true },
         { p: '请理性参与，量力而行。', cls: 'is-note' },
       ],
       // 点承诺值打开（roulette-bot/roulette.py 的种子哈希链 + 抽号）
       commitTip: '点击查看说明',
       commitPage: [
-        { title: '【承诺值说明】' },
+        { title: '【结果计算】' },
         { p: '承诺值是一串固定的「指纹」，在开奖上线前就公开了，以后不会改。它保证每天开奖用的「种子」早就定好，不能临时更换。' },
         { h: '【种子和承诺值】' },
         { li: '每天开奖用一个种子（按北京时间算日期）。所有种子都提前生成，连成一条链：对某天的种子算一次 SHA-256，就得到前一天的种子。' },
@@ -167,7 +167,7 @@
       boardTitle: 'Notice Board',
       boardBody: ['Welcome to the Arena!'],
       boardAlt: 'Notice board',
-      boardMenu: { rules: '[Arena Guide]', bets: '[Arena]', mew: '[Event] Beat Mewtwo!!!', close: 'Close' },
+      boardMenu: { rules: '[Arena Guide]', bets: '[Arena]', commit: '[Result calculation]', mew: '[Event] Beat Mewtwo!!!', close: 'Close' },
       arenaTitle: '[Arena]',
       boardSoon: ' (coming soon)',
       boardBack: 'Back',
@@ -183,20 +183,20 @@
         { li: 'Only 2 decimals count. Below 0.5U does not enter. Above 10U plays as 10U and the rest is refunded automatically.' },
         { li: 'Only USDC on Arbitrum One is accepted. If you sent the wrong network or token, contact the admin.' },
         { h: 'Results and rewards' },
-        { li: 'Win (1×, or a 2×, 3×, 10× critical)' },
-        { li: 'Loss: no reward' },
-        { p: 'Rewards go back to the paying address automatically, usually within seconds to a minute.' },
+        { p: 'Each result is computed from a “seed” and your “transaction hash”.' },
+        { li: '**Win (1×, or a 2×, 3×, 10× critical)**' },
+        { li: '**Loss: no reward**' },
+        { p: '**Rewards go back to the paying address automatically, usually within seconds to a minute.**' },
         { h: '[Arena]' },
         { p: 'Every match can be replayed under [Arena] on the notice board.' },
-        { h: 'How results are drawn' },
-        { li: 'Each result is computed from a “seed” and your “transaction hash”.' },
-        { li: 'For details, see the commitment:' },
-        { commit: true },
+        { h: 'Result calculation' },
+        { p: '**For details, see the commitment:**' },
+        { commit: true, bold: true },
         { p: 'Please play responsibly and within your means.', cls: 'is-note' },
       ],
       commitTip: 'Tap for details',
       commitPage: [
-        { title: '[About the commitment]' },
+        { title: '[Result calculation]' },
         { p: 'The commitment is a fixed “fingerprint” published before the draws went live. It never changes, so the daily “seeds” used for the draws were fixed in advance and cannot be swapped.' },
         { h: 'Seeds and the commitment' },
         { li: 'Each day (Beijing time) uses one seed. All seeds were made in advance as a chain: SHA-256 of one day’s seed gives the previous day’s seed.' },
@@ -492,7 +492,9 @@
           const ok = await copyText(COMMITMENT);
           done.textContent = ok ? t.commitCopied : t.copyFail;
         });
-        row.append(code, btn, done); paper.appendChild(row); continue;
+        if (b.bold) { const strong = document.createElement('strong'); strong.appendChild(code); row.appendChild(strong); }
+        else row.appendChild(code);
+        row.append(btn, done); paper.appendChild(row); continue;
       }
       flush();
       const p = document.createElement('p'); if (b.cls) p.className = b.cls; richText(p, b.p); paper.appendChild(p);
@@ -956,13 +958,15 @@
       const opts = [
         { value: '__rules', label: t.boardMenu.rules },
         { value: '__bets', label: t.boardMenu.bets },
+        { value: '__commit', label: t.boardMenu.commit },
         { value: '__mew', label: t.boardMenu.mew + (MEW_LIVE ? '' : t.boardSoon) },
         { value: '__close', label: t.boardMenu.close },
       ];
       dialog.choose(t.boardTitle, opts, v => {
         if (v === '__rules') this.showRules();
         else if (v === '__bets') { this.betsFromMenu = true; this.openBets(false); }
-        else if (v === '__mew') this.boardShow(back => boardPage(t, t.mewPage, MEW_LIVE ? null : t.mewSoonNote, back), 2);
+        else if (v === '__commit') this.boardShow(back => boardPage(t, t.commitPage, null, back), 2);
+        else if (v === '__mew') this.boardShow(back => boardPage(t, t.mewPage, MEW_LIVE ? null : t.mewSoonNote, back), 3);
         else dialog.close();
       }, sel, boardHead(t));
       this.boardSel = sel;
