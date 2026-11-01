@@ -46,8 +46,46 @@
       copyFail: '复制失败，请长按地址手动复制',
       close: '关闭',
       boardTitle: '公告栏',
-      boardBody: ['欢迎来到竞技场！（点击观赛）'],
+      boardBody: ['欢迎来到竞技场！'],
       boardAlt: '公告栏',
+      boardMenu: { rules: '竞技场说明', bets: '观看比赛', mew: '【活动】击败超梦！！！', close: '关闭' },
+      boardSoon: '（即将开始）',
+      boardBack: '返回',
+      commitCopy: '复制',
+      commitCopied: '已复制',
+      // 竞技场说明（主人 2026-11-01 14:26 定稿）。{h} 小标题，{li} 列表，{p} 段落，**粗体**，{commit} 承诺值
+      rules: [
+        { title: '欢迎来到宝可梦竞技场！' },
+        { p: '这里有 386 只宝可梦擂主，分成 10 档。报名后，系统会派出一只挑战者替你上场，对战结果马上揭晓。' },
+        { h: '【如何报名】' },
+        { li: '到大厅柜台选一档，用 Arbitrum One 网络转 USDC 到竞技场地址，转账就算报名。' },
+        { li: '参赛费决定档位：0.5–1U 是第一档，1.01–2U 是第二档……9.01–10U 是第十档。' },
+        { li: '只取到小数后 2 位。低于 0.5U 不参赛。超过 10U 按 10U 参赛，多出的部分自动退回。' },
+        { li: '只收 Arbitrum One 上的 USDC，转错网络或币种请联系管理员。' },
+        { h: '【结果和奖励】' },
+        { li: '胜（1倍，暴击2、3、10倍）' },
+        { li: '负：没有奖励' },
+        { p: '奖励自动转回你付款的地址，通常几秒到一分钟内到账。' },
+        { h: '【观看比赛】' },
+        { p: '每场比赛的对战都能在公告栏的「观看比赛」里看回放。' },
+        { h: '【结果计算】' },
+        { li: '每场结果由「种子」和「交易哈希」算出。' },
+        { li: '详情参见承诺值：' },
+        { commit: true },
+        { p: '请理性参与，量力而行。', cls: 'is-note' },
+      ],
+      // 【活动】击败超梦！！！（主人 2026-11-01 14:29 定稿）
+      mewPage: [
+        { title: '【活动】击败超梦！！！' },
+        { p: '传说中最强的宝可梦超梦，正在第十档守擂。' },
+        { h: '活动规则' },
+        { li: '参加第十档比赛（参赛费 9.01–10U）并且获胜，就有机会对上超梦并击败它。' },
+        { li: '击败超梦，额外获得 **100U 大奖**：如押 10U 暴击 3 倍再击败超梦，会收到 130U。' },
+        { li: '公告栏会显示「胜（暴击3倍+击败超梦！）」，回放里能看到你的挑战者打败超梦的全过程。' },
+        { p: '**活动时间**：即日起，结束时间另行公告。' },
+        { p: '大奖数量不限，每一场都有机会！', cls: 'is-note' },
+      ],
+      mewSoonNote: '活动即将开始，开始时间另行公告。',
       betsTitle: '最近比赛',
       betsCols: ['训练师', '参赛费', '档位', '结果'],
       betsLoading: '比赛载入中…',
@@ -91,8 +129,44 @@
       copyFail: 'Copy failed. Press and hold the address to copy it.',
       close: 'Close',
       boardTitle: 'Notice Board',
-      boardBody: ['Welcome to the Arena! (Tap a match to watch)'],
+      boardBody: ['Welcome to the Arena!'],
       boardAlt: 'Notice board',
+      boardMenu: { rules: 'Arena Guide', bets: 'Watch Matches', mew: '[Event] Beat Mewtwo!!!', close: 'Close' },
+      boardSoon: ' (coming soon)',
+      boardBack: 'Back',
+      commitCopy: 'Copy',
+      commitCopied: 'Copied',
+      rules: [
+        { title: 'Welcome to the Pokémon Arena!' },
+        { p: '386 Pokémon champions hold the arena, split into 10 tiers. Once you enter, a challenger takes the field for you and the result is revealed right away.' },
+        { h: 'How to enter' },
+        { li: 'Pick a tier at the main-hall counter and send USDC on Arbitrum One to the arena address. The transfer is your entry.' },
+        { li: 'The entry fee sets the tier: 0.5–1U is tier 1, 1.01–2U is tier 2 … 9.01–10U is tier 10.' },
+        { li: 'Only 2 decimals count. Below 0.5U does not enter. Above 10U plays as 10U and the rest is refunded automatically.' },
+        { li: 'Only USDC on Arbitrum One is accepted. If you sent the wrong network or token, contact the admin.' },
+        { h: 'Results and rewards' },
+        { li: 'Win (1×, or a 2×, 3×, 10× critical)' },
+        { li: 'Loss: no reward' },
+        { p: 'Rewards go back to the paying address automatically, usually within seconds to a minute.' },
+        { h: 'Watching matches' },
+        { p: 'Every match can be replayed under “Watch Matches” on the notice board.' },
+        { h: 'How results are drawn' },
+        { li: 'Each result is computed from a “seed” and your “transaction hash”.' },
+        { li: 'For details, see the commitment:' },
+        { commit: true },
+        { p: 'Please play responsibly and within your means.', cls: 'is-note' },
+      ],
+      mewPage: [
+        { title: '[Event] Beat Mewtwo!!!' },
+        { p: 'Mewtwo, the legendary strongest Pokémon, is defending tier 10.' },
+        { h: 'Rules' },
+        { li: 'Enter a tier-10 match (fee 9.01–10U) and win for a chance to face Mewtwo and beat it.' },
+        { li: 'Beat Mewtwo for an extra **100U jackpot**: e.g. 10U with a 3× critical plus beating Mewtwo pays 130U.' },
+        { li: 'The notice board shows “Win (Crit ×3 + Beat Mewtwo!)”, and the replay shows your challenger taking Mewtwo down.' },
+        { p: '**Event period**: from now on; the end date will be announced.' },
+        { p: 'No limit on jackpots. Every match has a chance!', cls: 'is-note' },
+      ],
+      mewSoonNote: 'The event is coming soon; the start date will be announced.',
       betsTitle: 'Recent matches',
       betsCols: ['Trainer', 'Entry fee', 'Tier', 'Result'],
       betsLoading: 'Loading matches…',
@@ -281,8 +355,16 @@
     return box;
   }
 
-  // Lobby notice board contents
-  function boardPanel(t, keepPage) {
+  // ---------- lobby notice board: menu -> guide / recent matches / Mewtwo event ----------
+  // Mewtwo event switch: false = menu says "coming soon" and the event page carries a notice.
+  // Set true only once roulette.py runs with mew_enabled (otherwise nobody gets the 100U).
+  const MEW_LIVE = false;
+  // Public commitment of the roulette seed chain (roulette-bot data/roulette_state.json, never changes).
+  const COMMITMENT = '5b1f1744fa9b197454c843af759531473af206391a010dfae605c38a21d66c80';
+  const shortCommit = c => c.slice(0, 8) + '…' + c.slice(-4);
+
+  // header shown above the board menu (title + welcome line)
+  function boardHead(t) {
     const box = document.createElement('div');
     box.className = 'arena-board';
     const h = document.createElement('h2');
@@ -290,7 +372,77 @@
     const paper = document.createElement('div');
     paper.className = 'arena-board-paper';
     t.boardBody.forEach(line => { const p = document.createElement('p'); p.textContent = line; paper.appendChild(p); });
-    box.append(h, paper, betsPanel(t, keepPage));
+    box.append(h, paper);
+    return box;
+  }
+
+  // "**bold**" -> <strong>, everything else as text
+  function richText(el, s) {
+    s.split(/(\*\*[^*]+\*\*)/).forEach(part => {
+      if (!part) return;
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const b = document.createElement('strong'); b.textContent = part.slice(2, -2); el.appendChild(b);
+      } else el.appendChild(document.createTextNode(part));
+    });
+  }
+
+  // one text page of the board (guide / event); blocks = TEXT.*.rules / mewPage
+  function boardPage(t, blocks, note, back) {
+    const box = document.createElement('div');
+    box.className = 'arena-board';
+    box.addEventListener('click', e => e.stopPropagation());   // reading/scrolling/copying must not close it
+    const paper = document.createElement('div');
+    paper.className = 'arena-board-paper arena-board-page';
+    paper.tabIndex = 0;   // keyboard users can scroll it
+    let list = null;
+    const flush = () => { list = null; };
+    if (note) { const n = document.createElement('p'); n.className = 'arena-board-soon'; n.setAttribute('role', 'note'); n.textContent = note; paper.appendChild(n); }
+    for (const b of blocks) {
+      if (b.title) { flush(); const h = document.createElement('h2'); h.textContent = b.title; box.insertBefore(h, box.firstChild); continue; }
+      if (b.h) { flush(); const h = document.createElement('h3'); h.textContent = b.h; paper.appendChild(h); continue; }
+      if (b.li) {
+        if (!list) { list = document.createElement('ul'); paper.appendChild(list); }
+        const li = document.createElement('li'); richText(li, b.li); list.appendChild(li); continue;
+      }
+      if (b.commit) {   // short form on screen, full value in the copy button + accessible label
+        flush();
+        const row = document.createElement('div'); row.className = 'arena-commit';
+        const code = document.createElement('code'); code.textContent = shortCommit(COMMITMENT);
+        code.title = COMMITMENT; code.setAttribute('aria-label', COMMITMENT);
+        const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = t.commitCopy;
+        const done = document.createElement('span'); done.className = 'arena-commit-done'; done.setAttribute('aria-live', 'polite');
+        btn.addEventListener('click', async ev => {
+          ev.stopPropagation();
+          const ok = await copyText(COMMITMENT);
+          done.textContent = ok ? t.commitCopied : t.copyFail;
+        });
+        row.append(code, btn, done); paper.appendChild(row); continue;
+      }
+      flush();
+      const p = document.createElement('p'); if (b.cls) p.className = b.cls; richText(p, b.p); paper.appendChild(p);
+    }
+    box.appendChild(paper);
+    box.appendChild(backButton(t, back));
+    return box;
+  }
+
+  function backButton(t, back) {
+    const nav = document.createElement('div');
+    nav.className = 'arena-board-back';
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = t.boardBack;
+    b.addEventListener('click', ev => { ev.stopPropagation(); back(); });
+    nav.appendChild(b);
+    return nav;
+  }
+
+  // recent matches view (the old board contents)
+  function boardBets(t, keepPage, back) {
+    const box = document.createElement('div');
+    box.className = 'arena-board';
+    const h = document.createElement('h2');
+    h.textContent = t.boardMenu.bets;
+    box.append(h, betsPanel(t, keepPage), backButton(t, back));
     return box;
   }
 
@@ -604,10 +756,40 @@
       else if (i > 0) this.talkToNpc();   // east hall: pick a champion and watch
     }
 
-    openBoard(keepPage) {
+    // Notice board: a menu first; each item opens its page, and Back / Space (nothing selected) returns here.
+    openBoard(sel = 0) {
       if (window.ArenaMusic) window.ArenaMusic.sfx('select');
-      dialog.notice(boardPanel(TEXT[lang()], keepPage));
+      stopBets();
+      const t = TEXT[lang()];
+      const opts = [
+        { value: '__rules', label: t.boardMenu.rules },
+        { value: '__bets', label: t.boardMenu.bets },
+        { value: '__mew', label: t.boardMenu.mew + (MEW_LIVE ? '' : t.boardSoon) },
+        { value: '__close', label: t.boardMenu.close },
+      ];
+      dialog.choose(t.boardTitle, opts, v => {
+        if (v === '__rules') this.boardShow(back => boardPage(t, t.rules, null, back), 0);
+        else if (v === '__bets') this.openBets(false);
+        else if (v === '__mew') this.boardShow(back => boardPage(t, t.mewPage, MEW_LIVE ? null : t.mewSoonNote, back), 2);
+        else dialog.close();
+      }, sel, boardHead(t));
+      this.boardSel = sel;
+    }
+
+    // show a board page; back (button, Space/Enter/A, or a tap outside the page) returns to the menu on item sel
+    boardShow(make, sel) {
+      const back = () => { dialog.close(); this.openBoard(sel); };
+      dialog.notice(make(back));
+      dialog.onDone = () => this.openBoard(sel);
+    }
+
+    // recent matches; keepPage = coming back from a replay
+    openBets(keepPage) {
+      const t = TEXT[lang()];
+      const back = () => { stopBets(); dialog.close(); this.openBoard(1); };
+      dialog.notice(boardBets(t, keepPage, back));
       dialog.noticeHook = boardHook;
+      dialog.onDone = () => { stopBets(); this.openBoard(1); };
     }
 
     // Notice-board replay: battle n of champion m.champ, challenger shown as the entrant's address.
@@ -719,7 +901,7 @@
       this.fitCamera();
       playMusic('lobby');
       const t = TEXT[lang()];
-      if (data && data.replay) { bets.page = this.replayPage || 0; this.openBoard(true); return; }   // back to the board
+      if (data && data.replay) { bets.page = this.replayPage || 0; this.openBets(true); return; }   // back to the match list
       if (data && data.result) dialog.start(t[data.result === 'win' ? 'win' : 'lose']);
     }
 

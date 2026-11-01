@@ -1,6 +1,7 @@
 /* 竞技场 page: full-height game area below the site topbar */
 html, body { height: 100%; }
 body[data-page="arena"] { display: flex; flex-direction: column; overflow: hidden; }
+body[data-page="arena"] .notice-bar { flex: 0 0 auto; }
 .arena-wrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .arena-game { flex: 1; min-height: 0; background: #04241f; touch-action: none; }
 .arena-game canvas { display: block; image-rendering: pixelated; }
@@ -104,6 +105,29 @@ body[data-page="arena"] { display: flex; flex-direction: column; overflow: hidde
   border: 3px solid #85582c; box-shadow: inset 0 0 0 2px #c6966a;
 }
 .arena-board-paper p { margin: 0; font-size: 20px; text-align: center; }
+/* board text pages (guide / event): scroll inside the paper, left-aligned */
+.arena-board-page { max-height: min(56vh, 460px); overflow-y: auto; cursor: auto; font-size: 15px; line-height: 1.65; }
+.arena-board-page:focus-visible { outline: 2px solid #3a6ad0; outline-offset: 2px; }
+.arena-board-page p { font-size: 15px; text-align: left; margin: 0 0 6px; }
+.arena-board-page h3 { margin: 10px 0 4px; font-size: 16px; color: #6a4626; }
+.arena-board-page ul { margin: 0 0 6px; padding-left: 1.2em; }
+.arena-board-page li { margin: 0 0 2px; }
+.arena-board-page strong { color: #b03020; }
+.arena-board-page .is-note { margin-top: 10px; text-align: center; color: #6a4626; }
+.arena-board-soon { padding: 6px 8px; border-radius: 4px; background: #fff1d0; color: #8a4a10 !important; text-align: center !important; }
+.arena-commit { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 6px 1.2em; }
+.arena-commit code { font: 600 14px/1.5 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; background: #f3e8cc; padding: 1px 6px; border-radius: 4px; }
+.arena-commit button, .arena-board-back button {
+  font: inherit; font-size: 14px; font-weight: 700; padding: 2px 12px; border: 2px solid #383848; border-radius: 6px;
+  background: #fffdf4; color: #303030; cursor: pointer;
+}
+.arena-commit button:focus-visible, .arena-board-back button:focus-visible { outline: 2px solid #3a6ad0; outline-offset: 2px; }
+.arena-commit-done { font-size: 13px; color: #287048; }
+.arena-board-back { display: flex; justify-content: center; margin-top: 8px; }
+@media (max-width: 520px) {
+  .arena-board-page { max-height: 48vh; font-size: 14px; }
+  .arena-board-page p { font-size: 14px; }
+}
 
 /* Recent matches under the notice (bets.js) */
 .arena-bets { margin-top: 10px; cursor: default; }
