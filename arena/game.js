@@ -668,7 +668,7 @@
       this.load.image('board', 'assets/board.png?v=20261101ad');        // title plank says 竞技场
       this.load.image('board-en', 'assets/board-en.png?v=20261101ad');  // ... or ARENA
       for (const n of ['signup', 'trial']) for (const sfx of ['', '-en'])   // counter-top labels
-        this.load.image(`desk-${n}${sfx}`, `assets/desk-${n}${sfx}.png?v=20261101ae`);
+        this.load.image(`desk-${n}${sfx}`, `assets/desk-${n}${sfx}.png?v=20261101ag`);
       this.load.image('sign', 'assets/sign.png?v=20261101z');
     }
 
@@ -714,7 +714,7 @@
           .on('pointerdown', open);
       }
 
-      // Labels on the grey counter tops: 报名处 (main hall) / 模拟挑战 (east hall); swapped with the page language
+      // Labels on the grey counter tops: 报名处 (main hall) / 挑战练习 (east hall); swapped with the page language
       this.deskImgs = (prop('desks') || '').split(';').filter(Boolean).map(v => {
         const [n, x, y] = v.split(',');
         const img = this.add.image(+x * TILE, +y * TILE, 'desk-' + n + (lang() === 'en' ? '-en' : '')).setOrigin(0, 0).setDepth(1);
