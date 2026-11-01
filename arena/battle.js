@@ -38,6 +38,7 @@
       this.fixedN = Number.isInteger(data.n) ? data.n : null;
       this.who = data.who || null;
       this.crit = data.crit > 1 ? data.crit : 0;   // winning multiplier >1 = crit bonus line at the end
+      this.mew = !!data.mew;                       // beat-Mewtwo bonus (status 3) = jackpot line at the very end
       this.replay = !!data.replay;
       // assets/battles/<champion>/<k>.json holds battles k*chunk .. k*chunk+chunk-1 (battle-gen/build_tier_battles.mjs).
       // Replay: battle n. Counter: a random one of the champion's `count` battles. Only that one file is loaded.
@@ -216,6 +217,7 @@
         ? (win ? [`${me}战胜了${tr}！`, `擂主${foeMon}被击败了！`] : [`${me}输给了${tr}……`, `擂主${foeMon}守住了擂台！`])
         : (win ? [`${me} defeated ${tr}!`, `The champion ${foeMon} has fallen!`] : [`${me} lost to ${tr}...`, `The champion ${foeMon} held on!`]);
       if (win && this.crit) end.push(zh ? `恭喜本场比赛获得${this.crit}倍暴击奖励！！！` : `Congratulations! This match earned a ${this.crit}× critical bonus!!!`);
+      if (win && this.mew) end.push(zh ? '恭喜击败超梦！获得 100U 大奖！！！' : 'Congratulations on beating Mewtwo! You won the 100U jackpot!!!');
       this.UI.dialog.busy = false;
       this.UI.dialog.start(end, () => this.finish());
     }

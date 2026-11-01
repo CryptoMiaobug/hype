@@ -1,7 +1,8 @@
 /* Recent entries on the lobby notice board, read straight from Arbitrum in the visitor's browser.
  * Entry  = USDC transfer INTO the arena address, amount >= 0.5 (roulette.py ignores smaller ones).
- * Result = USDC transfer OUT to the same address whose 4th decimal is 0 (win) or 1 (loss);
- *          refunds (4th decimal 2) are not shown. Digits 1-3 of the last four = multiplier.
+ * Result = USDC transfer OUT to the same address whose 4th decimal is 0 (win), 1 (loss) or 3 (win +
+ *          beat Mewtwo, 100U bonus in the same transfer, 主人 2026-11-01); refunds (4th decimal 2) are
+ *          not shown. Digits 1-3 of the last four = multiplier.
  * Per address, entries and results are paired in chain order (first entry gets first result after it).
  * No result yet = pending. Works in the browser (window.ArenaBets) and in Node (module.exports) for tests. */
 (function (root) {
@@ -74,12 +75,12 @@
         const tail = r.raw % 10000, status = tail % 10, mult = Math.floor(tail / 10);
         // loss receipt is exactly 0.000001; a win always carries a multiplier >= 1. Anything else
         // (refunds = status 2, ordinary transfers out) is not a result.
-        const isLoss = r.raw === 1, isWin = status === 0 && mult >= 1;
+        const isLoss = r.raw === 1, isWin = (status === 0 || status === 3) && mult >= 1;
         if (!isLoss && !isWin) continue;
         const q = queue[r.who];
         if (!q || !q.length) continue;
         const e = q.shift();
-        e.result = isLoss ? { kind: 'loss' } : { kind: 'win', mult };
+        e.result = isLoss ? { kind: 'loss' } : { kind: 'win', mult, mew: status === 3 };
         e.resultTx = r.tx;   // picks the replayed battle (game.js matchBattle)
       }
     }
@@ -97,16 +98,23 @@
 
   // Replay for a settled match: among all recorded battles of the entry's tier whose challenger
   // outcome equals the match result, take number(result tx hash) mod count. idx = assets/match-index.json.
+  // Mewtwo split (主人 2026-11-01): a win with status 3 (beat Mewtwo) only picks battles the challenger
+  // won against Mewtwo; every other win never picks those, so a plain win never shows Mewtwo falling.
   // Candidate order: roster order of champions, then battle order inside assets/battles/<id>.json.
   // -> { champ, n (battle index in that file), expect: 'win' | 'lose' } or null if not settled.
   function matchBattle(entry, idx) {
     if (!entry.resultTx || entry.result.kind === 'pending') return null;
     const want = entry.result.kind === 'win' ? 'w' : 'l';
-    const list = idx.tiers[entry.tier];
+    const mew = !!entry.result.mew;
+    const ok = champ => want !== 'w' || (champ === MEW) === mew;   // losses: everyone; wins: split on Mewtwo
+    let list = idx.tiers[entry.tier];
+    if (mew && !list.some(([c]) => c === MEW)) list = idx.tiers['10'];   // bonus is a tier-10 thing
     let count = 0;
-    for (const [, s] of list) for (const c of s) if (c === want) count++;
+    for (const [champ, s] of list) if (ok(champ)) for (const c of s) if (c === want) count++;
+    if (!count) return null;
     let k = Number(BigInt(entry.resultTx) % BigInt(count));
     for (const [champ, s] of list) {
+      if (!ok(champ)) continue;
       for (let n = 0; n < s.length; n++) {
         if (s[n] !== want) continue;
         if (k-- === 0) return { champ, n, chunk: idx.chunk, expect: want === 'w' ? 'win' : 'lose' };
@@ -115,6 +123,7 @@
     return null;
   }
 
+  const MEW = 'mewtwo';
   const api = { load, pair, tierOf, matchBattle, ADDRESS, START_BLOCK };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.ArenaBets = api;

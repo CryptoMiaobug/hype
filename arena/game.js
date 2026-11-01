@@ -54,7 +54,7 @@
       betsEmpty: '还没有比赛',
       betsError: '比赛载入失败，请稍后再试',
       betsTier: (n, name) => `第${'一二三四五六七八九十'[n - 1]}档（${name}）`,
-      betsWin: m => (m > 1 ? `胜（暴击${m}倍）` : '胜'),
+      betsWin: (m, mew) => (m > 1 ? `胜（暴击${m}倍${mew ? '+击败超梦！' : ''}）` : mew ? '胜（击败超梦！）' : '胜'),
       betsLoss: '负',
       betsPending: '待开奖',
       betsPage: (p, n) => `第 ${p}/${n} 页`,
@@ -99,7 +99,7 @@
       betsEmpty: 'No matches yet',
       betsError: 'Could not load matches. Please try again later.',
       betsTier: (n, name) => `Tier ${n} (${name})`,
-      betsWin: m => (m > 1 ? `Win (Crit ×${m})` : 'Win'),
+      betsWin: (m, mew) => (m > 1 ? `Win (Crit ×${m}${mew ? ' + Beat Mewtwo!' : ''})` : mew ? 'Win (Beat Mewtwo!)' : 'Win'),
       betsLoss: 'Loss',
       betsPending: 'Pending',
       betsPage: (p, n) => `Page ${p}/${n}`,
@@ -356,7 +356,8 @@
       const resume = bets.page;
       stopBets();
       dialog.close();
-      arenaScene.startReplay(m, idx.v, shortAddr(e.who), e.tier, resume, e.result.kind === 'win' ? e.result.mult : 0);
+      arenaScene.startReplay(m, idx.v, shortAddr(e.who), e.tier, resume, e.result.kind === 'win' ? e.result.mult : 0,
+        e.result.kind === 'win' && !!e.result.mew);
     } catch (err) {
       const t = TEXT[lang()];
       const box = bets.el;
@@ -419,7 +420,7 @@
       const tr = document.createElement('tr');
       const name = bets.roster && bets.roster.tiers[e.tier] ? bets.roster.tiers[e.tier][L] : '';
       const r = e.result;
-      const res = r.kind === 'win' ? t.betsWin(r.mult) : r.kind === 'loss' ? t.betsLoss : t.betsPending;
+      const res = r.kind === 'win' ? t.betsWin(r.mult, r.mew) : r.kind === 'loss' ? t.betsLoss : t.betsPending;
       const cells = [shortAddr(e.who), fmtFee(e.raw), t.betsTier(e.tier, name), res];
       cells.forEach((v, i) => {
         const td = document.createElement('td'); td.textContent = v;
@@ -610,13 +611,13 @@
     }
 
     // Notice-board replay: battle n of champion m.champ, challenger shown as the entrant's address.
-    startReplay(m, v, who, tier, page, crit) {
+    startReplay(m, v, who, tier, page, crit, mew) {
       this.replayPage = page;
       this.face('up');
       this.cameras.main.fadeOut(250, 255, 255, 255);
       this.cameras.main.once('camerafadeoutcomplete', () => {
         this.scene.sleep();
-        this.scene.run('battle', { champ: m.champ, n: m.n, chunk: m.chunk, expect: m.expect, who, crit, v, music: tier >= 9 ? 'legend' : 'battle', replay: true });
+        this.scene.run('battle', { champ: m.champ, n: m.n, chunk: m.chunk, expect: m.expect, who, crit, mew, v, music: tier >= 9 ? 'legend' : 'battle', replay: true });
       });
     }
 
