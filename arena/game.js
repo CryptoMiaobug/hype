@@ -48,7 +48,8 @@
       boardTitle: '公告栏',
       boardBody: ['欢迎来到竞技场！'],
       boardAlt: '公告栏',
-      boardMenu: { rules: '竞技场说明', bets: '观看比赛', mew: '【活动】击败超梦！！！', close: '关闭' },
+      boardMenu: { rules: '竞技场说明', bets: '【竞技场】', mew: '【活动】击败超梦！！！', close: '关闭' },
+      arenaTitle: '【竞技场】',
       boardSoon: '（即将开始）',
       boardBack: '返回',
       commitCopy: '复制',
@@ -66,8 +67,8 @@
         { li: '胜（1倍，暴击2、3、10倍）' },
         { li: '负：没有奖励' },
         { p: '奖励自动转回你付款的地址，通常几秒到一分钟内到账。' },
-        { h: '【观看比赛】' },
-        { p: '每场比赛的对战都能在公告栏的「观看比赛」里看回放。' },
+        { h: '【竞技场】' },
+        { p: '每场比赛的对战都能在公告栏的【竞技场】里看回放。' },
         { h: '【结果计算】' },
         { li: '每场结果由「种子」和「交易哈希」算出。' },
         { li: '详情参见承诺值：' },
@@ -131,7 +132,8 @@
       boardTitle: 'Notice Board',
       boardBody: ['Welcome to the Arena!'],
       boardAlt: 'Notice board',
-      boardMenu: { rules: 'Arena Guide', bets: 'Watch Matches', mew: '[Event] Beat Mewtwo!!!', close: 'Close' },
+      boardMenu: { rules: 'Arena Guide', bets: '[Arena]', mew: '[Event] Beat Mewtwo!!!', close: 'Close' },
+      arenaTitle: '[Arena]',
       boardSoon: ' (coming soon)',
       boardBack: 'Back',
       commitCopy: 'Copy',
@@ -148,8 +150,8 @@
         { li: 'Win (1×, or a 2×, 3×, 10× critical)' },
         { li: 'Loss: no reward' },
         { p: 'Rewards go back to the paying address automatically, usually within seconds to a minute.' },
-        { h: 'Watching matches' },
-        { p: 'Every match can be replayed under “Watch Matches” on the notice board.' },
+        { h: '[Arena]' },
+        { p: 'Every match can be replayed under [Arena] on the notice board.' },
         { h: 'How results are drawn' },
         { li: 'Each result is computed from a “seed” and your “transaction hash”.' },
         { li: 'For details, see the commitment:' },
@@ -446,12 +448,12 @@
   }
 
   // recent matches view (the old board contents)
-  function boardBets(t, keepPage, back) {
+  function boardBets(t, keepPage, back, backLabel) {
     const box = document.createElement('div');
     box.className = 'arena-board';
     const h = document.createElement('h2');
-    h.textContent = t.boardMenu.bets;
-    box.append(h, betsPanel(t, keepPage), backButton(t, back));
+    h.textContent = t.arenaTitle;
+    box.append(h, betsPanel(t, keepPage), backButton(backLabel ? { ...t, boardBack: backLabel } : t, back));
     return box;
   }
 
@@ -659,9 +661,10 @@
 
     preload() {
       this.load.image('tiles', 'assets/tileset.png');
-      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261101g');
+      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261101z');
       this.load.atlas('player', 'assets/player.png', 'assets/player.json');
       this.load.image('board', 'assets/board.png?v=20261101d');
+      this.load.image('sign', 'assets/sign.png?v=20261101z');
     }
 
     create() {
@@ -687,8 +690,23 @@
           .on('pointerdown', (p, lx, ly, ev) => {
             if (dialog.open) return;
             ev.stopPropagation();   // keep the scene-level tap handler from closing it at once
-            this.openBoard();
+            this.openBigBoard();
           });
+      }
+
+      // Small notice board on the left (1x3 tiles): face above the player, post below; same menu as the big board
+      const sp = prop('sign');
+      if (sp) {
+        const [sx2, sy2] = sp.split(',').map(Number);
+        this.sign = { x: sx2, y: sy2 };
+        const open = (p, lx, ly, ev) => { if (dialog.open) return; ev.stopPropagation(); this.openBoard(); };
+        const face = this.add.image(sx2 * TILE, sy2 * TILE, 'sign').setOrigin(0, 0).setDepth(10)
+          .setCrop(0, 0, TILE, TILE * 2).setInteractive({ useHandCursor: true }).on('pointerdown', open);
+        face.input.hitArea.setTo(0, 0, TILE, TILE * 2);
+        this.add.image(sx2 * TILE, sy2 * TILE, 'sign').setOrigin(0, 0).setDepth(4)
+          .setCrop(0, TILE * 2, TILE, TILE)
+          .setInteractive({ hitArea: new Phaser.Geom.Rectangle(0, TILE * 2, TILE, TILE), hitAreaCallback: Phaser.Geom.Rectangle.Contains, useHandCursor: true })
+          .on('pointerdown', open);
       }
 
       // Player: 32x41 sprite, feet on the bottom of its tile
@@ -759,13 +777,15 @@
       const fx = this.tx + d.dx, fy = this.ty + d.dy;
       // NPCs stand behind a counter: talk across it (facing up at the counter tile in front of them)
       const b = this.board;
-      if (b && fx >= b.x && fx < b.x + b.w && fy >= b.y && fy < b.y + b.h) { this.openBoard(); return; }
+      if (b && fx >= b.x && fx < b.x + b.w && fy >= b.y && fy < b.y + b.h) { this.openBigBoard(); return; }
+      const sg = this.sign;   // small board: its post tile (row +2) collides, talk to it from any side
+      if (sg && fx === sg.x && fy === sg.y + 2) { this.openBoard(); return; }
       const i = this.npcs.findIndex(n => (this.facing === 'up' && fx === n.x && fy === n.y + 2) || (fx === n.x && fy === n.y));
       if (i === 0) this.talkToFeeNpc();   // main hall: entry fee
       else if (i > 0) this.talkToNpc();   // east hall: pick a champion and watch
     }
 
-    // Notice board: a menu first; each item opens its page, and Back / Space (nothing selected) returns here.
+    // Small notice board (left): a menu first; each item opens its page, and Back / Space (nothing selected) returns here.
     openBoard(sel = 0) {
       if (window.ArenaMusic) window.ArenaMusic.sfx('select');
       stopBets();
@@ -778,7 +798,7 @@
       ];
       dialog.choose(t.boardTitle, opts, v => {
         if (v === '__rules') this.boardShow(back => boardPage(t, t.rules, null, back), 0);
-        else if (v === '__bets') this.openBets(false);
+        else if (v === '__bets') { this.betsFromMenu = true; this.openBets(false); }
         else if (v === '__mew') this.boardShow(back => boardPage(t, t.mewPage, MEW_LIVE ? null : t.mewSoonNote, back), 2);
         else dialog.close();
       }, sel, boardHead(t));
@@ -792,13 +812,23 @@
       dialog.onDone = () => this.openBoard(sel);
     }
 
-    // recent matches; keepPage = coming back from a replay
+    // big board in the middle: straight to the match list; Close leaves the board
+    openBigBoard() {
+      if (window.ArenaMusic) window.ArenaMusic.sfx('select');
+      this.betsFromMenu = false;
+      this.openBets(false);
+    }
+
+    // recent matches; keepPage = coming back from a replay.
+    // Opened from the small board's menu -> Back returns to that menu; from the big board -> Close.
     openBets(keepPage) {
       const t = TEXT[lang()];
-      const back = () => { stopBets(); dialog.close(); this.openBoard(1); };
-      dialog.notice(boardBets(t, keepPage, back));
+      const fromMenu = !!this.betsFromMenu;
+      const leave = () => { stopBets(); if (fromMenu) this.openBoard(1); };
+      const back = () => { stopBets(); dialog.close(); if (fromMenu) this.openBoard(1); };
+      dialog.notice(boardBets(t, keepPage, back, fromMenu ? null : t.boardMenu.close));
       dialog.noticeHook = boardHook;
-      dialog.onDone = () => { stopBets(); this.openBoard(1); };
+      dialog.onDone = leave;
     }
 
     // Notice-board replay: battle n of champion m.champ, challenger shown as the entrant's address.
