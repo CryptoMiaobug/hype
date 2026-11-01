@@ -33,6 +33,11 @@
     init(data) {
       this.champ = data.champ;                 // the champion the player challenges (the foe side)
       this.music = data.music || 'battle';   // tiers 9-10 use the legendary battle theme
+      // Notice-board replay: a fixed battle (index n) chosen from the match result; the challenger is
+      // shown as the entrant's address (who). Otherwise a random battle with an unnamed challenger.
+      this.fixedN = Number.isInteger(data.n) ? data.n : null;
+      this.who = data.who || null;
+      this.replay = !!data.replay;
       // assets/battles/<champion>.json holds its 100 battles (battle-gen/build_tier_battles.mjs)
       this.dataKey = 'battles-' + data.champ;
       this.dataUrl = `assets/battles/${data.champ}.json?v=${data.v || DATA_V}`;
@@ -43,7 +48,9 @@
       // pick the battle as soon as the script is in, then load only the two sprites it needs
       const addImages = d => {
         // any of the champion's battles; the challenger ('me') comes with the battle
-        this.B = d.battles[Math.floor(Math.random() * d.battles.length)];
+        this.B = this.fixedN !== null && d.battles[this.fixedN]
+          ? d.battles[this.fixedN]
+          : d.battles[Math.floor(Math.random() * d.battles.length)];
         const foe = this.B.foe, me = this.B.pick;
         if (!this.textures.exists('mon-' + foe)) this.load.image('mon-' + foe, `assets/mon/${foe}.png`);
         if (!this.textures.exists('back-' + me)) this.load.image('back-' + me, `assets/mon/${me}-back.png`);
@@ -187,7 +194,10 @@
       await this.say(zh ? `擂主训练家${tr}接受了挑战！` : `Champion trainer ${tr} accepts the challenge!`);
       this.box.foe.c.setVisible(true);
       await this.say(zh ? `${tr}派出了擂主${foeMon}！` : `${tr} sent out the champion ${foeMon}!`, 700);
-      await this.say(zh ? `去吧！挑战者${myMon}！` : `Go! Challenger ${myMon}!`, 300);
+      const who = this.who;
+      await this.say(who
+        ? (zh ? `挑战者${who}派出了${myMon}！` : `Challenger ${who} sent out ${myMon}!`)
+        : (zh ? `去吧！挑战者${myMon}！` : `Go! Challenger ${myMon}!`), 300);
       await this.tween({ targets: this.sprite.me, x: this.home.me.x, duration: 500, ease: 'Quad.out' });
       this.box.me.c.setVisible(true);
       await this.wait(300);
@@ -197,9 +207,10 @@
 
       const win = this.B.result === 'win';
       if (window.ArenaMusic) { if (win) window.ArenaMusic.play('victory'); else window.ArenaMusic.stop(); }
+      const me = who || (zh ? '你' : 'You');
       const end = zh
-        ? (win ? [`你战胜了${tr}！`, `擂主${foeMon}被击败了！`] : [`你输给了${tr}……`, `擂主${foeMon}守住了擂台！`])
-        : (win ? [`You defeated ${tr}!`, `The champion ${foeMon} has fallen!`] : [`You lost to ${tr}...`, `The champion ${foeMon} held on!`]);
+        ? (win ? [`${me}战胜了${tr}！`, `擂主${foeMon}被击败了！`] : [`${me}输给了${tr}……`, `擂主${foeMon}守住了擂台！`])
+        : (win ? [`${me} defeated ${tr}!`, `The champion ${foeMon} has fallen!`] : [`${me} lost to ${tr}...`, `The champion ${foeMon} held on!`]);
       this.UI.dialog.busy = false;
       this.UI.dialog.start(end, () => this.finish());
     }
@@ -291,7 +302,7 @@
       this.UI.setHint('arena');
       const result = this.B.result;
       this.scene.stop();
-      this.scene.wake('arena', { result });
+      this.scene.wake('arena', this.replay ? { replay: true } : { result });
     }
   }
 

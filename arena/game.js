@@ -46,7 +46,7 @@
       copyFail: '复制失败，请长按地址手动复制',
       close: '关闭',
       boardTitle: '公告栏',
-      boardBody: ['欢迎来到竞技场！'],
+      boardBody: ['欢迎来到竞技场！（点击观赛）'],
       boardAlt: '公告栏',
       betsTitle: '最近比赛',
       betsCols: ['地址', '参赛费', '档位', '结果'],
@@ -61,6 +61,8 @@
       betsPrev: '◀ 上一页',
       betsNext: '下一页 ▶',
       betsCaption: '最近比赛，每页 10 笔，数据直接读取 Arbitrum 链上记录',
+      betsWatch: (a, fee, res) => `观看 ${a} 的比赛：${fee}，${res}`,
+      betsReplayFail: '比赛回放载入失败，请稍后再试',
     },
     en: {
       npc: ['Welcome to the Pokémon Arena!', 'Every Pokémon here is a champion. Which one will you challenge?'],
@@ -89,7 +91,7 @@
       copyFail: 'Copy failed. Press and hold the address to copy it.',
       close: 'Close',
       boardTitle: 'Notice Board',
-      boardBody: ['Welcome to the Arena!'],
+      boardBody: ['Welcome to the Arena! (Tap a match to watch)'],
       boardAlt: 'Notice board',
       betsTitle: 'Recent matches',
       betsCols: ['Address', 'Entry fee', 'Tier', 'Result'],
@@ -104,6 +106,8 @@
       betsPrev: '◀ Prev',
       betsNext: 'Next ▶',
       betsCaption: 'Recent matches, 10 per page, read directly from Arbitrum',
+      betsWatch: (a, fee, res) => `Watch the match of ${a}: ${fee}, ${res}`,
+      betsReplayFail: 'Could not load the replay. Please try again later.',
       hint: 'Arrows / WASD to move, Space / Enter to talk',
       hintTouch: 'D-pad to move, press A at the counter to talk',
       next: '▼',
@@ -215,9 +219,10 @@
       this.el.classList.add('is-notice');
       this.setExtra(node);
     },
-    clearMenu() { this.choice = null; this.setExtra(null); if (this.menuEl) { this.menuEl.hidden = true; this.menuEl.innerHTML = ''; } },
+    clearMenu() { this.choice = null; this.noticeHook = null; this.setExtra(null); if (this.menuEl) { this.menuEl.hidden = true; this.menuEl.innerHTML = ''; } },
     advance() {
       if (!this.open) return;
+      if (this.noticeHook && this.noticeHook()) return;   // notice board: Space/A plays the selected match
       if (this.typing) { this.endTyping(); return; }   // first press finishes the line
       if (this.choice) { this.confirm(); return; }
       if (this.sayDone) { this.sayDone(); return; }   // skip the pause in auto-play
@@ -229,7 +234,7 @@
     },
     close() {
       this.open = false; this.el.hidden = true;
-      this.el.classList.remove('is-notice'); this.setExtra(null);
+      this.el.classList.remove('is-notice'); this.setExtra(null); this.noticeHook = null;
       clearInterval(this.typing); this.typing = null;
     },
   };
@@ -277,7 +282,7 @@
   }
 
   // Lobby notice board contents
-  function boardPanel(t) {
+  function boardPanel(t, keepPage) {
     const box = document.createElement('div');
     box.className = 'arena-board';
     const h = document.createElement('h2');
@@ -285,7 +290,7 @@
     const paper = document.createElement('div');
     paper.className = 'arena-board-paper';
     t.boardBody.forEach(line => { const p = document.createElement('p'); p.textContent = line; paper.appendChild(p); });
-    box.append(h, paper, betsPanel(t));
+    box.append(h, paper, betsPanel(t, keepPage));
     return box;
   }
 
@@ -294,13 +299,15 @@
   const BETS_REFRESH_MS = 10000;   // re-read the chain while the board is open
   const shortAddr = a => a.slice(0, 6) + '…' + a.slice(-4);
   const fmtFee = raw => (raw / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'U';
-  const bets = { page: 0, list: null, err: false, el: null, timer: null, keys: null };
+  const bets = { page: 0, sel: -1, list: null, err: false, el: null, timer: null, keys: null };
+  let arenaScene = null;   // set in Arena.create; the board starts replays through it
 
-  function betsPanel(t) {
+  function betsPanel(t, keepPage) {
     const box = document.createElement('div');
     box.className = 'arena-bets';
     box.addEventListener('click', e => e.stopPropagation());   // paging must not close the board
-    bets.el = box; bets.page = 0;
+    bets.el = box; bets.sel = -1;
+    if (!keepPage) bets.page = 0;
     renderBets(t);
     refreshBets();
     clearInterval(bets.timer);
@@ -308,15 +315,61 @@
       if (!box.isConnected) { stopBets(); return; }
       refreshBets();
     }, BETS_REFRESH_MS);
-    if (!bets.keys) {   // ← / → flip pages while the board is open
+    if (!bets.keys) {   // ← / → flip pages, ↑ / ↓ select a match while the board is open
       bets.keys = e => {
         if (!bets.el || !bets.el.isConnected) return;
         if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { flipBets(-1); e.preventDefault(); }
         else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { flipBets(1); e.preventDefault(); }
+        else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') { moveBetSel(-1); e.preventDefault(); }
+        else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') { moveBetSel(1); e.preventDefault(); }
       };
       document.addEventListener('keydown', bets.keys);
     }
     return box;
+  }
+
+  const pageBets = () => (bets.list || []).slice(bets.page * BETS_PAGE, (bets.page + 1) * BETS_PAGE);
+
+  function moveBetSel(d) {
+    const n = pageBets().length;
+    if (!n) return;
+    bets.sel = bets.sel < 0 ? (d > 0 ? 0 : n - 1) : (bets.sel + d + n) % n;
+    renderBets(TEXT[lang()]);
+    const row = bets.el && bets.el.querySelector('tr.is-sel');
+    if (row && row.scrollIntoView) row.scrollIntoView({ block: 'nearest' });
+  }
+
+  // Replay of a settled match (rule: bets.js matchBattle + assets/match-index-v1.json)
+  let matchIdxP = null;
+  const loadMatchIdx = () => matchIdxP || (matchIdxP = fetch('assets/match-index-v1.json?v=20261101p')
+    .then(r => { if (!r.ok) throw new Error('index ' + r.status); return r.json(); })
+    .catch(e => { matchIdxP = null; throw e; }));
+
+  async function watchBet(e) {
+    if (!arenaScene || bets.starting) return;
+    bets.starting = true;
+    try {
+      const idx = await loadMatchIdx();
+      const m = window.ArenaBets.matchBattle(e, idx);
+      if (!m) return;
+      const resume = bets.page;
+      stopBets();
+      dialog.close();
+      arenaScene.startReplay(m, idx.v, shortAddr(e.who), e.tier, resume);
+    } catch (err) {
+      const t = TEXT[lang()];
+      const box = bets.el;
+      if (box) { const p = box.querySelector('.arena-bets-msg.is-err') || document.createElement('p'); p.className = 'arena-bets-msg is-err'; p.setAttribute('role', 'alert'); p.textContent = t.betsReplayFail; box.appendChild(p); }
+    } finally { bets.starting = false; }
+  }
+
+  // Space / Enter / A on the open board: play the selected match; with nothing selected, close the board.
+  // Installed by openBoard after dialog.notice() (notice clears any previous hook).
+  function boardHook() {
+    const e = pageBets()[bets.sel];
+    if (!e) return false;
+    if (e.result.kind !== 'pending') watchBet(e);
+    return true;
   }
 
   function stopBets() { clearInterval(bets.timer); bets.timer = null; bets.el = null; }
@@ -325,7 +378,7 @@
     if (!bets.list || !bets.list.length) return;
     const pages = Math.ceil(bets.list.length / BETS_PAGE);
     const p = Math.min(pages - 1, Math.max(0, bets.page + d));
-    if (p !== bets.page) { bets.page = p; renderBets(TEXT[lang()]); }
+    if (p !== bets.page) { bets.page = p; bets.sel = -1; renderBets(TEXT[lang()]); }
   }
 
   async function refreshBets() {
@@ -361,7 +414,7 @@
     t.betsCols.forEach(c => { const th = document.createElement('th'); th.scope = 'col'; th.textContent = c; head.appendChild(th); });
     const thead = document.createElement('thead'); thead.appendChild(head);
     const tbody = document.createElement('tbody');
-    for (const e of bets.list.slice(bets.page * BETS_PAGE, (bets.page + 1) * BETS_PAGE)) {
+    pageBets().forEach((e, rowI) => {
       const tr = document.createElement('tr');
       const name = bets.roster && bets.roster.tiers[e.tier] ? bets.roster.tiers[e.tier][L] : '';
       const r = e.result;
@@ -373,8 +426,20 @@
         if (i === 3) td.className = 'is-' + r.kind;
         tr.appendChild(td);
       });
+      if (rowI === bets.sel) tr.classList.add('is-sel');
+      if (r.kind !== 'pending') {   // settled: the whole row opens the replay (mouse, touch, Tab + Enter)
+        tr.classList.add('is-watch');
+        tr.tabIndex = 0;
+        tr.setAttribute('aria-label', t.betsWatch(shortAddr(e.who), fmtFee(e.raw), res));
+        tr.addEventListener('click', ev => { ev.stopPropagation(); watchBet(e); });
+        tr.addEventListener('keydown', ev => {
+          if (ev.key !== 'Enter' && ev.key !== ' ') return;
+          ev.preventDefault(); ev.stopPropagation();   // keep the game's Space handler from closing the board
+          watchBet(e);
+        });
+      }
       tbody.appendChild(tr);
-    }
+    });
     table.append(cap, thead, tbody);
     box.appendChild(table);
 
@@ -492,6 +557,7 @@
       playMusic('lobby');
       window.onArenaLang = () => { setHint(hintMode); if (window.ArenaMusic) window.ArenaMusic.refreshLabel(); };
       this.events.on('wake', this.onWake, this);
+      arenaScene = this;
     }
 
     fitCamera() {
@@ -536,9 +602,21 @@
       else if (i > 0) this.talkToNpc();   // east hall: pick a champion and watch
     }
 
-    openBoard() {
+    openBoard(keepPage) {
       if (window.ArenaMusic) window.ArenaMusic.sfx('select');
-      dialog.notice(boardPanel(TEXT[lang()]));
+      dialog.notice(boardPanel(TEXT[lang()], keepPage));
+      dialog.noticeHook = boardHook;
+    }
+
+    // Notice-board replay: battle n of champion m.champ, challenger shown as the entrant's address.
+    startReplay(m, v, who, tier, page) {
+      this.replayPage = page;
+      this.face('up');
+      this.cameras.main.fadeOut(250, 255, 255, 255);
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        this.scene.sleep();
+        this.scene.run('battle', { champ: m.champ, n: m.n, expect: m.expect, who, v, music: tier >= 9 ? 'legend' : 'battle', replay: true });
+      });
     }
 
     talkToNpc() {
@@ -639,6 +717,7 @@
       this.fitCamera();
       playMusic('lobby');
       const t = TEXT[lang()];
+      if (data && data.replay) { bets.page = this.replayPage || 0; this.openBoard(true); return; }   // back to the board
       if (data && data.result) dialog.start(t[data.result === 'win' ? 'win' : 'lose']);
     }
 
@@ -653,9 +732,12 @@
 
     update() {
       if (pad.action) { pad.action = false; this.interact(); }
-      if (dialog.choice && pad.held && !this.padRepeat) {   // touch d-pad drives the menu
+      if ((dialog.choice || (bets.el && bets.el.isConnected)) && pad.held && !this.padRepeat) {   // touch d-pad drives the menu / board
         this.padRepeat = true;
-        if (pad.held === 'up' || pad.held === 'down') dialog.move(pad.held === 'up' ? -1 : 1);
+        const d = pad.held === 'up' ? -1 : pad.held === 'down' ? 1 : 0;
+        if (dialog.choice) { if (d) dialog.move(d); }
+        else if (d) moveBetSel(d);
+        else flipBets(pad.held === 'left' ? -1 : 1);
       }
       if (!pad.held) this.padRepeat = false;
       if (this.moving || dialog.open) return;

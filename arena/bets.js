@@ -80,6 +80,7 @@
         if (!q || !q.length) continue;
         const e = q.shift();
         e.result = isLoss ? { kind: 'loss' } : { kind: 'win', mult };
+        e.resultTx = r.tx;   // picks the replayed battle (game.js matchBattle)
       }
     }
     return entries.reverse();
@@ -94,7 +95,27 @@
     return { list: pair(rows), head };
   }
 
-  const api = { load, pair, tierOf, ADDRESS, START_BLOCK };
+  // Replay for a settled match: among all recorded battles of the entry's tier whose challenger
+  // outcome equals the match result, take number(result tx hash) mod count. idx = match-index-v1.json.
+  // Candidate order: roster order of champions, then battle order inside assets/battles/<id>.json.
+  // -> { champ, n (battle index in that file), expect: 'win' | 'lose' } or null if not settled.
+  function matchBattle(entry, idx) {
+    if (!entry.resultTx || entry.result.kind === 'pending') return null;
+    const want = entry.result.kind === 'win' ? 'w' : 'l';
+    const list = idx.tiers[entry.tier];
+    let count = 0;
+    for (const [, s] of list) for (const c of s) if (c === want) count++;
+    let k = Number(BigInt(entry.resultTx) % BigInt(count));
+    for (const [champ, s] of list) {
+      for (let n = 0; n < s.length; n++) {
+        if (s[n] !== want) continue;
+        if (k-- === 0) return { champ, n, expect: want === 'w' ? 'win' : 'lose' };
+      }
+    }
+    return null;
+  }
+
+  const api = { load, pair, tierOf, matchBattle, ADDRESS, START_BLOCK };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.ArenaBets = api;
 })(typeof window !== 'undefined' ? window : globalThis);
