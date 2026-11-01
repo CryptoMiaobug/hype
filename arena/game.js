@@ -212,8 +212,8 @@
 
   // Entry fee (main-hall receptionist): tier n costs n USDC on Arbitrum One.
   // The QR (assets/pay/arb-usdc-qr.png, made by pay-gen/build_pay_qr.py) encodes PAY_ADDRESS only.
-  const PAY_ADDRESS = '0x5D9ac14a4b277b97806aB20F319796D37A9010d5';
-  const PAY_QR = 'assets/pay/arb-usdc-qr.png?v=20261101b';
+  const PAY_ADDRESS = '0xf589fe018faF04b663eEA702E59E8601c65e5354';
+  const PAY_QR = 'assets/pay/arb-usdc-qr.png?v=20261101e';
   const tierFee = n => n;
 
   async function copyText(s) {
