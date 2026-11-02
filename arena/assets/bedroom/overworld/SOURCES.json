@@ -1,0 +1,118 @@
+{
+  "repository": "rh-hideout/pokeemerald-expansion",
+  "commit": "c460a8661dfa0598ae25d42a968c690ecbf489c6",
+  "assets": [
+    {
+      "name": "bulbasaur",
+      "url": "https://raw.githubusercontent.com/rh-hideout/pokeemerald-expansion/c460a8661dfa0598ae25d42a968c690ecbf489c6/graphics/pokemon/bulbasaur/overworld.png",
+      "size": [
+        192,
+        32
+      ]
+    },
+    {
+      "name": "charmander",
+      "url": "https://raw.githubusercontent.com/rh-hideout/pokeemerald-expansion/c460a8661dfa0598ae25d42a968c690ecbf489c6/graphics/pokemon/charmander/overworld.png",
+      "size": [
+        192,
+        32
+      ]
+    },
+    {
+      "name": "squirtle",
+      "url": "https://raw.githubusercontent.com/rh-hideout/pokeemerald-expansion/c460a8661dfa0598ae25d42a968c690ecbf489c6/graphics/pokemon/squirtle/overworld.png",
+      "size": [
+        192,
+        32
+      ]
+    },
+    {
+      "name": "pikachu",
+      "url": "https://raw.githubusercontent.com/rh-hideout/pokeemerald-expansion/c460a8661dfa0598ae25d42a968c690ecbf489c6/graphics/pokemon/pikachu/overworld.png",
+      "size": [
+        192,
+        32
+      ]
+    }
+  ],
+  "selectedFrames": [
+    {
+      "name": "bulbasaur",
+      "visibleNativeSize": [
+        15,
+        16
+      ],
+      "displaySize": [
+        30,
+        32
+      ],
+      "sha256": "60664b697728dcc29348677239e5151e48cb88f6eaefce233fbf0660b3ae4893"
+    },
+    {
+      "name": "charmander",
+      "visibleNativeSize": [
+        11,
+        16
+      ],
+      "displaySize": [
+        22,
+        32
+      ],
+      "sha256": "9db1fc08eeffe1768d608b7f5f38c6f9e46bbba5b2d77135e8e484f98520e60d"
+    },
+    {
+      "name": "squirtle",
+      "visibleNativeSize": [
+        11,
+        15
+      ],
+      "displaySize": [
+        22,
+        30
+      ],
+      "sha256": "840b7671a1350650369c487cc460a9ca5ee5349e24413cb43b188424f4bc3e82"
+    },
+    {
+      "name": "pikachu",
+      "visibleNativeSize": [
+        16,
+        18
+      ],
+      "displaySize": [
+        32,
+        36
+      ],
+      "sha256": "6c6e1755d53b156e808e2bcbbfa911eb202b966fbdb17483920dbfe37643f9fa"
+    },
+    {
+      "name": "item_ball",
+      "visibleNativeSize": [
+        10,
+        10
+      ],
+      "displaySize": [
+        20,
+        20
+      ],
+      "sha256": "175afd1c4a7c0d9df6fca9e46386408a621384c7dda9a553830e309545549ba7"
+    }
+  ],
+  "frame": 0,
+  "frameRect": [
+    0,
+    0,
+    32,
+    32
+  ],
+  "direction": "down idle",
+  "transparentPaletteIndex": 0,
+  "scale": 2,
+  "resampling": "NEAREST",
+  "itemBall": {
+    "repository": "pret/pokefirered",
+    "commit": "7e3f822652ecce0c99b626d74f455c3b93660377",
+    "path": "graphics/object_events/pics/misc/item_ball.png",
+    "source": "existing local decomp, no ROM download"
+  },
+  "rights": "Public repository availability does not grant independent commercial rights to Pokemon artwork; original and derivative rights remain with their respective owners."
+}

@@ -747,8 +747,11 @@
     constructor() { super('arena'); }
 
     preload() {
+      for (const suffix of ['', '-en']) this.load.image('construction'+suffix, 'assets/construction'+suffix+'.png?v=20261102bedroom4');
+      this.load.image('bedroom-props','assets/bedroom/props.png?v=20261102bedroom4');
+      this.load.image('bedroom', 'assets/bedroom/room.png?v=20261102bedroom4');
       this.load.image('tiles', 'assets/tileset.png');
-      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261102trophy');
+      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261102bedroom4');
       this.load.atlas('player', 'assets/player.png', 'assets/player.json');
       this.load.image('board', 'assets/board.png?v=20261101ad');        // title plank says 竞技场
       this.load.image('board-en', 'assets/board-en.png?v=20261101ad');  // ... or ARENA
@@ -772,6 +775,24 @@
       // receptionists: main hall + east hall (same dialogue for now)
       this.npcs = ['npc', 'npc2'].map(prop).filter(Boolean).map(v => { const [x, y] = v.split(',').map(Number); return { x, y }; });
       this.mapW = map.width; this.mapH = map.height;
+      const bedroom = prop('bedroom');
+      if (bedroom) {
+        const [x,y,w,h] = bedroom.split(',').map(Number);
+        // Solid backing closes transparent tileset corner seams; doorway stays open.
+        for (const [rx,ry,rw,rh] of [[x-1,y-1,w+2,1],[x-1,y+h,w+2,1],[x+w,y,1,h],[x-1,y,1,4],[x-1,y+5,1,3]])
+          this.add.rectangle(rx*TILE,ry*TILE,rw*TILE,rh*TILE,0xaabbb8).setOrigin(0,0).setDepth(-0.1);
+        this.add.image(x*TILE,y*TILE,'bedroom').setOrigin(0,0).setScale(2).setDepth(0.25);
+        this.add.image(x*TILE,y*TILE,'bedroom-props').setOrigin(0,0).setDepth(0.3);
+      }
+
+      const construction = prop('construction');
+      if (construction) {
+        const [x,y] = construction.split(',').map(Number);
+        this.construction = {x,y};
+        this.constructionImg = this.add.image(x*TILE+16,y*TILE+32,'construction'+(lang()==='en'?'-en':''))
+          .setOrigin(.5,1).setDepth(4).setInteractive({useHandCursor:true})
+          .on('pointerdown',(p,lx,ly,ev)=>{ev.stopPropagation();if(!dialog.open)this.openConstruction();});
+      }
 
       // Notice board (w x h tiles); walk up to it and press A, or click/tap it
       const bp = prop('board');
@@ -864,6 +885,7 @@
         if (this.entryEvent) this.entryEvent.setTexture('event-banner-' + lang());
         if (this.entryEventOverlay) { this.entryEventOverlay.src = 'assets/event-banner-' + lang() + '.png?v=20261102event'; this.entryEventOverlay.alt = lang() === 'en' ? 'EVENT — DEFEAT MEWTWO!!!' : '【活动】击败超梦！！！'; }
         setHint(hintMode); if (window.ArenaMusic) window.ArenaMusic.refreshLabel();
+        if (this.constructionImg) this.constructionImg.setTexture('construction'+(lang()==='en'?'-en':''));
         if (this.boardImg) this.boardImg.setTexture(lang() === 'en' ? 'board-en' : 'board');
         for (const d of this.deskImgs) d.setTexture('desk-' + d.deskName + (lang() === 'en' ? '-en' : ''));
       };
@@ -946,9 +968,8 @@
       // Integer zoom so pixels stay square; show the whole room when there's room for it.
       const { width, height } = this.scale.gameSize;
       const mw = this.mapW * TILE, mh = this.mapH * TILE;
-      const fit = Math.min(width / mw, height / mh);
-      // Half-step zoom keeps pixels even on desktop; small screens shrink to fit the whole room.
-      const zoom = fit >= 1 ? Math.floor(fit * 2) / 2 : Math.max(0.5, fit);
+      // Original hall framing independent of extension; integer camera zoom.
+      const zoom = Math.max(1, Math.floor(Math.min(width / (25*TILE), height / mh)));
       const cam = this.cameras.main;
       cam.setZoom(zoom);
       // When the room is smaller than the view, widen the bounds symmetrically so it sits centered.
@@ -1027,6 +1048,8 @@
       if (this.moving) return;
       const d = DIRS[this.facing];
       const fx = this.tx + d.dx, fy = this.ty + d.dy;
+      const cs=this.construction;
+      if(cs && fx===cs.x && fy===cs.y){this.openConstruction();return;}
       // NPCs stand behind a counter: talk across it (facing up at the counter tile in front of them)
       const b = this.board;
       if (b && fx >= b.x && fx < b.x + b.w && fy >= b.y && fy < b.y + b.h) { this.openBigBoard(); return; }
@@ -1038,6 +1061,8 @@
       if (i === 0) this.talkToFeeNpc();   // main hall: entry fee
       else if (i > 0) this.talkToNpc();   // east hall: pick a champion and watch
     }
+
+    openConstruction() { dialog.start([lang()==='en'?'Mystery room under renovation…':'神秘房间装修中……']); }
 
     talkToTrophy() {
       if (window.ArenaMusic) window.ArenaMusic.sfx('select');
