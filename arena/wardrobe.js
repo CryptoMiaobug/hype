@@ -2,7 +2,7 @@
 'use strict';
 const t=(zh,en)=>window.I18n?.lang==='en'?en:zh;
 let opened=false,busy=false,returnFocus=null,selected=null,direction='front',walking=false,timer=null,beat=0;
-const image=new Image();image.src='assets/players.png?v=20261102six';
+const image=new Image();image.src='assets/players.png?v=20261102size1';
 const panel=document.createElement('section');panel.id='wardrobe-panel';panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','wardrobe-title');document.querySelector('.arena-wrap').append(panel);
 function node(tag,text){const el=document.createElement(tag);if(text!==undefined)el.textContent=text;return el;}
 function reset(){const ui=window.ArenaUI;if(ui){ui.pad.held=null;ui.pad.action=false;}for(const s of ui?.game?.scene.scenes||[])if(s.input?.keyboard){s.input.keyboard.resetKeys();s.input.keyboard.enabled=!opened&&!window.ArenaChat?.isTyping();}}

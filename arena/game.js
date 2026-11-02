@@ -802,7 +802,7 @@
       this.load.image('wardrobe','assets/wardrobe.png?v=20261102wardrobe2');
       this.load.image('tiles', 'assets/tileset.png');
       this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261102wardrobe2');
-      this.load.atlas('player', 'assets/players.png?v=20261102six', 'assets/players.json?v=20261102six');
+      this.load.atlas('player', 'assets/players.png?v=20261102size1', 'assets/players.json?v=20261102size1');
       this.load.image('board', 'assets/board.png?v=20261101ad');        // title plank says 竞技场
       this.load.image('board-en', 'assets/board-en.png?v=20261101ad');  // ... or ARENA
       for (const n of ['signup', 'trial']) for (const sfx of ['', '-en'])   // counter-top labels
