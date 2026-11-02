@@ -42,10 +42,11 @@
       win: ['恭喜你击败了擂主！真是精彩的对战！', '想再挑战的话随时找我哦。'],
       lose: ['擂主守住了……不过你的挑战者表现得很棒！', '要不要再挑战一次？'],
       trophyBody: '本月冠军是…………',
-      hint: '方向键 / WASD 移动，空格 / 回车 与柜台、公告牌或奖杯互动',
-      hintTouch: '方向键移动，走到柜台、公告牌或奖杯旁按 A 互动',
-      hintMenu: '↑ / ↓ 选择，空格 / 回车 确认',
+      hint: '方向键 / WASD 移动，空格 / 回车互动，Esc 返回',
+      hintTouch: '方向键移动，A 互动 / 确认，B 返回',
+      hintMenu: '↑ / ↓ 选择，空格 / 回车 确认，Esc 返回',
       hintBattle: '自动对战中，空格 / 回车 / 点击 可加快',
+      hintMenuTouch: '方向键选择，A 确认，B 返回',
       next: '▼',
       // main-hall receptionist: entry fee
       feeNpc: ['欢迎来到宝可梦竞技场！'],
@@ -149,7 +150,7 @@
       go: m => [`Great! You will challenge ${m}!`, 'Your challenger is ready. The battle starts now!'],
       win: ['You beat the champion! What a great battle!', 'Come see me if you want another round.'],
       lose: ['The champion held on... but your challenger did really well!', 'Why not challenge again?'],
-      hintMenu: '↑ / ↓ to choose, Space / Enter to confirm',
+      hintMenu: '↑ / ↓: choose · Space / Enter: confirm · Esc: back',
       hintBattle: 'Auto battle. Space / Enter / tap to speed up',
       feeNpc: ['Welcome to the Pokémon Arena!'],
       feeAsk: 'Which tier will you challenge?',
@@ -227,8 +228,9 @@
       betsWatch: (a, fee, res) => `Watch the match of ${a}: ${fee}, ${res}`,
       betsReplayFail: 'Could not load the replay. Please try again later.',
       trophyBody: 'This month’s champion is…………',
-      hint: 'Arrows / WASD to move, Space / Enter at a counter, notice board or trophy',
-      hintTouch: 'D-pad to move, press A at a counter, notice board or trophy',
+      hint: 'Arrows / WASD: move · Space / Enter: interact · Esc: back',
+      hintTouch: 'D-pad: move · A: interact / confirm · B: back',
+      hintMenuTouch: 'D-pad: choose · A: confirm · B: back',
       next: '▼',
     },
   };
@@ -239,12 +241,21 @@
   // choose(prompt, options, onPick) = pick one option (keyboard ↑/↓ + Space, or tap).
   const dialog = {
     el: null, textEl: null, menuEl: null, lines: [], idx: 0, typing: null, open: false,
-    busy: false, onDone: null, sayDone: null, sayTimer: null, choice: null,
+    onCancel: null, revision: 0, busy: false, onDone: null, sayDone: null, sayTimer: null, choice: null,
     init() {
       this.el = document.getElementById('dialog');
       this.textEl = document.getElementById('dialog-text');
       this.menuEl = document.getElementById('dialog-menu');
       this.el.addEventListener('click', () => { if (!window.ArenaChat?.isTyping()) this.advance(); });
+      let escapeHeld = false;
+      document.addEventListener('keyup', e => { if (e.key === 'Escape') escapeHeld = false; });
+      window.addEventListener('blur', () => { escapeHeld = false; });
+      document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape' || window.ArenaChat?.isTyping()) return;
+        e.preventDefault(); e.stopImmediatePropagation();
+        if (escapeHeld || e.repeat) return;
+        escapeHeld = true; this.cancel();
+      });
       document.addEventListener('keydown', e => {
         if (window.ArenaChat?.isTyping() || !this.choice) return;
         const k = e.key;
@@ -274,15 +285,15 @@
       if (f) f();
     },
     showBox(next) { this.open = true; this.el.hidden = false; this.el.classList.toggle('no-next', !next); },
-    start(lines, onDone) {
+    start(lines, onDone, onCancel = null) {
       this.clearMenu();
-      this.lines = lines; this.idx = 0; this.onDone = onDone || null;
+      this.lines = lines; this.idx = 0; this.onDone = onDone || null; this.onCancel = onCancel; this.revision++;
       this.showBox(true);
       this.type(this.lines[0]);
     },
-    hold(text) { this.clearMenu(); this.showBox(false); this.full = text; this.textEl.textContent = text; },
+    hold(text) { this.onCancel = null; this.revision++; this.clearMenu(); this.showBox(false); this.full = text; this.textEl.textContent = text; },
     say(text, hold = 900) {
-      this.clearMenu();
+      this.onCancel = null; this.revision++; this.clearMenu();
       this.showBox(false);
       return new Promise(resolve => {
         this.sayDone = () => { clearTimeout(this.sayTimer); this.sayDone = null; resolve(); };
@@ -290,7 +301,8 @@
       });
     },
     // extra: optional DOM node shown between the prompt and the menu (e.g. the payment QR)
-    choose(prompt, options, onPick, sel = 0, extra = null) {
+    choose(prompt, options, onPick, sel = 0, extra = null, onCancel = null) {
+      this.clearMenu(); this.revision++; this.onCancel = onCancel;
       this.lines = []; this.onDone = null;
       this.showBox(false);
       this.type(prompt);
@@ -339,7 +351,8 @@
       this.el.classList.toggle('is-board-menu', !!(node && node.classList && node.classList.contains('arena-board-head')));
     },
     // Full notice (e.g. the lobby board): node replaces the text line; any press closes it.
-    notice(node) {
+    notice(node, onCancel = null) {
+      this.onCancel = onCancel; this.revision++;
       this.clearMenu();
       this.lines = ['']; this.idx = 0; this.onDone = null;
       clearInterval(this.typing); this.typing = null;
@@ -350,6 +363,14 @@
       this.setExtra(node);
     },
     clearMenu() { this.choice = null; this.noticeHook = null; this.setExtra(null); if (this.menuEl) { this.menuEl.hidden = true; this.menuEl.innerHTML = ''; } },
+    cancel() {
+      if (!this.open || this.busy || this.sayDone || hintMode === 'battle') return false;
+      if (this.choice && !this.onCancel) return false;
+      const back = this.onCancel;
+      this.close();
+      if (back) back(); else setHint('arena');
+      return true;
+    },
     advance() {
       if (!this.open) return;
       if (this.noticeHook && this.noticeHook()) return;   // notice board: Space/A plays the selected match
@@ -363,6 +384,8 @@
       } else this.type(this.lines[this.idx]);
     },
     close() {
+      this.revision++; this.onCancel = null; this.onDone = null; this.typingDone = null;
+      this.clearMenu(); this.lines = [];
       this.open = false; this.el.hidden = true;
       this.el.classList.remove('is-notice'); this.setExtra(null); this.noticeHook = null;
       clearInterval(this.typing); this.typing = null;
@@ -569,7 +592,9 @@
     if (!arenaScene || bets.starting) return;
     bets.starting = true;
     try {
+      const box = bets.el;
       const idx = await loadMatchIdx();
+      if (!box || bets.el !== box || !box.isConnected) return;
       const m = window.ArenaBets.matchBattle(e, idx);
       if (!m) return;
       const resume = bets.page;
@@ -593,7 +618,7 @@
     return true;
   }
 
-  function stopBets() { clearInterval(bets.timer); bets.timer = null; bets.el = null; }
+  function stopBets() { clearInterval(bets.timer); bets.timer = null; bets.el = null; if (bets.keys) document.removeEventListener('keydown', bets.keys); bets.keys = null; }
 
   function flipBets(d) {
     if (!bets.list || !bets.list.length) return;
@@ -691,9 +716,11 @@
   function setHint(mode) {
     hintMode = mode;
     const t = TEXT[lang()];
+    document.getElementById('pad-b')?.setAttribute('aria-label', lang() === 'en' ? 'B — Back / Cancel' : 'B — 返回 / 取消');
+    document.getElementById('pad-a')?.setAttribute('aria-label', lang() === 'en' ? 'A — Confirm / Interact' : 'A — 确认 / 互动');
     const touch = matchMedia('(pointer: coarse)').matches;
     document.getElementById('hint').textContent =
-      mode === 'menu' ? t.hintMenu : mode === 'battle' ? t.hintBattle : touch ? t.hintTouch : t.hint;
+      mode === 'menu' ? (touch ? t.hintMenuTouch : t.hintMenu) : mode === 'battle' ? t.hintBattle : touch ? t.hintTouch : t.hint;
   }
 
   // ---------- virtual pad (touch) ----------
@@ -710,6 +737,15 @@
     });
     const a = document.getElementById('pad-a');
     a.addEventListener('pointerdown', e => { e.preventDefault(); pad.action = true; });
+    const b = document.getElementById('pad-b');
+    b.addEventListener('pointerdown', e => {
+      e.preventDefault(); e.stopPropagation();
+      if (!e.isPrimary) return;
+      b.setPointerCapture(e.pointerId); pad.held = null; pad.action = false;
+      dialog.cancel();
+    });
+    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture', 'click'])
+      b.addEventListener(type, e => { e.preventDefault(); e.stopPropagation(); });
   }
 
   // Indices of WILD_PICKS battles with different challengers, at least one recorded win and one loss; null if impossible.
@@ -748,7 +784,7 @@
 
     preload() {
       for (const suffix of ['', '-en']) this.load.image('construction'+suffix, 'assets/construction'+suffix+'.png?v=20261102bedroom4');
-      this.load.image('bedroom-props','assets/bedroom/props.png?v=20261102bedroom4');
+      this.load.image('bedroom-props','assets/bedroom/props.png?v=20261102props5');
       this.load.image('bedroom', 'assets/bedroom/room.png?v=20261102bedroom4');
       this.load.image('tiles', 'assets/tileset.png');
       this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261102bedroom4');
@@ -1028,7 +1064,7 @@
           this.scene.sleep();
           this.scene.run('battle', { champ, n, chunk: R.chunk, v: R.v, music: 'battle', wild: true });
         });
-      });
+      }, 0, null, () => { this.wildCool = WILD_COOL; setHint('arena'); });
     }
 
     blocked(x, y) {
@@ -1087,7 +1123,7 @@
         else if (v === '__commit') this.boardShow(back => boardPage(t, t.commitPage, null, back), 3);
         else if (v === '__mew') this.boardShow(back => boardPage(t, t.mewPage, MEW_LIVE ? null : t.mewSoonNote, back), 0);
         else dialog.close();
-      }, sel, boardHead(t));
+      }, sel, boardHead(t), () => setHint('arena'));
       this.boardSel = sel;
     }
 
@@ -1098,7 +1134,7 @@
         if (window.ArenaMusic) window.ArenaMusic.sfx('select');
         const toRules = () => { dialog.close(); this.showRules(); };
         dialog.close();
-        dialog.notice(boardPage(t, t.commitPage, null, toRules));
+        dialog.notice(boardPage(t, t.commitPage, null, toRules), toRules);
         dialog.onDone = () => this.showRules();
       }), 1);
     }
@@ -1106,7 +1142,7 @@
     // show a board page; back (button, Space/Enter/A, or a tap outside the page) returns to the menu on item sel
     boardShow(make, sel) {
       const back = () => { dialog.close(); this.openBoard(sel); };
-      dialog.notice(make(back));
+      dialog.notice(make(back), back);
       dialog.onDone = () => this.openBoard(sel);
     }
 
@@ -1124,7 +1160,7 @@
       const fromMenu = !!this.betsFromMenu;
       const leave = () => { stopBets(); if (fromMenu) this.openBoard(2); };
       const back = () => { stopBets(); dialog.close(); if (fromMenu) this.openBoard(2); };
-      dialog.notice(boardBets(t, keepPage, back, fromMenu ? null : t.boardMenu.close));
+      dialog.notice(boardBets(t, keepPage, back, fromMenu ? null : t.boardMenu.close), back);
       dialog.noticeHook = boardHook;
       dialog.onDone = leave;
     }
@@ -1154,7 +1190,9 @@
     askFeeTier(sel = 0) {
       const L = lang(), t = TEXT[L];
       setHint('menu');
+      const request = ++dialog.revision;
       loadRoster().then(R => {
+        if (request !== dialog.revision) return;
         if (!R) { setHint('arena'); dialog.start(t.bye); return; }
         const opts = [...R.open].sort((a, b) => a - b)
           .map(n => ({ value: n, label: t.feeTier(n, R.tiers[n][L], tierFee(n)) }));
@@ -1162,7 +1200,7 @@
         dialog.choose(t.feeAsk, opts, tier => {
           if (!tier) { setHint('arena'); dialog.start(t.bye); return; }
           this.showPay(R, tier, opts.findIndex(o => o.value === tier));
-        }, sel);
+        }, sel, null, () => setHint('arena'));
       });
     }
 
@@ -1175,11 +1213,13 @@
       ];
       dialog.choose(t.payText(tier, R.tiers[tier][L], tierFee(tier)), opts, async pick => {
         if (pick === '__copy') {
+          const request = dialog.revision;
           const ok = await copyText(PAY_ADDRESS);
+          if (request !== dialog.revision) return;
           this.showPay(R, tier, tierSel, ok ? t.copied : t.copyFail, 0);
         } else if (pick === '__back') this.askFeeTier(tierSel);
         else { setHint('arena'); dialog.start(t.payDone); }
-      }, sel, payPanel(t, status));
+      }, sel, payPanel(t, status), () => this.askFeeTier(tierSel));
     }
 
     // Step 1: division (tier 1-10). The tier list comes from assets/roster.json, made by
@@ -1187,7 +1227,9 @@
     askPick(sel = 0) {
       const L = lang(), t = TEXT[L];
       setHint('menu');
+      const request = ++dialog.revision;
       loadRoster().then(R => {
+        if (request !== dialog.revision) return;
         if (!R) { setHint('arena'); dialog.start(t.bye); return; }
         const opts = [...R.open].sort((a, b) => a - b)
           .map(n => ({ value: n, label: t.tier(n, R.tiers[n][L], R.tiers[n].mon.length) }));
@@ -1195,7 +1237,7 @@
         dialog.choose(t.askTier, opts, tier => {
           if (!tier) { setHint('arena'); dialog.start(t.bye); return; }
           this.askMon(R, tier, 0, opts.findIndex(o => o.value === tier));
-        }, sel);
+        }, sel, null, () => setHint('arena'));
       });
     }
 
@@ -1220,7 +1262,7 @@
           return;
         }
         this.askChallenger(R, pick, tier, page, tierSel);
-      }, sel);
+      }, sel, null, () => this.askPick(tierSel));
     }
 
     // Step 3: choose one of the same distinct challengers offered by a grass encounter.
@@ -1230,9 +1272,11 @@
       setHint('menu');
       dialog.hold(t.challengerLoading);
       dialog.busy = true;
+      const request = dialog.revision;
       const choices = await loadChallengerOffers(R, champ);
+      if (request !== dialog.revision) return;
       dialog.busy = false;
-      if (!choices) { dialog.start(t.challengerFail, back); return; }
+      if (!choices) { dialog.start(t.challengerFail, back, back); return; }
       const { D, offers } = choices;
       const opts = offers.map(n => ({ value: 'w' + n, label: D.mon[D.battles[n].pick][L] }));
       opts.push({ value: '__back', label: t.back });
@@ -1240,8 +1284,8 @@
         if (pick === '__back') { back(); return; }
         const n = Number(pick.slice(1));
         setHint('arena');
-        dialog.start(t.go(R.mon[champ][L]), () => this.startBattle(champ, R.v, tier >= 9 ? 'legend' : 'battle', R.mon[champ].battles, R.chunk, n));
-      });
+        dialog.start(t.go(R.mon[champ][L]), () => this.startBattle(champ, R.v, tier >= 9 ? 'legend' : 'battle', R.mon[champ].battles, R.chunk, n), back);
+      }, 0, null, back);
     }
 
     startBattle(pick, v, music, count, chunk, n) {

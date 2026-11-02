@@ -43,6 +43,7 @@ body[data-page="arena"] .notice-bar { flex: 0 0 auto; }
   .arena-pad .pl { grid-column: 1; grid-row: 2; }
   .arena-pad .pr { grid-column: 3; grid-row: 2; }
   .arena-pad .pd { grid-column: 2; grid-row: 3; }
+  .arena-pad .pb { grid-column: 4; grid-row: 3; justify-self: end; width: 56px; height: 56px; align-self: center; border-radius: 50%; background: rgba(224,80,80,.55); font-weight: 700; }
   .arena-pad .pa { grid-column: 5; grid-row: 2; height: 64px; align-self: center; border-radius: 50%; background: rgba(224,80,80,.55); font-weight: 700; }
   .arena-dialog { bottom: 220px; font-size: 16px; }
 }
@@ -236,6 +237,7 @@ body[data-page="arena"] .notice-bar { flex: 0 0 auto; }
  .arena-pad { grid-template-rows:25px 25px 25px; grid-template-columns:35px 35px 35px 1fr 45px; gap:2px; padding:3px 12px; }
  .arena-pad button { font-size:13px; }
  .arena-pad .pa { height:35px; }
+ .arena-pad .pb { width:35px; height:35px; }
  .arena-hint { padding:2px 8px; font-size:10px; }
  .arena-chat { top:5px; right:58px; height:calc(var(--chat-visible,100%) - 10px); max-height:calc(100% - 10px); }
  .arena-chat-admin { max-height:45%; }
