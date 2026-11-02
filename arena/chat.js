@@ -31,21 +31,29 @@
   const error=make('p','arena-chat-error');error.setAttribute('role','status');
   const admin=make('details','arena-chat-admin'),summary=make('summary'),authForm=make('form','arena-chat-auth'),token=make('input'),login=make('button'),logout=make('button');token.type='password';token.autocomplete='off';token.maxLength=256;login.type='submit';logout.type='button';logout.hidden=true;authForm.append(token,login);admin.append(summary,authForm,logout);
   head.insertBefore(nickLabel,close);head.insertBefore(state,nickLabel);panel.append(head,log,newer,form,error,admin);admin.append(note);host.append(toggle,panel);
-  let socket=null,reconnect=null,attempt=0,unread=0,adminOn=false,online=false,statusKey='connecting',lastFocus=null,alive=true,hasHistory=false,lastSend=0,pending=null;
+  let socket=null,reconnect=null,attempt=0,unread=0,adminOn=false,online=false,statusKey='connecting',alive=true,hasHistory=false,lastSend=0,pending=null;
   const messages=new Map(), nodes=new Map();
   const isOpen=()=>!panel.hidden;
-  const typing=()=>!panel.hidden&&panel.contains(document.activeElement);
+  const typing=()=>{
+    const el=document.activeElement;
+    return !panel.hidden&&panel.contains(el)&&!el.disabled&&!el.readOnly&&
+      (el.matches('textarea,input:not([type]),input[type=text],input[type=password],input[type=search],input[type=email],input[type=url],input[type=tel],input[type=number]')||el.isContentEditable);
+  };
   function badgeText(){toggle.replaceChildren(document.createTextNode('💬 '+t().button),badge);badge.hidden=!unread;badge.textContent=unread>99?'99+':String(unread);toggle.setAttribute('aria-label',unread?t().unread(unread):t().button);}
   function setStatus(key){statusKey=key;state.textContent=t()[key];state.classList.toggle('is-online',key==='online');send.disabled=!online||!!pending;}
   function language(){title.textContent=t().title;close.setAttribute('aria-label',t().close);log.setAttribute('aria-label',t().title);empty.textContent=t().empty;note.textContent=t().note;nickCaption.textContent=t().nick;messageCaption.textContent=t().message;input.placeholder=t().placeholder;send.textContent=t().send;summary.textContent=t().admin;token.placeholder=t().token;token.setAttribute('aria-label',t().token);login.textContent=t().login;logout.textContent=t().logout;newer.textContent=t().newer;setStatus(statusKey);badgeText();for(const [key,msg]of messages)renderAdmin(nodes.get(key),msg);}
-  function updateKeyboard(){const blocked=typing();const game=window.ArenaUI?.game;for(const scene of game?.scene.scenes||[]){if(scene.input?.keyboard){scene.input.keyboard.resetKeys();scene.input.keyboard.enabled=!blocked;}}if(window.ArenaUI){window.ArenaUI.pad.held=null;window.ArenaUI.pad.action=false;}}
+  // Reset only ownership transitions; a deferred focusout must not erase a new pad press.
+  function updateKeyboard(){const blocked=typing();const game=window.ArenaUI?.game;for(const scene of game?.scene.scenes||[]){if(scene.input?.keyboard&&scene.input.keyboard.enabled===blocked){scene.input.keyboard.resetKeys();scene.input.keyboard.enabled=!blocked;}}if(blocked&&window.ArenaUI){window.ArenaUI.pad.held=null;window.ArenaUI.pad.action=false;}}
   // Capture before Phaser's global keyboard listener, preserving text editing and composition defaults.
-  for(const event of ['keydown','keyup'])window.addEventListener(event,e=>{if(!typing())return;if(event==='keydown'&&e.key==='Escape'){e.preventDefault();open(false);}else if(event==='keydown'&&document.activeElement===input&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&e.keyCode!==229){e.preventDefault();form.requestSubmit();}e.stopImmediatePropagation();},true);
+  for(const event of ['keydown','keyup'])window.addEventListener(event,e=>{if(!typing())return;if(event==='keydown'&&e.key==='Escape'){e.preventDefault();document.activeElement.blur();updateKeyboard();}else if(event==='keydown'&&document.activeElement===input&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&e.keyCode!==229){e.preventDefault();form.requestSubmit();}e.stopImmediatePropagation();},true);
   panel.addEventListener('focusin',updateKeyboard);panel.addEventListener('focusout',()=>queueMicrotask(updateKeyboard));
-  for(const event of ['pointerdown','pointerup','click'])panel.addEventListener(event,e=>e.stopPropagation());
+  // Release editing before canvas/virtual-pad handlers run. Never cancel the first action.
+  window.addEventListener('pointerdown',e=>{if(typing()&&!panel.contains(e.target)){document.activeElement.blur();updateKeyboard();}},true);
+  // Keep chat interaction local while retaining native scrolling and text selection.
+  for(const event of ['pointerdown','pointerup','click','mousedown','mouseup','touchstart','touchend','wheel'])panel.addEventListener(event,e=>e.stopPropagation());
   function bottom(){return log.scrollHeight-log.scrollTop-log.clientHeight<48;}
   function toBottom(){log.scrollTop=log.scrollHeight;newer.hidden=true;if(isOpen()&&!document.hidden){unread=0;badgeText();}}
-  function open(value){panel.hidden=!value;toggle.setAttribute('aria-expanded',String(value));if(value){lastFocus=document.activeElement;toBottom();(matchMedia('(pointer:coarse)').matches?close:input).focus({preventScroll:true});}else{(lastFocus?.isConnected?lastFocus:toggle).focus({preventScroll:true});}updateKeyboard();}
+  function open(value){if(!value&&panel.contains(document.activeElement)){document.activeElement.blur();toggle.focus({preventScroll:true});}panel.hidden=!value;toggle.setAttribute('aria-expanded',String(value));if(value)toBottom();updateKeyboard();}
   toggle.addEventListener('click',()=>open(!isOpen()));close.addEventListener('click',()=>open(false));newer.addEventListener('click',toBottom);log.addEventListener('scroll',()=>{if(bottom())toBottom();});
   function transmit(data){if(!socket||socket.readyState!==WebSocket.OPEN)return false;socket.send(JSON.stringify(data));return true;}
   function renderAdmin(li,msg){let tools=li.querySelector('.arena-chat-tools');if(tools)tools.remove();if(!adminOn)return;tools=make('div','arena-chat-tools');for(const [type,label]of [['delete',t().del],['mute',t().mute]]){const b=make('button','',label);b.type='button';b.addEventListener('click',()=>{if(!transmit({type,id:msg.id,...(type==='mute'?{minutes:10}:{})}))error.textContent=t().unavailable;});tools.append(b);}li.append(tools);}
