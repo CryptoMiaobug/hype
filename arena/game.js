@@ -886,16 +886,16 @@
       this.entryEventDelay = this.time.delayedCall(500, () => {
         this.entryEventDelay = null;
         this.entryEventTween = this.tweens.add({
-          targets: this.entryEvent, alpha: 1, duration: 180, onUpdate: () => this.layoutEntryEvent(),
+          targets: this.entryEvent, alpha: 1, duration: 500, onUpdate: () => this.layoutEntryEvent(),
         });
         this.entryEventGrow = this.tweens.add({
-          targets: this.entryEventProgress, scale: 1, duration: 180,
+          targets: this.entryEventProgress, scale: 1, duration: 500,
           onUpdate: () => this.layoutEntryEvent(),
         });
-        this.entryEventFade = this.time.delayedCall(2000, () => {
+        this.entryEventFade = this.time.delayedCall(4500, () => {
           this.entryEventFade = null;
           this.entryEventTween = this.tweens.add({ targets: this.entryEvent,
-            alpha: 0, duration: 1500, onUpdate: () => this.layoutEntryEvent(), onComplete: () => this.clearEntryEvent() });
+            alpha: 0, duration: 2000, onUpdate: () => this.layoutEntryEvent(), onComplete: () => this.clearEntryEvent() });
         });
       });
     }
