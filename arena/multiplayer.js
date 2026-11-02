@@ -2,6 +2,7 @@
 (() => {
   'use strict';
   const TILE = 32, STEP_MS = 180, NICK_KEY = 'arena_chat_nick';
+  const avatarIDs = new Set(window.ArenaAvatarCatalog.map(v=>v.id)), defaultAvatar = window.ArenaAvatarCatalog[0].id;
   const frames = {left:'left',right:'right',up:'back',down:'front'};
   const requested = new URLSearchParams(location.search).get('mpRoom') || '';
   const group = /^test-[A-Za-z0-9-]{1,64}$/.test(requested) ? requested : 'public';
@@ -39,7 +40,7 @@
     entry.sprite.destroy(); entry.label.destroy(); sprites.delete(id);
   }
   function clearPlayers() { for (const id of sprites.keys()) destroySprite(id); players.clear(); refresh(); }
-  function valid(p) { return p && typeof p.id === 'string' && typeof p.nick === 'string' && Number.isInteger(p.x) && Number.isInteger(p.y) && frames[p.dir] && (!scene || !scene.blocked(p.x,p.y)); }
+  function valid(p) { return p && typeof p.id === 'string' && typeof p.nick === 'string' && Number.isInteger(p.x) && Number.isInteger(p.y) && frames[p.dir] && avatarIDs.has(p.avatar) && (!scene || !scene.blocked(p.x,p.y)); }
   function labelAt(entry) {
     entry.label.setPosition(entry.sprite.x,entry.sprite.y-44);
   }
@@ -48,19 +49,20 @@
     let entry = sprites.get(p.id);
     const x = p.x*TILE+TILE/2, y = (p.y+1)*TILE, anim = frames[p.dir];
     if (!entry) {
-      const sprite = scene.add.sprite(x,y,'player',`ariel-${anim}`).setOrigin(.5,1).setDepth(5);
+      const sprite = scene.add.sprite(x,y,'player',`${p.avatar}-${anim}`).setOrigin(.5,1).setDepth(5);
       const label = scene.add.text(x,y-44,p.nick.slice(0,24),{fontFamily:'sans-serif',fontSize:'11px',color:'#ffffff',stroke:'#10231f',strokeThickness:3,backgroundColor:'#10231faa',padding:{x:3,y:1}}).setOrigin(.5,1).setDepth(11);
       entry = {sprite,label}; sprites.set(p.id,entry);
     }
     entry.label.setText(p.nick.slice(0,24));
     scene.tweens.killTweensOf(entry.sprite);
     if (!snap && (entry.sprite.x !== x || entry.sprite.y !== y)) {
-      entry.sprite.play(anim,true);
-      scene.tweens.add({targets:entry.sprite,x,y,duration:STEP_MS,onUpdate:()=>labelAt(entry),onComplete:()=>{entry.sprite.anims.stop();entry.sprite.setFrame(`ariel-${anim}`);labelAt(entry);}});
-    } else { entry.sprite.setPosition(x,y);entry.sprite.anims.stop();entry.sprite.setFrame(`ariel-${anim}`);labelAt(entry); }
+      entry.sprite.play(`${p.avatar}-${anim}`,true);
+      scene.tweens.add({targets:entry.sprite,x,y,duration:STEP_MS,onUpdate:()=>labelAt(entry),onComplete:()=>{entry.sprite.anims.stop();entry.sprite.setFrame(`${p.avatar}-${anim}`);labelAt(entry);}});
+    } else { entry.sprite.setPosition(x,y);entry.sprite.anims.stop();entry.sprite.setFrame(`${p.avatar}-${anim}`);labelAt(entry); }
   }
   function correct(p, snapshot) {
     if (!scene || !active) return;
+    if (scene.avatar !== p.avatar) { scene.avatar=p.avatar; scene.player.anims.stop(); scene.player.setFrame(`${p.avatar}-${frames[p.dir]}`); }
     // Acknowledgements for earlier predicted steps must not rewind a newer step.
     const index = sentMoves.findIndex(m=>m.x===p.x && m.y===p.y && m.dir===p.dir);
     if (!snapshot && index >= 0) { sentMoves.splice(0,index+1); return; }
@@ -69,11 +71,12 @@
     scene.tweens.killTweensOf(scene.player);
     scene.tx=p.x; scene.ty=p.y; scene.facing=p.dir; scene.moving=false;
     scene.mpCorrectUntil=performance.now()+STEP_MS;
-    scene.player.anims.stop();scene.player.setFrame(`ariel-${frames[p.dir]}`);scene.placePlayer();
+    scene.player.anims.stop();scene.player.setFrame(`${p.avatar}-${frames[p.dir]}`);scene.placePlayer();
   }
   function player(p, snap = false) {
     if (!valid(p)) return;
-    players.set(p.id,{id:p.id,nick:p.nick,x:p.x,y:p.y,dir:p.dir});
+    players.set(p.id,{id:p.id,nick:p.nick,avatar:p.avatar,x:p.x,y:p.y,dir:p.dir});
+    if(p.id===selfId){window.dispatchEvent(new CustomEvent('arena-identity',{detail:p}));if(scene){if(!scene.nameLabel)scene.nameLabel=scene.add.text(0,0,p.nick,{fontFamily:'sans-serif',fontSize:'11px',color:'#fff',stroke:'#10231f',strokeThickness:3,backgroundColor:'#10231faa',padding:{x:3,y:1}}).setOrigin(.5,1).setDepth(11);scene.nameLabel.setText(p.nick);}}
     if (p.id === selfId) correct(p,snap); else render(p,snap);
     refresh();
   }
@@ -100,6 +103,7 @@
       // Own bounded join retries; never let the SDK enqueue chat during reconnection.
       if (joined.reconnection) joined.reconnection.enabled=false;
       joined.onMessage('snapshot',data=>{if(room!==joined)return;snapshot(data);if(!online){clearTimeout(readyTimer);notify(true);transmit('presence',{active});}});
+      joined.onMessage('wardrobe',data=>{if(room!==joined)return;if(data?.profile)player(data.profile);window.ArenaWardrobe?.receive(data);});
       joined.onMessage('player',data=>{if(room===joined)player(data);});
       joined.onMessage('leave',data=>{if(room!==joined || !data)return;destroySprite(data.id);players.delete(data.id);refresh();});
       joined.onMessage('chat',data=>{if(room!==joined)return;if(!subscribers.size){if(chatBacklog.length>=100)chatBacklog.shift();chatBacklog.push(data);}else for(const sub of subscribers)sub.chat?.(data);});
@@ -107,7 +111,6 @@
       joined.onError(()=>{if(room===joined)rejoin();});
       attempt=0;
       readyTimer=setTimeout(()=>{if(room===joined&&!online)rejoin();},12000);
-      joined.send('nick',{nick});
       joined.send('presence',{active});
     } catch (_) {
       if (token===generation) { notify(false);schedule(); }
@@ -124,15 +127,11 @@
     if (!active) { for(const id of sprites.keys())destroySprite(id); }
     transmit('presence',{active});
   }
-  function setNick(value) {
-    const next=String(value||'').trim().slice(0,24);if(!next || next===nick)return;
-    nick=next;try{localStorage.setItem(NICK_KEY,nick);}catch(_){}
-    transmit('nick',{nick});
-  }
   window.ArenaMultiplayer={
     attach(value){scene=value;setHall(true);for(const p of players.values()){if(p.id===selfId)correct(p,true);else render(p,true);}},
     detach(value){if(scene!==value)return;setHall(false);clearPlayers();scene=null;},
-    setHall,setNick,refresh,rejoin,
+    setHall,refresh,rejoin,
+    wardrobeOpen(){return transmit('wardrobe-open',{});},wardrobeClose(){transmit('wardrobe-close',{});},wardrobeSave(data){return transmit('wardrobe-profile',data);},get identity(){return players.get(selfId)||{nick,avatar:defaultAvatar};},
     move(x,y,dir){
       if(!active || !frames[dir])return;
       const key=`${x},${y},${dir}`;if(key===lastMove)return;

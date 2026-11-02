@@ -1,0 +1,9 @@
+/* Only the new welcome detail: keep long translations inside the game area. */
+.arena-dialog.is-welcome-notice { z-index: 8; max-height: calc(100% - 52px); display: flex; flex-direction: column; }
+.arena-dialog.is-welcome-notice .arena-board-welcome { display: flex; flex-direction: column; min-height: 0; }
+.arena-dialog.is-welcome-notice .arena-board-page { min-height: 0; overflow-y: auto; overflow-wrap: anywhere; touch-action: pan-y; }
+.arena-dialog.is-welcome-notice .arena-board-back { flex: none; }
+@media (pointer: coarse) {
+  .arena-dialog.is-welcome-notice { top: 8px; bottom: auto; max-height: calc(100% - 228px); }
+  .arena-dialog.is-welcome-notice .arena-board-page { max-height: 32vh; }
+}

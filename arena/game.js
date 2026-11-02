@@ -60,10 +60,15 @@
       copyFail: '复制失败，请长按地址手动复制',
       close: '关闭',
       boardTitle: '公告栏',
-      boardBody: ['欢迎来到竞技场！'],
+      boardBody: ['欢迎来到乌龟Poke！手搓Poke网游，望支持。'],
       boardAlt: '公告栏',
-      boardMenu: { rules: '【竞技场说明】', bets: '【竞技场】', commit: '【结果计算】', mew: '【活动】击败超梦！！！', close: '关闭' },
+      boardMenu: { welcome: '【乌龟Poke】欢迎您！！！', rules: '【竞技场说明】', bets: '【竞技场】', commit: '【结果计算】', mew: '【活动】击败超梦！！！', close: '关闭' },
       arenaTitle: '【竞技场】',
+      welcomePage: [
+        { title: '【乌龟Poke】欢迎您！！！' },
+        { p: '因深受Pokemon影响我做出了一个违背祖宗的决定，决定手搓一款宝可梦网游，取名叫「乌龟Poke」，借此向魔兽乌龟服致敬！' },
+        { p: '不过我个人的开发进度也真的跟乌龟一样慢，资源极其有限。纯打字AI手搓，每天都在狂烧Token，纯纯拿真金白银“为爱发电”。项目全凭一腔热血撑着，希望得到大家的支持，你们的鼓励是我继续更新的动力！' },
+      ],
       boardSoon: '（即将开始）',
       boardBack: '返回',
       commitCopy: '复制',
@@ -163,10 +168,15 @@
       copyFail: 'Copy failed. Press and hold the address to copy it.',
       close: 'Close',
       boardTitle: 'Notice Board',
-      boardBody: ['Welcome to the Arena!'],
+      boardBody: ['Welcome to Wugui Poke! A handcrafted online Poke world — thanks for your support.'],
       boardAlt: 'Notice board',
-      boardMenu: { rules: '[Arena Guide]', bets: '[Arena]', commit: '[Result calculation]', mew: '[Event] Beat Mewtwo!!!', close: 'Close' },
+      boardMenu: { welcome: '[Wugui Poke] Welcome!!!', rules: '[Arena Guide]', bets: '[Arena]', commit: '[Result calculation]', mew: '[Event] Beat Mewtwo!!!', close: 'Close' },
       arenaTitle: '[Arena]',
+      welcomePage: [
+        { title: '[Wugui Poke] Welcome!!!' },
+        { p: 'Inspired by Pokemon, I made a decision that would make my ancestors shake their heads: to handcraft an online Pokémon game called “Wugui Poke,” as a tribute to Turtle WoW!' },
+        { p: 'My development pace really is as slow as a turtle, though, and my resources are extremely limited. I am building it by typing prompts into AI, burning through Tokens every day and spending real money on this labor of love. This project runs entirely on passion. I hope you will support it—your encouragement is what keeps me updating it!' },
+      ],
       boardSoon: ' (coming soon)',
       boardBack: 'Back',
       commitCopy: 'Copy',
@@ -349,6 +359,7 @@
       this.el.classList.toggle('has-extra', !!node);
       // board menu: no title lines, options stacked vertically
       this.el.classList.toggle('is-board-menu', !!(node && node.classList && node.classList.contains('arena-board-head')));
+      this.el.classList.toggle('is-welcome-notice', !!(node && node.classList && node.classList.contains('arena-board-welcome')));
     },
     // Full notice (e.g. the lobby board): node replaces the text line; any press closes it.
     notice(node, onCancel = null) {
@@ -364,6 +375,7 @@
     },
     clearMenu() { this.choice = null; this.noticeHook = null; this.setExtra(null); if (this.menuEl) { this.menuEl.hidden = true; this.menuEl.innerHTML = ''; } },
     cancel() {
+      if(window.ArenaWardrobe?.cancel())return true;
       if (!this.open || this.busy || this.sayDone || hintMode === 'battle') return false;
       if (this.choice && !this.onCancel) return false;
       const back = this.onCancel;
@@ -468,6 +480,7 @@
   function boardPage(t, blocks, note, back, onCommit) {
     const box = document.createElement('div');
     box.className = 'arena-board';
+    if (blocks === t.welcomePage) box.classList.add('arena-board-welcome');
     box.addEventListener('click', e => e.stopPropagation());   // reading/scrolling/copying must not close it
     const paper = document.createElement('div');
     paper.className = 'arena-board-paper arena-board-page';
@@ -786,9 +799,10 @@
       for (const suffix of ['', '-en']) this.load.image('construction'+suffix, 'assets/construction'+suffix+'.png?v=20261102bedroom4');
       this.load.image('bedroom-props','assets/bedroom/props.png?v=20261102props5');
       this.load.image('bedroom', 'assets/bedroom/room.png?v=20261102bedroom4');
+      this.load.image('wardrobe','assets/wardrobe.png?v=20261102wardrobe2');
       this.load.image('tiles', 'assets/tileset.png');
-      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261102bedroom4');
-      this.load.atlas('player', 'assets/player.png', 'assets/player.json');
+      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261102wardrobe2');
+      this.load.atlas('player', 'assets/players.png?v=20261102six', 'assets/players.json?v=20261102six');
       this.load.image('board', 'assets/board.png?v=20261101ad');        // title plank says 竞技场
       this.load.image('board-en', 'assets/board-en.png?v=20261101ad');  // ... or ARENA
       for (const n of ['signup', 'trial']) for (const sfx of ['', '-en'])   // counter-top labels
@@ -858,6 +872,8 @@
           });
       }
 
+      const wp=prop('wardrobe');if(wp){const [x,y,w,h]=wp.split(',').map(Number);this.wardrobe={x,y,w,h};this.wardrobeImg=this.add.image(x*TILE,y*TILE,'wardrobe').setOrigin(0,0).setDepth(10).setInteractive({useHandCursor:true}).on('pointerdown',(p,lx,ly,ev)=>{ev.stopPropagation();window.ArenaWardrobe?.show(true);});}
+
       // Entrance notice board (1x3 tiles): raised face, grounded foot; opens the guide menu
       const sp = prop('sign');
       if (sp) {
@@ -892,12 +908,13 @@
 
       // Player: 32x41 sprite, feet on the bottom of its tile
       this.tx = sx; this.ty = sy; this.facing = 'up'; this.moving = false;
-      this.player = this.add.sprite(0, 0, 'player', 'ariel-back').setOrigin(0.5, 1).setDepth(5);
+      this.avatar = window.ArenaAvatarCatalog[0].id;
+      this.player = this.add.sprite(0, 0, 'player', `${this.avatar}-back`).setOrigin(0.5, 1).setDepth(5);
       this.placePlayer();
-      for (const k of ['left', 'right', 'front', 'back']) {
+      for (const avatar of window.ArenaAvatarCatalog) for (const k of ['left', 'right', 'front', 'back']) {
         this.anims.create({
-          key: k,
-          frames: this.anims.generateFrameNames('player', { prefix: `ariel-${k}-walk.`, start: 0, end: 3, zeroPad: 3 }),
+          key: `${avatar.id}-${k}`,
+          frames: this.anims.generateFrameNames('player', { prefix: `${avatar.id}-${k}-walk.`, start: 0, end: 3, zeroPad: 3 }),
           frameRate: 10, repeat: -1,
         });
       }
@@ -1074,16 +1091,17 @@
     face(dir) {
       this.facing = dir;
       this.player.anims.stop();
-      this.player.setFrame(`ariel-${DIRS[dir].anim}`);
+      this.player.setFrame(`${this.avatar}-${DIRS[dir].anim}`);
       window.ArenaMultiplayer?.move(this.tx, this.ty, dir);
     }
 
     interact() {
-      if (window.ArenaChat?.isTyping()) return;
+      if (window.ArenaWardrobe?.open || window.ArenaChat?.isTyping()) return;
       if (dialog.open) { dialog.advance(); return; }
       if (this.moving) return;
       const d = DIRS[this.facing];
       const fx = this.tx + d.dx, fy = this.ty + d.dy;
+      const wp=this.wardrobe;if(wp&&fx>=wp.x&&fx<wp.x+wp.w&&fy>=wp.y&&fy<wp.y+wp.h){window.ArenaWardrobe?.show(true);return;}
       const cs=this.construction;
       if(cs && fx===cs.x && fy===cs.y){this.openConstruction();return;}
       // NPCs stand behind a counter: talk across it (facing up at the counter tile in front of them)
@@ -1111,6 +1129,7 @@
       stopBets();
       const t = TEXT[lang()];
       const opts = [
+        { value: '__welcome', label: t.boardMenu.welcome },
         { value: '__mew', label: t.boardMenu.mew },
         { value: '__rules', label: t.boardMenu.rules },
         { value: '__bets', label: t.boardMenu.bets },
@@ -1118,10 +1137,11 @@
         { value: '__close', label: t.boardMenu.close },
       ];
       dialog.choose(t.boardTitle, opts, v => {
-        if (v === '__rules') this.showRules();
+        if (v === '__welcome') this.boardShow(back => boardPage(t, t.welcomePage, null, back), 0);
+        else if (v === '__rules') this.showRules();
         else if (v === '__bets') { this.betsFromMenu = true; this.openBets(false); }
-        else if (v === '__commit') this.boardShow(back => boardPage(t, t.commitPage, null, back), 3);
-        else if (v === '__mew') this.boardShow(back => boardPage(t, t.mewPage, MEW_LIVE ? null : t.mewSoonNote, back), 0);
+        else if (v === '__commit') this.boardShow(back => boardPage(t, t.commitPage, null, back), 4);
+        else if (v === '__mew') this.boardShow(back => boardPage(t, t.mewPage, MEW_LIVE ? null : t.mewSoonNote, back), 1);
         else dialog.close();
       }, sel, boardHead(t), () => setHint('arena'));
       this.boardSel = sel;
@@ -1136,7 +1156,7 @@
         dialog.close();
         dialog.notice(boardPage(t, t.commitPage, null, toRules), toRules);
         dialog.onDone = () => this.showRules();
-      }), 1);
+      }), 2);
     }
 
     // show a board page; back (button, Space/Enter/A, or a tap outside the page) returns to the menu on item sel
@@ -1158,8 +1178,8 @@
     openBets(keepPage) {
       const t = TEXT[lang()];
       const fromMenu = !!this.betsFromMenu;
-      const leave = () => { stopBets(); if (fromMenu) this.openBoard(2); };
-      const back = () => { stopBets(); dialog.close(); if (fromMenu) this.openBoard(2); };
+      const leave = () => { stopBets(); if (fromMenu) this.openBoard(3); };
+      const back = () => { stopBets(); dialog.close(); if (fromMenu) this.openBoard(3); };
       dialog.notice(boardBets(t, keepPage, back, fromMenu ? null : t.boardMenu.close), back);
       dialog.noticeHook = boardHook;
       dialog.onDone = leave;
@@ -1317,7 +1337,8 @@
     }
 
     update() {
-      if (window.ArenaChat?.isTyping()) { pad.held = null; pad.action = false; return; }
+      if(this.nameLabel)this.nameLabel.setPosition(this.player.x,this.player.y-44);
+      if (window.ArenaWardrobe?.open || window.ArenaChat?.isTyping()) { pad.held = null; pad.action = false; return; }
       if (pad.action) { pad.action = false; this.interact(); }
       if ((dialog.choice || (bets.el && bets.el.isConnected)) && pad.held && !this.padRepeat) {   // touch d-pad drives the menu / board
         this.padRepeat = true;
@@ -1338,7 +1359,7 @@
       const nx = this.tx + d.dx, ny = this.ty + d.dy;
       if (this.blocked(nx, ny)) { this.face(dir); return; }
       this.moving = true;
-      this.player.anims.play(d.anim, true);
+      this.player.anims.play(`${this.avatar}-${d.anim}`, true);
       this.tx = nx; this.ty = ny;
       window.ArenaMultiplayer?.move(nx, ny, dir);
       this.tweens.add({

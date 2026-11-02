@@ -24,7 +24,7 @@ const I18N_DICT = {
     'nav.copy': '反向交易',
     'nav.hype': 'Hype监控',
     'nav.battle': '多空战况',
-    'nav.arena': 'Poke竞技场',
+    'nav.arena': '乌龟Poke',
     'arena.title': '宝可梦大赛报名处',
     // ---- 战场页 ----
     'bf.brand': 'CoinValue',
@@ -228,7 +228,7 @@ const I18N_DICT = {
     'nav.copy': 'Reverse Trading',
     'nav.hype': 'Hype Monitor',
     'nav.battle': 'Long/Short Battle',
-    'nav.arena': 'Poke Arena',
+    'nav.arena': 'Wugui Poke',
     'arena.title': 'Pokémon Contest Reception',
     // ---- Battlefield ----
     'bf.brand': 'CoinValue',
