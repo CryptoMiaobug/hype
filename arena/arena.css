@@ -171,7 +171,7 @@ body[data-page="arena"] .notice-bar { flex: 0 0 auto; }
 /* Public chat: separate from Phaser dialogs and available during every scene. */
 .arena-chat-toggle { position:absolute; top:10px; right:60px; z-index:7; min-height:40px; padding:6px 12px; border:2px solid #8fb5ac; border-radius:8px; background:#123f36; color:#fff; font:600 14px/1.3 system-ui,sans-serif; cursor:pointer; }
 .arena-chat-badge { display:inline-block; margin-left:5px; padding:1px 5px; border-radius:12px; background:#c43d42; color:#fff; font-size:12px; }
-.arena-chat { --chat-bottom:0px; position:absolute; z-index:20; right:10px; top:60px; bottom:10px; width:350px; max-width:calc(100% - 20px); min-height:0; display:flex; flex-direction:column; box-sizing:border-box; border:3px solid #383848; border-radius:10px; background:#f8f8f8; color:#303030; box-shadow:inset 0 0 0 2px #a8b8d8,0 5px 24px #0006; font:14px/1.45 system-ui,"Microsoft YaHei",sans-serif; }
+.arena-chat { --chat-bottom:0px; position:absolute; z-index:20; right:10px; top:60px; bottom:10px; width:350px; max-width:calc(100% - 20px); min-height:0; display:flex; flex-direction:column; box-sizing:border-box; border:3px solid #383848; border-radius:10px; background:rgba(248,248,248,.82); color:#303030; box-shadow:inset 0 0 0 2px #a8b8d8,0 5px 24px #0006; font:14px/1.45 system-ui,"Microsoft YaHei",sans-serif; }
 .arena-chat [hidden], .arena-chat[hidden], .arena-chat-badge[hidden] { display:none !important; }
 .arena-chat button,.arena-chat input,.arena-chat textarea { font:inherit; }
 .arena-chat button { cursor:pointer; }
@@ -182,7 +182,7 @@ body[data-page="arena"] .notice-bar { flex: 0 0 auto; }
 .arena-chat-close { border:0; border-radius:5px; background:transparent; color:#303030; width:34px; height:34px; font-size:25px !important; }
 .arena-chat-state { margin:0; padding:0 12px 7px; color:#796138; font-size:12px; flex:none; }
 .arena-chat-state.is-online { color:#21704a; }
-.arena-chat-log { list-style:none; margin:0 9px; padding:4px 7px; overflow:auto; flex:1 1 auto; min-height:55px; border:1px solid #c6cdd6; border-radius:5px; background:#fff; overscroll-behavior:contain; overflow-anchor:none; touch-action:pan-y; }
+.arena-chat-log { list-style:none; margin:0 9px; padding:4px 7px; overflow:auto; flex:1 1 auto; min-height:55px; border:1px solid #c6cdd6; border-radius:5px; background:rgba(255,255,255,.48); overscroll-behavior:contain; overflow-anchor:none; touch-action:pan-y; }
 .arena-chat-message { padding:8px 0; border-bottom:1px solid #e5e9ed; }
 .arena-chat-message:last-child { border:0; }
 .arena-chat-meta { display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
@@ -208,7 +208,7 @@ body[data-page="arena"] .notice-bar { flex: 0 0 auto; }
 .arena-chat-tools { display:flex; gap:8px; margin-top:5px; }
 .arena-chat-new { flex:none; border:0; border-radius:4px; margin:4px 12px 0; background:#dfedf9; color:#24577f; font-size:12px; }
 @media (max-width:600px), (pointer:coarse) {
-  .arena-chat { position:fixed; top:auto; left:8px; right:8px; bottom:calc(var(--chat-bottom) + env(safe-area-inset-bottom, 0px) + 8px); width:auto; max-width:none; height:min(580px,calc(var(--chat-vh, 100dvh) - 24px)); }
+  .arena-chat { position:fixed; top:auto; left:auto; right:8px; bottom:calc(var(--chat-bottom) + env(safe-area-inset-bottom, 0px) + 8px); width:min(330px,calc(100vw - 16px)); max-width:calc(100vw - 16px); height:min(520px,calc(var(--chat-vh, 100dvh) - 24px)); }
   .arena-chat input,.arena-chat textarea { font-size:16px; } /* no iOS focus zoom */
   .arena-chat-toggle { font-size:13px; padding:5px 10px; }
 }

@@ -14,9 +14,9 @@
   const t = () => words[window.I18n?.lang === 'en' ? 'en' : 'zh'];
   const make = (tag, cls, text) => { const e = document.createElement(tag); if(cls)e.className=cls; if(text!==undefined)e.textContent=text; return e; };
   const host = document.querySelector('.arena-wrap');
-  const toggle=make('button','arena-chat-toggle'); toggle.type='button'; toggle.id='arena-chat-toggle'; toggle.setAttribute('aria-expanded','false'); toggle.setAttribute('aria-controls','arena-chat');
+  const toggle=make('button','arena-chat-toggle'); toggle.type='button'; toggle.id='arena-chat-toggle'; toggle.setAttribute('aria-expanded','true'); toggle.setAttribute('aria-controls','arena-chat');
   const badge=make('span','arena-chat-badge');badge.hidden=true;
-  const panel=make('section','arena-chat');panel.id='arena-chat';panel.hidden=true;panel.setAttribute('aria-labelledby','arena-chat-title');
+  const panel=make('section','arena-chat');panel.id='arena-chat';panel.hidden=false;panel.setAttribute('aria-labelledby','arena-chat-title');
   const head=make('header','arena-chat-head'),title=make('h2');title.id='arena-chat-title';
   const close=make('button','arena-chat-close','×');close.type='button';head.append(title,close);
   const state=make('p','arena-chat-state');state.id='arena-chat-state';state.setAttribute('role','status');
