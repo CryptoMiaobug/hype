@@ -41,8 +41,9 @@
       go: m => [`好的！挑战擂主${m}！`, '你的挑战者已经安排好了，对战马上开始！'],
       win: ['恭喜你击败了擂主！真是精彩的对战！', '想再挑战的话随时找我哦。'],
       lose: ['擂主守住了……不过你的挑战者表现得很棒！', '要不要再挑战一次？'],
-      hint: '方向键 / WASD 移动，空格 / 回车 与柜台或公告牌互动',
-      hintTouch: '方向键移动，走到柜台或公告牌旁按 A 互动',
+      trophyBody: '本月冠军是…………',
+      hint: '方向键 / WASD 移动，空格 / 回车 与柜台、公告牌或奖杯互动',
+      hintTouch: '方向键移动，走到柜台、公告牌或奖杯旁按 A 互动',
       hintMenu: '↑ / ↓ 选择，空格 / 回车 确认',
       hintBattle: '自动对战中，空格 / 回车 / 点击 可加快',
       next: '▼',
@@ -225,8 +226,9 @@
       betsCaption: 'Recent matches, 10 per page, read directly from Arbitrum',
       betsWatch: (a, fee, res) => `Watch the match of ${a}: ${fee}, ${res}`,
       betsReplayFail: 'Could not load the replay. Please try again later.',
-      hint: 'Arrows / WASD to move, Space / Enter at a counter or notice board',
-      hintTouch: 'D-pad to move, press A at a counter or notice board',
+      trophyBody: 'This month’s champion is…………',
+      hint: 'Arrows / WASD to move, Space / Enter at a counter, notice board or trophy',
+      hintTouch: 'D-pad to move, press A at a counter, notice board or trophy',
       next: '▼',
     },
   };
@@ -785,11 +787,18 @@
           });
       }
 
-      // Decorative approved trophy: 48px artwork centred on the old one-tile sign anchor.
+      // Champion trophy: keep the approved art and position; use the existing dialogue.
       const tp = prop('trophy');
       if (tp) {
         const [x, y] = tp.split(',').map(Number);
-        this.add.image(x * TILE - 8, y * TILE, 'trophy').setOrigin(0, 0).setDepth(4);
+        this.trophy = { x, y, w: 1, h: 3 };
+        this.add.image(x * TILE - 8, y * TILE, 'trophy').setOrigin(0, 0).setDepth(4)
+          .setInteractive({ useHandCursor: true })
+          .on('pointerdown', (p, lx, ly, ev) => {
+            if (dialog.open || window.ArenaChat?.isTyping()) return;
+            ev.stopPropagation();
+            this.talkToTrophy();
+          });
       }
 
       // Entrance notice board (1x3 tiles): raised face, grounded foot; opens the guide menu
@@ -1016,11 +1025,18 @@
       // NPCs stand behind a counter: talk across it (facing up at the counter tile in front of them)
       const b = this.board;
       if (b && fx >= b.x && fx < b.x + b.w && fy >= b.y && fy < b.y + b.h) { this.openBigBoard(); return; }
+      const tp = this.trophy;
+      if (tp && fx >= tp.x && fx < tp.x + tp.w && fy >= tp.y && fy < tp.y + tp.h) { this.talkToTrophy(); return; }
       const sg = this.sign;   // small board: its post tile (row +2) collides, talk to it from any side
       if (sg && fx === sg.x && fy === sg.y + 2) { this.openBoard(); return; }
       const i = this.npcs.findIndex(n => (this.facing === 'up' && fx === n.x && fy === n.y + 2) || (fx === n.x && fy === n.y));
       if (i === 0) this.talkToFeeNpc();   // main hall: entry fee
       else if (i > 0) this.talkToNpc();   // east hall: pick a champion and watch
+    }
+
+    talkToTrophy() {
+      if (window.ArenaMusic) window.ArenaMusic.sfx('select');
+      dialog.start([TEXT[lang()].trophyBody]);
     }
 
     // Small notice board (left): a menu first; each item opens its page, and Back / Space (nothing selected) returns here.
