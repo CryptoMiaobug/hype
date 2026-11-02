@@ -516,6 +516,7 @@
   const shortAddr = a => a.slice(0, 6) + '…' + a.slice(-4);
   const fmtFee = raw => (raw / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'U';
   const bets = { page: 0, sel: -1, list: null, err: false, el: null, timer: null, keys: null };
+  let entryEventShown = false;   // page lifecycle only; refresh permits the banner again
   let arenaScene = null;   // set in Arena.create; the board starts replays through it
 
   function betsPanel(t, keepPage) {
@@ -751,6 +752,7 @@
       this.load.image('board-en', 'assets/board-en.png?v=20261101ad');  // ... or ARENA
       for (const n of ['signup', 'trial']) for (const sfx of ['', '-en'])   // counter-top labels
         this.load.image(`desk-${n}${sfx}`, `assets/desk-${n}${sfx}.png?v=20261101ag`);
+      for (const L of ['zh', 'en']) this.load.image('event-banner-' + L, 'assets/event-banner-' + L + '.png?v=20261102event');
       this.load.image('trophy', 'assets/trophy.png?v=20261102trophy');
       this.load.image('sign', 'assets/sign.png?v=20261101z');
       this.load.image('grass', 'assets/grass.png?v=20261101ah');   // art-gen/build_grass.py
@@ -850,12 +852,81 @@
       setHint('arena');
       playMusic('lobby');
       window.onArenaLang = () => {
+        if (this.entryEvent) this.entryEvent.setTexture('event-banner-' + lang());
+        if (this.entryEventOverlay) { this.entryEventOverlay.src = 'assets/event-banner-' + lang() + '.png?v=20261102event'; this.entryEventOverlay.alt = lang() === 'en' ? 'EVENT — DEFEAT MEWTWO!!!' : '【活动】击败超梦！！！'; }
         setHint(hintMode); if (window.ArenaMusic) window.ArenaMusic.refreshLabel();
         if (this.boardImg) this.boardImg.setTexture(lang() === 'en' ? 'board-en' : 'board');
         for (const d of this.deskImgs) d.setTexture('desk-' + d.deskName + (lang() === 'en' ? '-en' : ''));
       };
       this.events.on('wake', this.onWake, this);
+      this.showEntryEvent();
+      this.events.on('sleep', this.clearEntryEvent, this);
+      this.events.once('shutdown', () => {
+        this.clearEntryEvent();
+        this.scale.off('resize', this.layoutEntryEvent, this);
+      });
       arenaScene = this;
+    }
+
+    showEntryEvent() {
+      if (entryEventShown) return;
+      entryEventShown = true;
+      this.entryEventOverlay = document.createElement('img');
+      this.entryEventOverlay.className = 'arena-entry-event';
+      this.entryEventOverlay.src = 'assets/event-banner-' + lang() + '.png?v=20261102event';
+      this.entryEventOverlay.alt = lang() === 'en' ? 'EVENT — DEFEAT MEWTWO!!!' : '【活动】击败超梦！！！';
+      this.entryEventOverlay.draggable = false;
+      this.entryEventOverlay.style.cssText = 'position:absolute;z-index:4;pointer-events:none;user-select:none;image-rendering:pixelated;left:50%;top:26%;opacity:0;transform:translate(-50%,-50%) scale(.94);';
+      document.getElementById('game').appendChild(this.entryEventOverlay);
+      this.entryEventProgress = { scale: 0.94 };
+      this.entryEvent = this.add.image(0, 0, 'event-banner-' + lang())
+        .setDepth(20).setScrollFactor(0).setAlpha(0);
+      this.scale.on('resize', this.layoutEntryEvent, this);
+      this.layoutEntryEvent();
+      this.entryEventDelay = this.time.delayedCall(500, () => {
+        this.entryEventDelay = null;
+        this.entryEventTween = this.tweens.add({
+          targets: this.entryEvent, alpha: 1, duration: 180, onUpdate: () => this.layoutEntryEvent(),
+        });
+        this.entryEventGrow = this.tweens.add({
+          targets: this.entryEventProgress, scale: 1, duration: 180,
+          onUpdate: () => this.layoutEntryEvent(),
+        });
+        this.entryEventFade = this.time.delayedCall(2000, () => {
+          this.entryEventFade = null;
+          this.entryEventTween = this.tweens.add({ targets: this.entryEvent,
+            alpha: 0, duration: 1500, onUpdate: () => this.layoutEntryEvent(), onComplete: () => this.clearEntryEvent() });
+        });
+      });
+    }
+
+    layoutEntryEvent() {
+      if (!this.entryEvent) return;
+      const cam = this.cameras.main, { width, height } = this.scale.gameSize;
+      const w = Math.min(512, width - 24, Math.max(256, height * 1.3));
+      // Scroll-factor zero still uses camera zoom/centre transform: convert screen to camera coords.
+      this.entryEvent.setVisible(false); // DOM art sits above chat paint but passes every input through
+      this.entryEventOverlay.style.width = w + 'px';
+      this.entryEventOverlay.style.opacity = this.entryEvent.alpha;
+      this.entryEventOverlay.style.transform = `translate(-50%,-50%) scale(${this.entryEventProgress.scale})`;
+      this.entryEvent.setPosition(width / 2, height / 2 + (height * 0.26 - height / 2) / cam.zoom)
+        .setScale(w / (256 * cam.zoom) * this.entryEventProgress.scale);
+    }
+
+    clearEntryEvent() {
+      for (const key of ['entryEventDelay', 'entryEventFade']) {
+        if (this[key]) this[key].remove(false);
+        this[key] = null;
+      }
+      for (const key of ['entryEventTween', 'entryEventGrow']) {
+        if (this[key]) this[key].stop();
+        this[key] = null;
+      }
+      if (this.entryEvent) this.entryEvent.destroy();
+      this.entryEvent = null;
+      if (this.entryEventOverlay) this.entryEventOverlay.remove();
+      this.entryEventOverlay = null;
+      this.scale.off('resize', this.layoutEntryEvent, this);
     }
 
     fitCamera() {
@@ -871,6 +942,7 @@
       const vw = width / zoom, vh = height / zoom;
       const bw = Math.max(mw, vw), bh = Math.max(mh, vh);
       cam.setBounds((mw - bw) / 2, (mh - bh) / 2, bw, bh);
+      this.layoutEntryEvent();
     }
 
     placePlayer() {
@@ -957,17 +1029,17 @@
       stopBets();
       const t = TEXT[lang()];
       const opts = [
+        { value: '__mew', label: t.boardMenu.mew },
         { value: '__rules', label: t.boardMenu.rules },
         { value: '__bets', label: t.boardMenu.bets },
         { value: '__commit', label: t.boardMenu.commit },
-        { value: '__mew', label: t.boardMenu.mew + (MEW_LIVE ? '' : t.boardSoon) },
         { value: '__close', label: t.boardMenu.close },
       ];
       dialog.choose(t.boardTitle, opts, v => {
         if (v === '__rules') this.showRules();
         else if (v === '__bets') { this.betsFromMenu = true; this.openBets(false); }
-        else if (v === '__commit') this.boardShow(back => boardPage(t, t.commitPage, null, back), 2);
-        else if (v === '__mew') this.boardShow(back => boardPage(t, t.mewPage, MEW_LIVE ? null : t.mewSoonNote, back), 3);
+        else if (v === '__commit') this.boardShow(back => boardPage(t, t.commitPage, null, back), 3);
+        else if (v === '__mew') this.boardShow(back => boardPage(t, t.mewPage, MEW_LIVE ? null : t.mewSoonNote, back), 0);
         else dialog.close();
       }, sel, boardHead(t));
       this.boardSel = sel;
@@ -982,7 +1054,7 @@
         dialog.close();
         dialog.notice(boardPage(t, t.commitPage, null, toRules));
         dialog.onDone = () => this.showRules();
-      }), 0);
+      }), 1);
     }
 
     // show a board page; back (button, Space/Enter/A, or a tap outside the page) returns to the menu on item sel
@@ -1004,8 +1076,8 @@
     openBets(keepPage) {
       const t = TEXT[lang()];
       const fromMenu = !!this.betsFromMenu;
-      const leave = () => { stopBets(); if (fromMenu) this.openBoard(1); };
-      const back = () => { stopBets(); dialog.close(); if (fromMenu) this.openBoard(1); };
+      const leave = () => { stopBets(); if (fromMenu) this.openBoard(2); };
+      const back = () => { stopBets(); dialog.close(); if (fromMenu) this.openBoard(2); };
       dialog.notice(boardBets(t, keepPage, back, fromMenu ? null : t.boardMenu.close));
       dialog.noticeHook = boardHook;
       dialog.onDone = leave;
