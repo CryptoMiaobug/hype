@@ -41,8 +41,8 @@
       go: m => [`好的！挑战擂主${m}！`, '你的挑战者已经安排好了，对战马上开始！'],
       win: ['恭喜你击败了擂主！真是精彩的对战！', '想再挑战的话随时找我哦。'],
       lose: ['擂主守住了……不过你的挑战者表现得很棒！', '要不要再挑战一次？'],
-      hint: '方向键 / WASD 移动，空格 / 回车 对话',
-      hintTouch: '方向键移动，走到柜台前按 A 对话',
+      hint: '方向键 / WASD 移动，空格 / 回车 与柜台或公告牌互动',
+      hintTouch: '方向键移动，走到柜台或公告牌旁按 A 互动',
       hintMenu: '↑ / ↓ 选择，空格 / 回车 确认',
       hintBattle: '自动对战中，空格 / 回车 / 点击 可加快',
       next: '▼',
@@ -225,8 +225,8 @@
       betsCaption: 'Recent matches, 10 per page, read directly from Arbitrum',
       betsWatch: (a, fee, res) => `Watch the match of ${a}: ${fee}, ${res}`,
       betsReplayFail: 'Could not load the replay. Please try again later.',
-      hint: 'Arrows / WASD to move, Space / Enter to talk',
-      hintTouch: 'D-pad to move, press A at the counter to talk',
+      hint: 'Arrows / WASD to move, Space / Enter at a counter or notice board',
+      hintTouch: 'D-pad to move, press A at a counter or notice board',
       next: '▼',
     },
   };
@@ -745,12 +745,13 @@
 
     preload() {
       this.load.image('tiles', 'assets/tileset.png');
-      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261101ah');
+      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261102trophy');
       this.load.atlas('player', 'assets/player.png', 'assets/player.json');
       this.load.image('board', 'assets/board.png?v=20261101ad');        // title plank says 竞技场
       this.load.image('board-en', 'assets/board-en.png?v=20261101ad');  // ... or ARENA
       for (const n of ['signup', 'trial']) for (const sfx of ['', '-en'])   // counter-top labels
         this.load.image(`desk-${n}${sfx}`, `assets/desk-${n}${sfx}.png?v=20261101ag`);
+      this.load.image('trophy', 'assets/trophy.png?v=20261102trophy');
       this.load.image('sign', 'assets/sign.png?v=20261101z');
       this.load.image('grass', 'assets/grass.png?v=20261101ah');   // art-gen/build_grass.py
     }
@@ -782,7 +783,14 @@
           });
       }
 
-      // Small notice board on the left (1x3 tiles): face above the player, post below; same menu as the big board
+      // Decorative approved trophy: 48px artwork centred on the old one-tile sign anchor.
+      const tp = prop('trophy');
+      if (tp) {
+        const [x, y] = tp.split(',').map(Number);
+        this.add.image(x * TILE - 8, y * TILE, 'trophy').setOrigin(0, 0).setDepth(4);
+      }
+
+      // Entrance notice board (1x3 tiles): raised face, grounded foot; opens the guide menu
       const sp = prop('sign');
       if (sp) {
         const [sx2, sy2] = sp.split(',').map(Number);
