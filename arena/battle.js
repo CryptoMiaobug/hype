@@ -91,7 +91,7 @@
       this.box = { foe: this.makeBox(8, 8, 'foe'), me: this.makeBox(130, 74, 'me') };
       this.box.foe.c.setVisible(false); this.box.me.c.setVisible(false);
 
-      const advance = () => this.UI.dialog.advance();
+      const advance = () => { if (!window.ArenaChat?.isTyping()) this.UI.dialog.advance(); };
       const keys = this.input.keyboard.addKeys('SPACE,ENTER,Z');
       keys.SPACE.on('down', advance); keys.ENTER.on('down', advance); keys.Z.on('down', advance);
       this.input.on('pointerdown', advance);
@@ -114,6 +114,7 @@
     }
 
     update() {
+      if (window.ArenaChat?.isTyping()) { this.UI.pad.action = false; return; }
       const pad = this.UI.pad;
       if (pad.action) { pad.action = false; this.UI.dialog.advance(); }
     }

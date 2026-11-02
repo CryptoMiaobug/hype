@@ -262,9 +262,9 @@
       this.el = document.getElementById('dialog');
       this.textEl = document.getElementById('dialog-text');
       this.menuEl = document.getElementById('dialog-menu');
-      this.el.addEventListener('click', () => this.advance());
+      this.el.addEventListener('click', () => { if (!window.ArenaChat?.isTyping()) this.advance(); });
       document.addEventListener('keydown', e => {
-        if (!this.choice) return;
+        if (window.ArenaChat?.isTyping() || !this.choice) return;
         const k = e.key;
         if (k === 'ArrowUp' || k === 'w' || k === 'W') { this.move(-this.cols()); e.preventDefault(); }
         else if (k === 'ArrowDown' || k === 's' || k === 'S') { this.move(this.cols()); e.preventDefault(); }
@@ -948,6 +948,7 @@
     }
 
     interact() {
+      if (window.ArenaChat?.isTyping()) return;
       if (dialog.open) { dialog.advance(); return; }
       if (this.moving) return;
       const d = DIRS[this.facing];
@@ -1166,6 +1167,7 @@
     }
 
     update() {
+      if (window.ArenaChat?.isTyping()) { pad.held = null; pad.action = false; return; }
       if (pad.action) { pad.action = false; this.interact(); }
       if ((dialog.choice || (bets.el && bets.el.isConnected)) && pad.held && !this.padRepeat) {   // touch d-pad drives the menu / board
         this.padRepeat = true;
@@ -1205,7 +1207,7 @@
     dialog.init();
     bindPad();
     const host = document.getElementById('game');
-    new Phaser.Game({
+    const game = new Phaser.Game({
       type: Phaser.AUTO,
       parent: host,
       pixelArt: true,
@@ -1213,6 +1215,7 @@
       scale: { mode: Phaser.Scale.RESIZE, width: host.clientWidth, height: host.clientHeight },
       scene: [Arena, window.ArenaBattle],
     });
+    window.ArenaUI.game = game;
   }
   window.addEventListener('DOMContentLoaded', boot);
 })();
