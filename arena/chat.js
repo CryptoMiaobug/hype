@@ -13,7 +13,7 @@
   };
   const t = () => words[window.I18n?.lang === 'en' ? 'en' : 'zh'];
   const make = (tag, cls, text) => { const e = document.createElement(tag); if(cls)e.className=cls; if(text!==undefined)e.textContent=text; return e; };
-  const host = document.querySelector('.arena-wrap');
+  const host = document.getElementById('game');
   const toggle=make('button','arena-chat-toggle'); toggle.type='button'; toggle.id='arena-chat-toggle'; toggle.setAttribute('aria-expanded','true'); toggle.setAttribute('aria-controls','arena-chat');
   const badge=make('span','arena-chat-badge');badge.hidden=true;
   const panel=make('section','arena-chat');panel.id='arena-chat';panel.hidden=false;panel.setAttribute('aria-labelledby','arena-chat-title');
@@ -26,11 +26,11 @@
   const note=make('p','arena-chat-note');
   const form=make('form','arena-chat-form');
   const nickLabel=make('label'),nickCaption=make('span'),nickInput=make('input');nickInput.id='arena-chat-nick';nickInput.maxLength=24;nickInput.value=nick;nickInput.autocomplete='nickname';nickLabel.append(nickCaption,nickInput);
-  const messageLabel=make('label'),messageCaption=make('span','sr-only'),input=make('textarea');input.id='arena-chat-message';input.maxLength=300;input.rows=2;input.required=true;messageLabel.append(messageCaption,input);
+  const messageLabel=make('label'),messageCaption=make('span','sr-only'),input=make('textarea');input.id='arena-chat-message';input.maxLength=300;input.rows=1;input.required=true;messageLabel.append(messageCaption,input);
   const row=make('div','arena-chat-send-row'),count=make('span','arena-chat-count','0/300'),send=make('button','arena-chat-send');send.type='submit';send.disabled=true;row.append(count,send);form.append(nickLabel,messageLabel,row);
   const error=make('p','arena-chat-error');error.setAttribute('role','status');
   const admin=make('details','arena-chat-admin'),summary=make('summary'),authForm=make('form','arena-chat-auth'),token=make('input'),login=make('button'),logout=make('button');token.type='password';token.autocomplete='off';token.maxLength=256;login.type='submit';logout.type='button';logout.hidden=true;authForm.append(token,login);admin.append(summary,authForm,logout);
-  panel.append(head,state,log,newer,note,form,error,admin);host.append(toggle,panel);
+  head.insertBefore(nickLabel,close);head.insertBefore(state,nickLabel);panel.append(head,log,newer,form,error,admin);admin.append(note);host.append(toggle,panel);
   let socket=null,reconnect=null,attempt=0,unread=0,adminOn=false,online=false,statusKey='connecting',lastFocus=null,alive=true,hasHistory=false,lastSend=0,pending=null;
   const messages=new Map(), nodes=new Map();
   const isOpen=()=>!panel.hidden;
@@ -61,6 +61,6 @@
   form.addEventListener('submit',e=>{e.preventDefault();if(pending)return;const body=input.value.trim();if(!body)return;if(!online){error.textContent=t().unavailable;return;}if(Date.now()-lastSend<4000){error.textContent=t().rate_limited;return;}nick=nickInput.value.trim().slice(0,24)||nick;nickInput.value=nick;storage.set(NICK_KEY,nick);pending={body,nick,draft:input.value,requestId:crypto.randomUUID()};if(!transmit({type:'send',nick,body,visitorId:id,requestId:pending.requestId})){pending=null;error.textContent=t().unavailable;return;}lastSend=Date.now();setStatus(statusKey);const sent=pending;setTimeout(()=>{if(pending===sent){pending=null;error.textContent=t().unavailable;setStatus(statusKey);}},10000);});
   authForm.addEventListener('submit',e=>{e.preventDefault();if(!token.value)return;const value=token.value;clearAdmin();if(!transmit({type:'auth',token:value}))error.textContent=t().unavailable;});logout.addEventListener('click',()=>{clearAdmin();socket?.close(1000,'Admin logout');});
   window.addEventListener('online',()=>{socket?.close();connect();});document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(isOpen()&&bottom())toBottom();if(socket?.readyState===WebSocket.CLOSED)connect();}});window.addEventListener('pagehide',()=>{alive=false;clearTimeout(reconnect);socket?.close();});window.addEventListener('pageshow',e=>{if(e.persisted){alive=true;connect();}});
-  function viewport(){const v=window.visualViewport;panel.style.setProperty('--chat-vh',(v?v.height:innerHeight)+'px');panel.style.setProperty('--chat-bottom',(v?Math.max(0,innerHeight-v.height-v.offsetTop):0)+'px');}window.visualViewport?.addEventListener('resize',viewport);window.visualViewport?.addEventListener('scroll',viewport);window.addEventListener('resize',viewport);
+  function viewport(){const v=window.visualViewport;const rect=host.getBoundingClientRect();const visible=Math.max(96,Math.min(rect.height,(v?v.offsetTop+v.height:innerHeight)-rect.top));host.style.setProperty('--chat-visible',visible+'px');}new ResizeObserver(viewport).observe(host);window.visualViewport?.addEventListener('resize',viewport);window.visualViewport?.addEventListener('scroll',viewport);window.addEventListener('resize',viewport);
   window.ArenaChat={isTyping:typing,refresh:language};language();viewport();connect();
 })();
