@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "image": "npcs.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 64,
+      "h": 41
+    },
+    "scale": 1
+  },
+  "frames": {
+    "receptionist": {
+      "rotated": false,
+      "trimmed": false,
+      "sourceSize": {
+        "w": 32,
+        "h": 41
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 41
+      },
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 41
+      }
+    },
+    "red-haired-clerk": {
+      "rotated": false,
+      "trimmed": false,
+      "sourceSize": {
+        "w": 32,
+        "h": 41
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 41
+      },
+      "frame": {
+        "x": 32,
+        "y": 0,
+        "w": 32,
+        "h": 41
+      }
+    }
+  }
+}

@@ -801,8 +801,9 @@
       this.load.image('bedroom', 'assets/bedroom/room.png?v=20261102bedroom4');
       this.load.image('wardrobe','assets/wardrobe.png?v=20261102wardrobe2');
       this.load.image('tiles', 'assets/tileset.png');
-      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261102wardrobe2');
-      this.load.atlas('player', 'assets/players.png?v=20261102size1', 'assets/players.json?v=20261102size1');
+      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261102size2');
+      this.load.atlas('player', 'assets/players.png?v=20261102size2', 'assets/players.json?v=20261102size2');
+      this.load.atlas('npc-people', 'assets/npcs.png?v=20261102size2', 'assets/npcs.json?v=20261102size2');
       this.load.image('board', 'assets/board.png?v=20261101ad');        // title plank says 竞技场
       this.load.image('board-en', 'assets/board-en.png?v=20261101ad');  // ... or ARENA
       for (const n of ['signup', 'trial']) for (const sfx of ['', '-en'])   // counter-top labels
@@ -823,7 +824,15 @@
       this.solid = JSON.parse(prop('solid'));
       const [sx, sy] = prop('spawn').split(',').map(Number);
       // receptionists: main hall + east hall (same dialogue for now)
-      this.npcs = ['npc', 'npc2'].map(prop).filter(Boolean).map(v => { const [x, y] = v.split(',').map(Number); return { x, y }; });
+      const npcFrames = ['receptionist', 'red-haired-clerk'];
+      this.npcs = ['npc', 'npc2'].map(prop).filter(Boolean).map((v, index) => {
+        const [x, y] = v.split(',').map(Number);
+        return { x, y, frame: npcFrames[index] };
+      });
+      for (const npc of this.npcs) {
+        npc.sprite = this.add.image(npc.x * TILE + TILE / 2, (npc.y + 1) * TILE, 'npc-people', npc.frame)
+          .setOrigin(0.5, 1).setDepth(5);
+      }
       this.mapW = map.width; this.mapH = map.height;
       const bedroom = prop('bedroom');
       if (bedroom) {
