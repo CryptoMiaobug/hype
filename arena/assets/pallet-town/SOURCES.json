@@ -1,0 +1,13 @@
+{
+  "layout": "pret/pokered maps/PalletTown.blk, gfx/blocksets/overworld.bst, data/maps/objects/PalletTown.asm; local JSON extraction from BrandeisPatrick/pokemon-red-web ee2a8ccb007192a90ea88a173199f4ccd85dca60",
+  "art": "Original Red 8px tile geometry from local extracted assets/tilesets/overworld.png, material-specific new colour interpretation using approved room palette; no official colour-art claim. Shutters/north gate drawn here. Layered tile generator retained.",
+  "texts": "pret/pokered text/PalletTown.asm; parent independently checked original text and objects 2026-11-03. Chinese is a faithful translation, NOT official Chinese. Your/rival labels substitute unavailable player names.",
+  "upstreamURLs": [
+    "https://github.com/pret/pokered/blob/master/maps/PalletTown.blk",
+    "https://github.com/pret/pokered/blob/master/gfx/blocksets/overworld.bst",
+    "https://github.com/pret/pokered/blob/master/text/PalletTown.asm",
+    "https://github.com/pret/pokered/blob/master/data/maps/objects/PalletTown.asm"
+  ],
+  "rights": "Original Pokémon art/layout copyright remains Nintendo/Game Freak/The Pokémon Company; source availability is not redistribution permission. Private local preview only.",
+  "changes": "No NPC added. Three original doors retained in layout; only own home connected. Rival and lab shutters blocked. North gate closed, south water blocked. No encounters or story hooks."
+}

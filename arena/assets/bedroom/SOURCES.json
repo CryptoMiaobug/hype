@@ -1,0 +1,11 @@
+{
+  "scope": "Only existing approved props repositioned; sprite bytes/scales unmodified",
+  "source": "Existing overworld/SOURCES.json, rh-hideout/pokeemerald-expansion c460a8661dfa0598ae25d42a968c690ecbf489c6; item ball pret/pokefirered 7e3f822652ecce0c99b626d74f455c3b93660377",
+  "defect": "Previous flat overlay feet y100/102 did not match blocking row y7 (128px relative bedroom); ball had no blocking cell. All now generated from explicit cell positions, trimmed alpha, centre/foot anchor.",
+  "generator": "art-gen/build_bedroom_props.py",
+  "computerTexts": {
+    "mail": "难道有爸爸发来的邮件？",
+    "centre": "请选择你的伙伴吧……"
+  },
+  "rights": "Existing asset rights unchanged. No official Chinese claim."
+}

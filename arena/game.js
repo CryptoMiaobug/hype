@@ -796,14 +796,16 @@
     constructor() { super('arena'); }
 
     preload() {
+      this.load.image('pallet-ground','assets/pallet-town/ground.png?v=pallet1');
+      this.load.image('pallet-foreground','assets/pallet-town/foreground.png?v=pallet1');
       this.load.image('living-room','assets/living-room/room.png?v=20261103living1');
       this.load.image('living-mom','assets/living-room/mom.png?v=20261103living1');
       for (const suffix of ['', '-en']) this.load.image('construction'+suffix, 'assets/construction'+suffix+'.png?v=20261102bedroom4');
-      this.load.image('bedroom-props','assets/bedroom/props.png?v=20261102props5');
+      this.load.image('bedroom-props','assets/bedroom/props.png?v=20261103pallet1');
       this.load.image('bedroom', 'assets/bedroom/room.png?v=20261102bedroom4');
       this.load.image('wardrobe','assets/wardrobe.png?v=20261102wardrobe2');
       this.load.image('tiles', 'assets/tileset.png');
-      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261103living1');
+      this.load.tilemapTiledJSON('map', 'assets/arena.json?v=20261103pallet1');
       this.load.atlas('player', 'assets/players.png?v=20261102size2', 'assets/players.json?v=20261102size2');
       this.load.atlas('npc-people', 'assets/npcs.png?v=20261102size2', 'assets/npcs.json?v=20261102size2');
       this.load.image('board', 'assets/board.png?v=20261101ad');        // title plank says 竞技场
@@ -846,6 +848,13 @@
         this.add.image(x*TILE,y*TILE,'bedroom-props').setOrigin(0,0).setDepth(0.3);
       }
 
+      const pallet=prop('pallet');
+      if(pallet){
+        const [x,y,w,h]=pallet.split(',').map(Number);this.pallet={x,y,w,h};
+        this.palletSigns=JSON.parse(prop('palletSigns')||'[]').map(v=>({...v,x:v.x+x,y:v.y+y}));
+        this.add.image(x*TILE,y*TILE,'pallet-ground').setOrigin(0,0).setScale(2).setDepth(.25);
+        this.add.image(x*TILE,y*TILE,'pallet-foreground').setOrigin(0,0).setScale(2).setDepth(7);
+      }
       this.stairs = (prop('stairs') || '').split(';').filter(Boolean).map(v=>v.split(',').map(Number));
       const living=prop('living');
       if(living){
@@ -857,12 +866,17 @@
           .on('pointerdown',(p,lx,ly,ev)=>{ev.stopPropagation();if(!dialog.open && Math.abs(this.tx-this.mom.x)+Math.abs(this.ty-this.mom.y)===1)this.talkToMom();});
       }
       this.bedroomTalk=[
-        {id:'computer',x:29,y:5,zh:['请选择你的伙伴吧……'],en:['Please choose your partner…']},
-        {id:'bulbasaur',x:30,y:7,zh:['种子～种子！','（妙蛙种子轻轻蹭了蹭你的手，安心地坐在你身旁。）'],en:['Bulba! Bulba!','(Bulbasaur gently nuzzles your hand and settles beside you.)']},
-        {id:'charmander',x:31,y:7,zh:['嗷！嗷呜！','（小火龙挺起胸膛，尾巴上的火苗欢快地跳动着。它似乎已经等不及出发了！）'],en:['Char! Charrr!','(Charmander puffs out its chest, its tail flame dancing eagerly. It seems ready to set off!)']},
-        {id:'squirtle',x:30,y:8,zh:['杰尼！杰尼！','（杰尼龟得意地拍了拍自己的龟壳，朝你摆出精神十足的姿势。）'],en:['Squirtle! Squirtle!','(Squirtle proudly pats its shell and strikes an energetic pose.)']},
-        {id:'pikachu',x:31,y:10,zh:['皮卡皮卡！','（皮卡丘开心地竖起耳朵，轻轻拉了拉你的衣角。）'],en:['Pika pika!','(Pikachu perks up its ears happily and gives your clothes a gentle tug.)']}
+        {id:'mail',x:29,y:5,zh:['难道有爸爸发来的邮件？'],en:['Could there be an email from Dad?']},
+        {id:'computer',x:32,y:8,zh:['请选择你的伙伴吧……'],en:['Please choose your partner…']},
+        {id:'bulbasaur',x:31,y:7,zh:['种子～种子！','（妙蛙种子轻轻蹭了蹭你的手，安心地坐在你身旁。）'],en:['Bulba! Bulba!','(Bulbasaur gently nuzzles your hand and settles beside you.)']},
+        {id:'charmander',x:33,y:7,zh:['嗷！嗷呜！','（小火龙挺起胸膛，尾巴上的火苗欢快地跳动着。它似乎已经等不及出发了！）'],en:['Char! Charrr!','(Charmander puffs out its chest, its tail flame dancing eagerly. It seems ready to set off!)']},
+        {id:'squirtle',x:31,y:9,zh:['杰尼！杰尼！','（杰尼龟得意地拍了拍自己的龟壳，朝你摆出精神十足的姿势。）'],en:['Squirtle! Squirtle!','(Squirtle proudly pats its shell and strikes an energetic pose.)']},
+        {id:'pikachu',x:33,y:10,zh:['皮卡皮卡！','（皮卡丘开心地竖起耳朵，轻轻拉了拉你的衣角。）'],en:['Pika pika!','(Pikachu perks up its ears happily and gives your clothes a gentle tug.)']}
       ];
+      for(const target of this.bedroomTalk){
+        this.add.zone((target.x+.5)*TILE,(target.y+.5)*TILE,TILE,TILE).setDepth(12).setInteractive({useHandCursor:true})
+          .on('pointerdown',(p,lx,ly,ev)=>{ev.stopPropagation();if(!dialog.open && Math.abs(this.tx-target.x)+Math.abs(this.ty-target.y)===1)dialog.start(target[lang()]);});
+      }
       const construction = prop('construction');
       if (construction) {
         const [x,y] = construction.split(',').map(Number);
@@ -1048,6 +1062,17 @@
     fitCamera() {
       // Integer zoom so pixels stay square; show the whole room when there's room for it.
       const { width, height } = this.scale.gameSize;
+      this.cameras.main.setViewport(0,0,width,height);
+      if(this.inPallet()){
+        const {x,y,w,h}=this.pallet,cam=this.cameras.main;
+        // Desktop fits all 20x18 cells at nearest-neighbour integer zoom.
+        // Narrow phones follow within the town's actual bounds; no distant rooms.
+        const zoom=Math.max(1,Math.floor(Math.min(width/(w*TILE),height/(h*TILE))));
+        cam.setZoom(zoom);const vw=Math.min(width,w*TILE*zoom),vh=Math.min(height,h*TILE*zoom);
+        cam.setViewport((width-vw)/2,(height-vh)/2,vw,vh);
+        cam.setBounds(x*TILE,y*TILE,w*TILE,h*TILE);
+        this.layoutEntryEvent();return;
+      }
       if(this.living && this.ty>=this.living.y){
         const {x,y,w,h}=this.living,cam=this.cameras.main;
         const zoom=Math.max(1,Math.floor(Math.min(width/(w*TILE),height/(h*TILE))));
@@ -1066,6 +1091,8 @@
       cam.setBounds((mw - bw) / 2, (mh - bh) / 2, bw, bh);
       this.layoutEntryEvent();
     }
+
+    inPallet() { const r=this.pallet;return !!r && this.tx>=r.x && this.tx<r.x+r.w && this.ty>=r.y && this.ty<r.y+r.h; }
 
     placePlayer() {
       this.player.setPosition(this.tx * TILE + TILE / 2, (this.ty + 1) * TILE);
@@ -1145,7 +1172,8 @@
       const bedroomTarget=this.bedroomTalk?.find(v=>v.x===fx && v.y===fy);
       if(bedroomTarget){dialog.start(bedroomTarget[lang()]);return;}
       if(this.mom && fx===this.mom.x && fy===this.mom.y){this.talkToMom();return;}
-      if(this.living && fx===34 && fy===24){dialog.start([lang()==='en'?'To the world outside…':'前往外面的世界…………']);return;}
+      const townSign=this.palletSigns?.find(v=>v.x===fx && v.y===fy);
+      if(townSign){dialog.start(townSign[lang()]);return;}
       const wp=this.wardrobe;if(wp&&fx>=wp.x&&fx<wp.x+wp.w&&fy>=wp.y&&fy<wp.y+wp.h){window.ArenaWardrobe?.show(true);return;}
       const cs=this.construction;
       if(cs && fx===cs.x && fy===cs.y){this.openConstruction();return;}
@@ -1384,7 +1412,7 @@
     }
 
     update() {
-      const cameraRoom=this.living && this.ty>=this.living.y?'living':'hall';
+      const cameraRoom=this.inPallet()?'pallet':this.living && this.ty>=this.living.y?'living':'hall';
       if(this.cameraRoom!==cameraRoom){this.cameraRoom=cameraRoom;this.fitCamera();}
 
       if(this.nameLabel)this.nameLabel.setPosition(this.player.x,this.player.y-44);

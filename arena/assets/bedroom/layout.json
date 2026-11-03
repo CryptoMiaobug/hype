@@ -1,0 +1,82 @@
+[
+  {
+    "name": "bulbasaur",
+    "cell": [
+      31,
+      7
+    ],
+    "visibleBounds": [
+      65,
+      96,
+      95,
+      128
+    ],
+    "foot": 128,
+    "scale": 2,
+    "sampling": "NEAREST"
+  },
+  {
+    "name": "charmander",
+    "cell": [
+      33,
+      7
+    ],
+    "visibleBounds": [
+      133,
+      96,
+      155,
+      128
+    ],
+    "foot": 128,
+    "scale": 2,
+    "sampling": "NEAREST"
+  },
+  {
+    "name": "squirtle",
+    "cell": [
+      31,
+      9
+    ],
+    "visibleBounds": [
+      69,
+      162,
+      91,
+      192
+    ],
+    "foot": 192,
+    "scale": 2,
+    "sampling": "NEAREST"
+  },
+  {
+    "name": "pikachu",
+    "cell": [
+      33,
+      10
+    ],
+    "visibleBounds": [
+      128,
+      188,
+      160,
+      224
+    ],
+    "foot": 224,
+    "scale": 2,
+    "sampling": "NEAREST"
+  },
+  {
+    "name": "item_ball",
+    "cell": [
+      34,
+      8
+    ],
+    "visibleBounds": [
+      166,
+      140,
+      186,
+      160
+    ],
+    "foot": 160,
+    "scale": 2,
+    "sampling": "NEAREST"
+  }
+]
